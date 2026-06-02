@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AdminSection } from "./AdminSections";
+import {
+  formatAdminDate,
+  getCurrentMealPeriod,
+  isItemAvailableForMealPeriod,
+  loadRestaurantSettings,
+  SETTINGS_CHANGE_EVENT,
+} from "./restaurantSettings";
 
 const STORAGE_KEY = "harbour-ordering-demo-orders";
 const MENU_STORAGE_KEY = "harbour-admin-menu";
@@ -309,23 +316,27 @@ function ViewToggle({ view, setView }) {
   );
 }
 
-function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
+function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }) {
   const [activeCategory, setActiveCategory] = useState("全部");
   const [cart, setCart] = useState({});
   const [isCartOpen, setCartOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const [stockNotice, setStockNotice] = useState("");
+  const periodMenuItems = useMemo(
+    () => menuItems.filter((item) => !item.deleted && isItemAvailableForMealPeriod(item, activeMealPeriod)),
+    [activeMealPeriod, menuItems],
+  );
   const categories = useMemo(
-    () => ["全部", ...new Set(menuItems.filter((item) => !item.deleted).map((item) => item.category).filter(Boolean))],
-    [menuItems],
+    () => ["全部", ...new Set(periodMenuItems.map((item) => item.category).filter(Boolean))],
+    [periodMenuItems],
   );
 
   const visibleMenu = useMemo(
     () =>
       activeCategory === "全部"
-        ? menuItems.filter((item) => !item.deleted)
-        : menuItems.filter((item) => !item.deleted && item.category === activeCategory),
-    [activeCategory, menuItems],
+        ? periodMenuItems
+        : periodMenuItems.filter((item) => item.category === activeCategory),
+    [activeCategory, periodMenuItems],
   );
 
   const cartItems = useMemo(
@@ -351,7 +362,9 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
   }, [activeCategory, categories]);
 
   useEffect(() => {
-    const unavailableIds = new Set(menuItems.filter((item) => item.soldOut || item.deleted).map((item) => item.id));
+    const unavailableIds = new Set(menuItems
+      .filter((item) => item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod))
+      .map((item) => item.id));
     const hasUnavailableItem = Object.entries(cart).some(([id, quantity]) => quantity > 0 && unavailableIds.has(id));
     if (!hasUnavailableItem) return;
 
@@ -359,11 +372,11 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
       Object.entries(current).filter(([id]) => !unavailableIds.has(id)),
     ));
     setStockNotice("部分菜品已停止供應，已從購物車移除。");
-  }, [cart, menuItems]);
+  }, [activeMealPeriod, cart, menuItems]);
 
   function updateItem(id, delta) {
     const item = getMenuItem(id, menuItems);
-    if (delta > 0 && (!item || item.soldOut || item.deleted)) {
+    if (delta > 0 && (!item || item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod))) {
       setStockNotice("這款菜品已售罄，暫時不能加入購物車。");
       return;
     }
@@ -425,6 +438,12 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
           </button>
         ))}
       </nav>
+
+      <div className={`service-notice ${activeMealPeriod ? "" : "closed"}`}>
+        {activeMealPeriod
+          ? `目前供應：${activeMealPeriod.name} ${activeMealPeriod.start}–${activeMealPeriod.end}`
+          : "目前非營業時段，暫時無法下單。"}
+      </div>
 
       {stockNotice && (
         <div className="stock-notice">
@@ -741,7 +760,7 @@ function PopularDishes({ menuItems, orders }) {
   );
 }
 
-function AdminApp({ menuItems, onMenuItemsChange, orders, onPrint, onReset, onSettle, setView }) {
+function AdminApp({ activeMealPeriod, menuItems, now, onMenuItemsChange, orders, onPrint, onReset, onSettle, setView }) {
   const pendingOrders = orders
     .filter((order) => order.status !== "settled")
     .sort((a, b) => a.sequence - b.sequence);
@@ -766,8 +785,8 @@ function AdminApp({ menuItems, onMenuItemsChange, orders, onPrint, onReset, onSe
             管理菜單
           </button>
           <div>
-            <span>2026年6月2日 · 星期二</span>
-            <strong>午市營業中</strong>
+            <span>{formatAdminDate(now)}</span>
+            <strong>{activeMealPeriod ? `${activeMealPeriod.name}營業中` : "非營業時段"}</strong>
           </div>
           <div>
             <button aria-label="通知" className="topbar-icon" type="button">
@@ -852,6 +871,9 @@ function App() {
   );
   const [orders, setOrders] = useState(loadOrders);
   const [menuItems, setMenuItems] = useState(loadMenuItems);
+  const [restaurantSettings, setRestaurantSettings] = useState(loadRestaurantSettings);
+  const [now, setNow] = useState(() => new Date());
+  const activeMealPeriod = getCurrentMealPeriod(restaurantSettings, now);
 
   useEffect(() => {
     function syncOrders() {
@@ -862,6 +884,23 @@ function App() {
     return () => {
       window.removeEventListener("storage", syncOrders);
       window.removeEventListener("harbour-orders-change", syncOrders);
+    };
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    function syncRestaurantSettings() {
+      setRestaurantSettings(loadRestaurantSettings());
+    }
+    window.addEventListener("storage", syncRestaurantSettings);
+    window.addEventListener(SETTINGS_CHANGE_EVENT, syncRestaurantSettings);
+    return () => {
+      window.removeEventListener("storage", syncRestaurantSettings);
+      window.removeEventListener(SETTINGS_CHANGE_EVENT, syncRestaurantSettings);
     };
   }, []);
 
@@ -880,7 +919,7 @@ function App() {
   function placeOrder(items) {
     if (items.some((line) => {
       const item = getMenuItem(line.id, menuItems);
-      return !item || item.soldOut || item.deleted;
+      return !item || item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod);
     })) return null;
 
     const latestOrders = loadOrders();
@@ -911,10 +950,12 @@ function App() {
     <>
       <ViewToggle setView={setView} view={view} />
       {view === "guest" ? (
-        <GuestApp menuItems={menuItems} onPlaceOrder={placeOrder} orders={orders} setView={setView} />
+        <GuestApp activeMealPeriod={activeMealPeriod} menuItems={menuItems} onPlaceOrder={placeOrder} orders={orders} setView={setView} />
       ) : (
         <AdminApp
+          activeMealPeriod={activeMealPeriod}
           menuItems={menuItems}
+          now={now}
           onMenuItemsChange={setMenuItems}
           onPrint={(id) => updateOrderStatus(id, "printed")}
           onReset={resetDemo}

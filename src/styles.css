@@ -325,6 +325,21 @@ p {
   padding: 10px 12px;
 }
 
+.service-notice {
+  background: var(--green-pale);
+  border-radius: 8px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0 14px 12px;
+  padding: 10px 12px;
+}
+
+.service-notice.closed {
+  background: var(--orange-pale);
+  color: var(--orange);
+}
+
 .stock-notice button {
   background: transparent;
   color: #a64f22;
@@ -1472,6 +1487,37 @@ p {
   width: 100%;
 }
 
+.meal-period-picker {
+  align-items: center;
+  border: 0;
+  display: flex;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+}
+
+.meal-period-picker legend {
+  color: var(--green-dark);
+  float: left;
+  font-size: 12px;
+  font-weight: 800;
+  margin-right: 1px;
+}
+
+.meal-period-picker label {
+  align-items: center;
+  color: var(--green-dark);
+  display: flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 4px;
+}
+
+.meal-period-picker input {
+  accent-color: var(--green);
+  margin: 0;
+}
+
 .table-panel {
   overflow: hidden;
 }
@@ -1734,6 +1780,46 @@ p {
   padding-top: 4px;
 }
 
+.meal-period-settings {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  padding-top: 15px;
+}
+
+.meal-period-settings h2 {
+  color: var(--green-dark);
+  font-size: 15px;
+}
+
+.meal-period-settings p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.meal-period-row {
+  align-items: end;
+  background: #f7f8f5;
+  border-radius: 7px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 70px 1fr 1fr;
+  padding: 10px;
+}
+
+.meal-period-row > strong {
+  align-self: center;
+  color: var(--green-dark);
+  font-size: 13px;
+}
+
+.meal-period-row label > span {
+  font-size: 11px;
+  margin-bottom: 5px;
+}
+
 .save-message {
   background: var(--green-pale);
   border-radius: 7px;
@@ -1854,7 +1940,12 @@ p {
   }
 
   .management-table {
-    min-width: 660px;
+    min-width: 790px;
+  }
+
+  .meal-period-picker {
+    flex-wrap: wrap;
+    width: 100%;
   }
 }
 

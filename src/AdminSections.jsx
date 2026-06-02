@@ -1,4 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  DEFAULT_MEAL_PERIODS,
+  loadRestaurantSettings,
+  saveRestaurantSettings,
+} from "./restaurantSettings";
 
 const seededTables = [
   ["01", "available"],
@@ -174,10 +179,12 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
 
 function MenuManagement({ items, setItems }) {
   const [query, setQuery] = useState("");
-  const [draft, setDraft] = useState({ category: "飯類", customCategory: "", imageUrl: "", name: "", price: "" });
+  const allMealPeriodIds = DEFAULT_MEAL_PERIODS.map((period) => period.id);
+  const [draft, setDraft] = useState({ category: "飯類", customCategory: "", imageUrl: "", mealPeriods: allMealPeriodIds, name: "", price: "" });
   const [categoryError, setCategoryError] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [photoError, setPhotoError] = useState("");
+  const [periodError, setPeriodError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const activeItems = items.filter((item) => !item.deleted);
   const categories = [...new Set(items.map((item) => item.category).filter(Boolean))];
@@ -185,10 +192,11 @@ function MenuManagement({ items, setItems }) {
   const visible = activeItems.filter((item) => item.name.includes(query.trim()));
 
   function resetForm() {
-    setDraft({ category: "飯類", customCategory: "", imageUrl: "", name: "", price: "" });
+    setDraft({ category: "飯類", customCategory: "", imageUrl: "", mealPeriods: allMealPeriodIds, name: "", price: "" });
     setCategoryError("");
     setEditingId(null);
     setPhotoError("");
+    setPeriodError("");
     setShowForm(false);
   }
 
@@ -202,12 +210,14 @@ function MenuManagement({ items, setItems }) {
       category: item.category,
       customCategory: "",
       imageUrl: item.imageUrl || "",
+      mealPeriods: Array.isArray(item.mealPeriods) ? item.mealPeriods : allMealPeriodIds,
       name: item.name,
       price: String(item.price),
     });
     setCategoryError("");
     setEditingId(item.id);
     setPhotoError("");
+    setPeriodError("");
     setShowForm(true);
   }
 
@@ -231,6 +241,10 @@ function MenuManagement({ items, setItems }) {
       setCategoryError("請選擇分類，或輸入新的分類名稱。");
       return;
     }
+    if (!draft.mealPeriods.length) {
+      setPeriodError("請至少選擇一個供應時段。");
+      return;
+    }
     if (!draft.name.trim() || !Number(draft.price)) return;
     if (editingId) {
       setItems((current) => current.map((item) => (
@@ -240,6 +254,7 @@ function MenuManagement({ items, setItems }) {
               name: draft.name.trim(),
               category,
               imageUrl: draft.imageUrl,
+              mealPeriods: draft.mealPeriods,
               price: Number(draft.price),
             }
           : item
@@ -253,6 +268,7 @@ function MenuManagement({ items, setItems }) {
         category,
         description: "餐廳後台新增菜品",
         imageUrl: draft.imageUrl,
+        mealPeriods: draft.mealPeriods,
         price: Number(draft.price),
         deleted: false,
         soldOut: false,
@@ -326,9 +342,29 @@ function MenuManagement({ items, setItems }) {
               value={draft.customCategory}
             />
           )}
+          <fieldset className="meal-period-picker">
+            <legend>供應時段</legend>
+            {DEFAULT_MEAL_PERIODS.map((period) => (
+              <label key={period.id}>
+                <input
+                  checked={draft.mealPeriods.includes(period.id)}
+                  onChange={(event) => {
+                    const mealPeriods = event.target.checked
+                      ? [...draft.mealPeriods, period.id]
+                      : draft.mealPeriods.filter((id) => id !== period.id);
+                    setDraft({ ...draft, mealPeriods });
+                    setPeriodError("");
+                  }}
+                  type="checkbox"
+                />
+                <span>{period.name}</span>
+              </label>
+            ))}
+          </fieldset>
           <button className="management-primary" type="submit">{editingId ? "儲存修改" : "儲存菜品"}</button>
           <button className="management-secondary" onClick={resetForm} type="button">取消</button>
           {categoryError && <span className="dish-photo-error">{categoryError}</span>}
+          {periodError && <span className="dish-photo-error">{periodError}</span>}
           {photoError && <span className="dish-photo-error">{photoError}</span>}
         </form>
       )}
@@ -347,6 +383,7 @@ function MenuManagement({ items, setItems }) {
             <tr>
               <th>菜品</th>
               <th>分類</th>
+              <th>供應時段</th>
               <th>價格</th>
               <th>狀態</th>
               <th>售罄</th>
@@ -367,6 +404,10 @@ function MenuManagement({ items, setItems }) {
                   </div>
                 </td>
                 <td>{item.category}</td>
+                <td>{(Array.isArray(item.mealPeriods) ? item.mealPeriods : allMealPeriodIds)
+                  .map((id) => DEFAULT_MEAL_PERIODS.find((period) => period.id === id)?.name)
+                  .filter(Boolean)
+                  .join("、")}</td>
                 <td>{money(item.price)}</td>
                 <td><span className={`list-status ${item.soldOut ? "inactive" : "active"}`}>{item.soldOut ? "已售罄" : "供應中"}</span></td>
                 <td>
@@ -588,11 +629,12 @@ function PrinterSettings() {
 }
 
 function RestaurantSettings() {
-  const [settings, setSettings] = useLocalState("harbour-admin-settings", { name: "海港小館", phone: "2188 6688", address: "香港灣仔軒尼詩道 88 號", language: "繁體中文" });
+  const [settings, setSettings] = useState(loadRestaurantSettings);
   const [saved, setSaved] = useState(false);
 
   function save(event) {
     event.preventDefault();
+    saveRestaurantSettings(settings);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2400);
   }
@@ -606,6 +648,47 @@ function RestaurantSettings() {
         <label><span>聯絡電話</span><input onChange={(event) => setSettings({ ...settings, phone: event.target.value })} value={settings.phone} /></label>
         <label><span>餐廳地址</span><input onChange={(event) => setSettings({ ...settings, address: event.target.value })} value={settings.address} /></label>
         <label><span>預設語言</span><select onChange={(event) => setSettings({ ...settings, language: event.target.value })} value={settings.language}><option>繁體中文</option><option>English</option></select></label>
+        <section className="meal-period-settings">
+          <header>
+            <h2>供應時段</h2>
+            <p>修改早餐、午市和晚市的營業時間。顧客只會看到目前時段可供應的菜品。</p>
+          </header>
+          {settings.mealPeriods.map((period) => (
+            <div className="meal-period-row" key={period.id}>
+              <strong>{period.name}</strong>
+              <label>
+                <span>開始</span>
+                <input
+                  aria-label={`${period.name}開始時間`}
+                  onChange={(event) => setSettings({
+                    ...settings,
+                    mealPeriods: settings.mealPeriods.map((entry) => (
+                      entry.id === period.id ? { ...entry, start: event.target.value } : entry
+                    )),
+                  })}
+                  required
+                  type="time"
+                  value={period.start}
+                />
+              </label>
+              <label>
+                <span>結束</span>
+                <input
+                  aria-label={`${period.name}結束時間`}
+                  onChange={(event) => setSettings({
+                    ...settings,
+                    mealPeriods: settings.mealPeriods.map((entry) => (
+                      entry.id === period.id ? { ...entry, end: event.target.value } : entry
+                    )),
+                  })}
+                  required
+                  type="time"
+                  value={period.end}
+                />
+              </label>
+            </div>
+          ))}
+        </section>
         <footer><button className="management-primary" type="submit">儲存餐廳資料</button></footer>
       </form>
     </section>
