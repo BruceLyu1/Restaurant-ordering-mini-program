@@ -621,6 +621,94 @@ p {
   padding: 12px 9px;
 }
 
+.mobile-nav-trigger {
+  display: none;
+}
+
+.mobile-nav-backdrop {
+  background: rgba(9, 27, 22, 0.48);
+  inset: 0;
+  position: fixed;
+  z-index: 60;
+}
+
+.mobile-admin-nav {
+  background: #19342b;
+  box-shadow: 12px 0 28px rgba(5, 24, 18, 0.2);
+  color: #e5eee9;
+  height: 100%;
+  max-width: 308px;
+  width: 82vw;
+}
+
+.mobile-admin-nav header {
+  align-items: center;
+  background: #fff;
+  display: flex;
+  height: 72px;
+  justify-content: space-between;
+  padding: 0 13px 0 18px;
+}
+
+.mobile-nav-brand {
+  align-items: center;
+  color: var(--green-dark);
+  display: flex;
+  font-family: Georgia, "Noto Serif TC", serif;
+  font-size: 18px;
+  gap: 10px;
+}
+
+.mobile-nav-close {
+  align-items: center;
+  background: transparent;
+  color: var(--green-dark);
+  display: flex;
+  font-size: 29px;
+  height: 38px;
+  justify-content: center;
+  line-height: 1;
+  width: 38px;
+}
+
+.mobile-admin-nav nav {
+  display: grid;
+  gap: 4px;
+  padding: 13px 9px;
+}
+
+.mobile-admin-nav nav button {
+  align-items: center;
+  background: transparent;
+  border-radius: 7px;
+  color: #c8d5d0;
+  display: flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 11px;
+  padding: 12px 11px;
+  text-align: left;
+  width: 100%;
+}
+
+.mobile-admin-nav nav button.active {
+  background: #2b684e;
+  color: #fff;
+}
+
+.mobile-admin-nav small {
+  align-items: center;
+  background: var(--orange);
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  font-size: 10px;
+  height: 18px;
+  justify-content: center;
+  margin-left: auto;
+  width: 18px;
+}
+
 .admin-workspace {
   flex: 1;
   min-width: 0;
@@ -1558,12 +1646,25 @@ p {
     display: none;
   }
 
+  .mobile-nav-trigger {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--green);
+    display: flex;
+    font-size: 12px;
+    font-weight: 800;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
   .admin-topbar {
     height: 61px;
     padding: 0 12px;
   }
 
-  .admin-topbar > div:first-child {
+  .admin-topbar > div:first-of-type {
     display: none;
   }
 

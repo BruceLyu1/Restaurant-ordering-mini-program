@@ -530,6 +530,43 @@ function Sidebar({ activeSection, onNavigate }) {
   );
 }
 
+function MobileAdminNav({ activeSection, onClose, onNavigate }) {
+  return (
+    <div className="mobile-nav-backdrop" onClick={onClose}>
+      <aside className="mobile-admin-nav" onClick={(event) => event.stopPropagation()}>
+        <header>
+          <div className="mobile-nav-brand">
+            <span className="brand-mark">
+              <Icon name="store" size={20} />
+            </span>
+            <strong>香港小館</strong>
+          </div>
+          <button aria-label="關閉管理菜單" className="mobile-nav-close" onClick={onClose} type="button">
+            ×
+          </button>
+        </header>
+        <nav>
+          {navItems.map(([section, icon, label]) => (
+            <button
+              className={section === activeSection ? "active" : ""}
+              key={label}
+              onClick={() => {
+                onNavigate(section);
+                onClose();
+              }}
+              type="button"
+            >
+              <Icon name={icon} size={18} />
+              <span>{label}</span>
+              {section === "orders" && <small>2</small>}
+            </button>
+          ))}
+        </nav>
+      </aside>
+    </div>
+  );
+}
+
 function StatusBadge({ status }) {
   const labels = {
     pending: "待處理",
@@ -638,13 +675,21 @@ function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
     .sort((a, b) => b.sequence - a.sequence);
   const [filter, setFilter] = useState("pending");
   const [activeSection, setActiveSection] = useState("orders");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
 
   return (
     <main className="admin-shell">
       <Sidebar activeSection={activeSection} onNavigate={setActiveSection} />
+      {mobileMenuOpen && (
+        <MobileAdminNav activeSection={activeSection} onClose={() => setMobileMenuOpen(false)} onNavigate={setActiveSection} />
+      )}
       <section className="admin-workspace">
         <header className="admin-topbar">
+          <button className="mobile-nav-trigger" onClick={() => setMobileMenuOpen(true)} type="button">
+            <Icon name="menu" size={18} />
+            管理菜單
+          </button>
           <div>
             <span>2026年6月2日 · 星期二</span>
             <strong>午市營業中</strong>
