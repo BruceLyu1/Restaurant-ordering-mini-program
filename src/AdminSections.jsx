@@ -446,17 +446,13 @@ function RestaurantSettings() {
   );
 }
 
-export function AdminSection({ activeSection, menuItems, onNavigate, orders }) {
+export function AdminSection({ activeSection, menuItems, onMenuItemsChange, onNavigate, orders }) {
   const [tables, setTables] = useLocalState("harbour-admin-tables", seededTables);
-  const [managedMenuItems, setManagedMenuItems] = useLocalState(
-    "harbour-admin-menu",
-    () => menuItems.map((item) => ({ ...item, soldOut: false })),
-  );
 
-  if (activeSection === "dashboard") return <Dashboard menuItems={managedMenuItems} onNavigate={onNavigate} orders={orders} tables={tables} />;
-  if (activeSection === "menu") return <MenuManagement items={managedMenuItems} setItems={setManagedMenuItems} />;
+  if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={onNavigate} orders={orders} tables={tables} />;
+  if (activeSection === "menu") return <MenuManagement items={menuItems} setItems={onMenuItemsChange} />;
   if (activeSection === "tables") return <TableManagement setTables={setTables} tables={tables} />;
-  if (activeSection === "reports") return <Reports menuItems={managedMenuItems} orders={orders} />;
+  if (activeSection === "reports") return <Reports menuItems={menuItems} orders={orders} />;
   if (activeSection === "staff") return <StaffManagement />;
   if (activeSection === "printer") return <PrinterSettings />;
   return <RestaurantSettings />;

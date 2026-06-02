@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AdminSection } from "./AdminSections";
 
 const STORAGE_KEY = "harbour-ordering-demo-orders";
+const MENU_STORAGE_KEY = "harbour-admin-menu";
 
-const menuItems = [
+const seedMenuItems = [
   {
     id: "char-siu",
     name: "蜜汁叉燒飯",
@@ -123,17 +124,28 @@ function saveOrders(orders) {
   window.dispatchEvent(new CustomEvent("harbour-orders-change"));
 }
 
+function loadMenuItems() {
+  const existing = localStorage.getItem(MENU_STORAGE_KEY);
+  if (!existing) return seedMenuItems.map((item) => ({ ...item, soldOut: false }));
+
+  try {
+    return JSON.parse(existing);
+  } catch {
+    return seedMenuItems.map((item) => ({ ...item, soldOut: false }));
+  }
+}
+
 function money(value) {
   return `HK$ ${value.toLocaleString("zh-HK")}`;
 }
 
-function getMenuItem(id) {
-  return menuItems.find((item) => item.id === id);
+function getMenuItem(id, items = seedMenuItems) {
+  return items.find((item) => item.id === id);
 }
 
-function getOrderTotal(order) {
+function getOrderTotal(order, items = seedMenuItems) {
   return order.items.reduce(
-    (total, item) => total + getMenuItem(item.id).price * item.quantity,
+    (total, item) => total + (getMenuItem(item.id, items)?.price || 0) * item.quantity,
     0,
   );
 }
@@ -280,26 +292,31 @@ function ViewToggle({ view, setView }) {
   );
 }
 
-function GuestApp({ onPlaceOrder, orders, setView }) {
+function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
   const [activeCategory, setActiveCategory] = useState("全部");
   const [cart, setCart] = useState({});
   const [isCartOpen, setCartOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
+  const [stockNotice, setStockNotice] = useState("");
 
   const visibleMenu = useMemo(
     () =>
       activeCategory === "全部"
         ? menuItems
         : menuItems.filter((item) => item.category === activeCategory),
-    [activeCategory],
+    [activeCategory, menuItems],
   );
 
   const cartItems = useMemo(
     () =>
       Object.entries(cart)
         .filter(([, quantity]) => quantity > 0)
-        .map(([id, quantity]) => ({ ...getMenuItem(id), quantity })),
-    [cart],
+        .map(([id, quantity]) => {
+          const item = getMenuItem(id, menuItems);
+          return item ? { ...item, quantity } : null;
+        })
+        .filter(Boolean),
+    [cart, menuItems],
   );
 
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -308,7 +325,24 @@ function GuestApp({ onPlaceOrder, orders, setView }) {
     0,
   );
 
+  useEffect(() => {
+    const unavailableIds = new Set(menuItems.filter((item) => item.soldOut).map((item) => item.id));
+    const hasUnavailableItem = Object.entries(cart).some(([id, quantity]) => quantity > 0 && unavailableIds.has(id));
+    if (!hasUnavailableItem) return;
+
+    setCart((current) => Object.fromEntries(
+      Object.entries(current).filter(([id]) => !unavailableIds.has(id)),
+    ));
+    setStockNotice("部分菜品剛剛售罄，已從購物車移除。");
+  }, [cart, menuItems]);
+
   function updateItem(id, delta) {
+    const item = getMenuItem(id, menuItems);
+    if (delta > 0 && (!item || item.soldOut)) {
+      setStockNotice("這款菜品已售罄，暫時不能加入購物車。");
+      return;
+    }
+
     setCart((current) => {
       const nextQuantity = Math.max(0, (current[id] || 0) + delta);
       return { ...current, [id]: nextQuantity };
@@ -320,6 +354,10 @@ function GuestApp({ onPlaceOrder, orders, setView }) {
     const order = onPlaceOrder(
       cartItems.map(({ id, quantity }) => ({ id, quantity })),
     );
+    if (!order) {
+      setStockNotice("部分菜品已售罄，請重新確認購物車。");
+      return;
+    }
     setConfirmation(order);
     setCart({});
     setCartOpen(false);
@@ -360,16 +398,24 @@ function GuestApp({ onPlaceOrder, orders, setView }) {
         ))}
       </nav>
 
+      {stockNotice && (
+        <div className="stock-notice">
+          <span>{stockNotice}</span>
+          <button aria-label="關閉提示" onClick={() => setStockNotice("")} type="button">×</button>
+        </div>
+      )}
+
       <section className="menu-list">
         {visibleMenu.map((item) => {
           const quantity = cart[item.id] || 0;
           return (
-            <article className="menu-item" key={item.id}>
+            <article className={`menu-item ${item.soldOut ? "sold-out" : ""}`} key={item.id}>
               <DishImage item={item} />
               <div className="menu-item-copy">
                 <h2>{item.name}</h2>
                 <p>{item.description}</p>
                 <strong>{money(item.price)}</strong>
+                {item.soldOut && <span className="sold-out-label">已售罄</span>}
               </div>
               <div className="menu-item-control">
                 {quantity > 0 && (
@@ -386,8 +432,9 @@ function GuestApp({ onPlaceOrder, orders, setView }) {
                   </>
                 )}
                 <button
-                  aria-label={`加入${item.name}`}
+                  aria-label={item.soldOut ? `${item.name}已售罄` : `加入${item.name}`}
                   className="quantity-control"
+                  disabled={item.soldOut}
                   onClick={() => updateItem(item.id, 1)}
                   type="button"
                 >
@@ -479,7 +526,7 @@ function GuestApp({ onPlaceOrder, orders, setView }) {
               <span>桌號</span>
               <strong>12號桌</strong>
               <span>金額</span>
-              <strong>{money(getOrderTotal(confirmation))}</strong>
+              <strong>{money(getOrderTotal(confirmation, menuItems))}</strong>
             </div>
             <button className="primary-button" onClick={() => setConfirmation(null)} type="button">
               繼續加菜
@@ -576,7 +623,7 @@ function StatusBadge({ status }) {
   return <span className={`status-badge ${status}`}>{labels[status]}</span>;
 }
 
-function OrderCard({ order, onPrint, onSettle }) {
+function OrderCard({ menuItems, order, onPrint, onSettle }) {
   return (
     <article className={`order-card ${order.status}`}>
       <header>
@@ -591,10 +638,10 @@ function OrderCard({ order, onPrint, onSettle }) {
       </header>
       <div className="order-lines">
         {order.items.map((line) => {
-          const item = getMenuItem(line.id);
+          const item = getMenuItem(line.id, menuItems);
           return (
             <div key={line.id}>
-              <span>{item.name}</span>
+              <span>{item?.name || "已移除菜品"}</span>
               <strong>x {line.quantity}</strong>
             </div>
           );
@@ -602,7 +649,7 @@ function OrderCard({ order, onPrint, onSettle }) {
       </div>
       <div className="order-total">
         <span>合計</span>
-        <strong>{money(getOrderTotal(order))}</strong>
+        <strong>{money(getOrderTotal(order, menuItems))}</strong>
       </div>
       <footer>
         <StatusBadge status={order.status} />
@@ -625,18 +672,18 @@ function OrderCard({ order, onPrint, onSettle }) {
   );
 }
 
-function PopularDishes({ orders }) {
+function PopularDishes({ menuItems, orders }) {
   const ranked = useMemo(() => {
     const totals = Object.fromEntries(menuItems.map((item) => [item.id, 0]));
     orders.forEach((order) => {
       order.items.forEach((item) => {
-        totals[item.id] += item.quantity;
+        totals[item.id] = (totals[item.id] || 0) + item.quantity;
       });
     });
     return menuItems
       .map((item) => ({ ...item, quantity: totals[item.id] }))
       .sort((a, b) => b.quantity - a.quantity);
-  }, [orders]);
+  }, [menuItems, orders]);
 
   return (
     <aside className="ranking-panel">
@@ -666,7 +713,7 @@ function PopularDishes({ orders }) {
   );
 }
 
-function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
+function AdminApp({ menuItems, onMenuItemsChange, orders, onPrint, onReset, onSettle, setView }) {
   const pendingOrders = orders
     .filter((order) => order.status !== "settled")
     .sort((a, b) => a.sequence - b.sequence);
@@ -705,7 +752,13 @@ function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
           </div>
         </header>
         {activeSection !== "orders" ? (
-          <AdminSection activeSection={activeSection} menuItems={menuItems} onNavigate={setActiveSection} orders={orders} />
+          <AdminSection
+            activeSection={activeSection}
+            menuItems={menuItems}
+            onMenuItemsChange={onMenuItemsChange}
+            onNavigate={setActiveSection}
+            orders={orders}
+          />
         ) : <div className="admin-layout">
           <section className="orders-panel">
             <header className="orders-header">
@@ -745,7 +798,7 @@ function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
             <div className="orders-grid">
               {visibleOrders.length ? (
                 visibleOrders.map((order) => (
-                  <OrderCard key={order.id} onPrint={onPrint} onSettle={onSettle} order={order} />
+                  <OrderCard key={order.id} menuItems={menuItems} onPrint={onPrint} onSettle={onSettle} order={order} />
                 ))
               ) : (
                 <div className="empty-state">
@@ -756,7 +809,7 @@ function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
               )}
             </div>
           </section>
-          <PopularDishes orders={orders} />
+          <PopularDishes menuItems={menuItems} orders={orders} />
         </div>}
       </section>
     </main>
@@ -770,6 +823,7 @@ function App() {
       : "guest",
   );
   const [orders, setOrders] = useState(loadOrders);
+  const [menuItems, setMenuItems] = useState(loadMenuItems);
 
   useEffect(() => {
     function syncOrders() {
@@ -783,7 +837,24 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuItems));
+  }, [menuItems]);
+
+  useEffect(() => {
+    function syncMenuItems(event) {
+      if (event.key === MENU_STORAGE_KEY) setMenuItems(loadMenuItems());
+    }
+    window.addEventListener("storage", syncMenuItems);
+    return () => window.removeEventListener("storage", syncMenuItems);
+  }, []);
+
   function placeOrder(items) {
+    if (items.some((line) => {
+      const item = getMenuItem(line.id, menuItems);
+      return !item || item.soldOut;
+    })) return null;
+
     const latestOrders = loadOrders();
     const maxSequence = Math.max(...latestOrders.map((order) => order.sequence), 1000);
     const order = {
@@ -812,9 +883,11 @@ function App() {
     <>
       <ViewToggle setView={setView} view={view} />
       {view === "guest" ? (
-        <GuestApp onPlaceOrder={placeOrder} orders={orders} setView={setView} />
+        <GuestApp menuItems={menuItems} onPlaceOrder={placeOrder} orders={orders} setView={setView} />
       ) : (
         <AdminApp
+          menuItems={menuItems}
+          onMenuItemsChange={setMenuItems}
           onPrint={(id) => updateOrderStatus(id, "printed")}
           onReset={resetDemo}
           onSettle={(id) => updateOrderStatus(id, "settled")}
