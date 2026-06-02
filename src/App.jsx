@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { AdminSection } from "./AdminSections";
 
 const STORAGE_KEY = "harbour-ordering-demo-orders";
 
@@ -491,17 +492,17 @@ function GuestApp({ onPlaceOrder, orders, setView }) {
 }
 
 const navItems = [
-  ["dashboard", "營運總覽"],
-  ["orders", "訂單管理"],
-  ["utensils", "菜單管理"],
-  ["table", "桌位管理"],
-  ["chart", "報表分析"],
-  ["user", "員工管理"],
-  ["printer", "打印設定"],
-  ["settings", "設定"],
+  ["dashboard", "dashboard", "營運總覽"],
+  ["orders", "orders", "訂單管理"],
+  ["menu", "utensils", "菜單管理"],
+  ["tables", "table", "桌位管理"],
+  ["reports", "chart", "報表分析"],
+  ["staff", "user", "員工管理"],
+  ["printer", "printer", "打印設定"],
+  ["settings", "settings", "設定"],
 ];
 
-function Sidebar() {
+function Sidebar({ activeSection, onNavigate }) {
   return (
     <aside className="sidebar">
       <div className="admin-brand">
@@ -511,11 +512,11 @@ function Sidebar() {
         <strong>海港小館</strong>
       </div>
       <nav>
-        {navItems.map(([icon, label], index) => (
-          <button className={index === 1 ? "active" : ""} key={label} type="button">
+        {navItems.map(([section, icon, label]) => (
+          <button className={section === activeSection ? "active" : ""} key={label} onClick={() => onNavigate(section)} type="button">
             <Icon name={icon} size={18} />
             <span>{label}</span>
-            {index === 1 && <small>2</small>}
+            {section === "orders" && <small>2</small>}
           </button>
         ))}
       </nav>
@@ -636,11 +637,12 @@ function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
     .filter((order) => order.status === "settled")
     .sort((a, b) => b.sequence - a.sequence);
   const [filter, setFilter] = useState("pending");
+  const [activeSection, setActiveSection] = useState("orders");
   const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
 
   return (
     <main className="admin-shell">
-      <Sidebar />
+      <Sidebar activeSection={activeSection} onNavigate={setActiveSection} />
       <section className="admin-workspace">
         <header className="admin-topbar">
           <div>
@@ -657,7 +659,9 @@ function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
             </button>
           </div>
         </header>
-        <div className="admin-layout">
+        {activeSection !== "orders" ? (
+          <AdminSection activeSection={activeSection} menuItems={menuItems} onNavigate={setActiveSection} orders={orders} />
+        ) : <div className="admin-layout">
           <section className="orders-panel">
             <header className="orders-header">
               <div>
@@ -708,7 +712,7 @@ function AdminApp({ orders, onPrint, onReset, onSettle, setView }) {
             </div>
           </section>
           <PopularDishes orders={orders} />
-        </div>
+        </div>}
       </section>
     </main>
   );
