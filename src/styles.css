@@ -1233,6 +1233,16 @@ p {
   color: var(--green);
 }
 
+.management-danger {
+  background: #fff;
+  border: 1px solid #efc7b2;
+  border-radius: 6px;
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 10px;
+}
+
 .metrics-row {
   display: grid;
   gap: 12px;
@@ -1826,7 +1836,7 @@ p {
   }
 
   .management-table {
-    min-width: 560px;
+    min-width: 660px;
   }
 }
 

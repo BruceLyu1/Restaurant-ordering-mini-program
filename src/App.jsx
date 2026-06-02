@@ -311,8 +311,8 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
   const visibleMenu = useMemo(
     () =>
       activeCategory === "全部"
-        ? menuItems
-        : menuItems.filter((item) => item.category === activeCategory),
+        ? menuItems.filter((item) => !item.deleted)
+        : menuItems.filter((item) => !item.deleted && item.category === activeCategory),
     [activeCategory, menuItems],
   );
 
@@ -335,19 +335,19 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
   );
 
   useEffect(() => {
-    const unavailableIds = new Set(menuItems.filter((item) => item.soldOut).map((item) => item.id));
+    const unavailableIds = new Set(menuItems.filter((item) => item.soldOut || item.deleted).map((item) => item.id));
     const hasUnavailableItem = Object.entries(cart).some(([id, quantity]) => quantity > 0 && unavailableIds.has(id));
     if (!hasUnavailableItem) return;
 
     setCart((current) => Object.fromEntries(
       Object.entries(current).filter(([id]) => !unavailableIds.has(id)),
     ));
-    setStockNotice("部分菜品剛剛售罄，已從購物車移除。");
+    setStockNotice("部分菜品已停止供應，已從購物車移除。");
   }, [cart, menuItems]);
 
   function updateItem(id, delta) {
     const item = getMenuItem(id, menuItems);
-    if (delta > 0 && (!item || item.soldOut)) {
+    if (delta > 0 && (!item || item.soldOut || item.deleted)) {
       setStockNotice("這款菜品已售罄，暫時不能加入購物車。");
       return;
     }
@@ -861,7 +861,7 @@ function App() {
   function placeOrder(items) {
     if (items.some((line) => {
       const item = getMenuItem(line.id, menuItems);
-      return !item || item.soldOut;
+      return !item || item.soldOut || item.deleted;
     })) return null;
 
     const latestOrders = loadOrders();

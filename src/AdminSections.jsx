@@ -124,6 +124,7 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
   const todayRevenue = orders.reduce((sum, order) => sum + orderTotal(order, menuItems), 0);
   const pending = orders.filter((order) => order.status !== "settled").length;
   const occupied = tables.filter((table) => table.status === "occupied").length;
+  const activeMenuItems = menuItems.filter((item) => !item.deleted);
 
   return (
     <section className="management-page">
@@ -135,7 +136,7 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
         <Metric label="今日營業額" note="已包含所有測試訂單" value={money(todayRevenue)} />
         <Metric label="待處理訂單" note="按下單時間順序處理" value={`${pending} 張`} />
         <Metric label="使用中桌位" note={`共 ${tables.length} 張桌`} value={`${occupied} 張`} />
-        <Metric label="已上架菜品" note="菜品可以隨時售罄" value={`${menuItems.length} 款`} />
+        <Metric label="已上架菜品" note="菜品可以隨時售罄" value={`${activeMenuItems.length} 款`} />
       </div>
       <div className="management-split">
         <section className="management-panel">
@@ -176,7 +177,8 @@ function MenuManagement({ items, setItems }) {
   const [draft, setDraft] = useState({ imageUrl: "", name: "", price: "" });
   const [photoError, setPhotoError] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const visible = items.filter((item) => item.name.includes(query.trim()));
+  const activeItems = items.filter((item) => !item.deleted);
+  const visible = activeItems.filter((item) => item.name.includes(query.trim()));
 
   async function selectPhoto(event) {
     const file = event.target.files?.[0];
@@ -203,6 +205,7 @@ function MenuManagement({ items, setItems }) {
         description: "餐廳後台新增菜品",
         imageUrl: draft.imageUrl,
         price: Number(draft.price),
+        deleted: false,
         soldOut: false,
       },
     ]);
@@ -215,7 +218,7 @@ function MenuManagement({ items, setItems }) {
     <section className="management-page">
       <SectionHeader
         action={<button className="management-primary" onClick={() => setShowForm(true)} type="button">新增菜品</button>}
-        description="維護菜品名稱、價格和售罄狀態。"
+        description="維護菜品照片、名稱、價格、售罄狀態和刪除下架。"
         title="菜單管理"
       />
       {showForm && (
@@ -257,7 +260,7 @@ function MenuManagement({ items, setItems }) {
           placeholder="搜尋菜品名稱"
           value={query}
         />
-        <span>共 {items.length} 款菜品</span>
+        <span>共 {activeItems.length} 款菜品</span>
       </div>
       <div className="management-panel table-panel">
         <table className="management-table">
@@ -268,6 +271,7 @@ function MenuManagement({ items, setItems }) {
               <th>價格</th>
               <th>狀態</th>
               <th>售罄</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -294,6 +298,20 @@ function MenuManagement({ items, setItems }) {
                       entry.id === item.id ? { ...entry, soldOut: !entry.soldOut } : entry
                     )))}
                   />
+                </td>
+                <td>
+                  <button
+                    className="management-danger"
+                    onClick={() => {
+                      if (!window.confirm(`確定刪除「${item.name}」嗎？刪除後顧客端將不再顯示。`)) return;
+                      setItems((current) => current.map((entry) => (
+                        entry.id === item.id ? { ...entry, deleted: true } : entry
+                      )));
+                    }}
+                    type="button"
+                  >
+                    刪除
+                  </button>
                 </td>
               </tr>
             ))}
