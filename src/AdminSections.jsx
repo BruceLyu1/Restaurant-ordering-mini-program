@@ -78,7 +78,7 @@ function useLocalState(key, initialValue) {
 function orderTotal(order, items) {
   const priceMap = new Map(items.map((item) => [item.id, item.price]));
   return order.items.reduce(
-    (total, item) => total + (priceMap.get(item.id) || 0) * item.quantity,
+    (total, item) => total + (item.unitPrice ?? priceMap.get(item.id) ?? 0) * item.quantity,
     0,
   );
 }
@@ -176,11 +176,40 @@ function MenuManagement({ items, setItems }) {
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState({ category: "飯類", customCategory: "", imageUrl: "", name: "", price: "" });
   const [categoryError, setCategoryError] = useState("");
+  const [editingId, setEditingId] = useState(null);
   const [photoError, setPhotoError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const activeItems = items.filter((item) => !item.deleted);
   const categories = [...new Set(items.map((item) => item.category).filter(Boolean))];
+  const editingItem = items.find((item) => item.id === editingId);
   const visible = activeItems.filter((item) => item.name.includes(query.trim()));
+
+  function resetForm() {
+    setDraft({ category: "飯類", customCategory: "", imageUrl: "", name: "", price: "" });
+    setCategoryError("");
+    setEditingId(null);
+    setPhotoError("");
+    setShowForm(false);
+  }
+
+  function createItem() {
+    resetForm();
+    setShowForm(true);
+  }
+
+  function editItem(item) {
+    setDraft({
+      category: item.category,
+      customCategory: "",
+      imageUrl: item.imageUrl || "",
+      name: item.name,
+      price: String(item.price),
+    });
+    setCategoryError("");
+    setEditingId(item.id);
+    setPhotoError("");
+    setShowForm(true);
+  }
 
   async function selectPhoto(event) {
     const file = event.target.files?.[0];
@@ -195,7 +224,7 @@ function MenuManagement({ items, setItems }) {
     }
   }
 
-  function addItem(event) {
+  function saveItem(event) {
     event.preventDefault();
     const category = draft.category === "__custom" ? draft.customCategory.trim() : draft.category;
     if (!category || category === "全部") {
@@ -203,9 +232,22 @@ function MenuManagement({ items, setItems }) {
       return;
     }
     if (!draft.name.trim() || !Number(draft.price)) return;
-    setItems((current) => [
-      ...current,
-      {
+    if (editingId) {
+      setItems((current) => current.map((item) => (
+        item.id === editingId
+          ? {
+              ...item,
+              name: draft.name.trim(),
+              category,
+              imageUrl: draft.imageUrl,
+              price: Number(draft.price),
+            }
+          : item
+      )));
+    } else {
+      setItems((current) => [
+        ...current,
+        {
         id: `custom-${Date.now()}`,
         name: draft.name.trim(),
         category,
@@ -214,31 +256,37 @@ function MenuManagement({ items, setItems }) {
         price: Number(draft.price),
         deleted: false,
         soldOut: false,
-      },
-    ]);
-    setDraft({ category: "飯類", customCategory: "", imageUrl: "", name: "", price: "" });
-    setCategoryError("");
-    setPhotoError("");
-    setShowForm(false);
+        },
+      ]);
+    }
+    resetForm();
   }
 
   return (
     <section className="management-page">
       <SectionHeader
-        action={<button className="management-primary" onClick={() => setShowForm(true)} type="button">新增菜品</button>}
+        action={<button className="management-primary" onClick={createItem} type="button">新增菜品</button>}
         description="維護菜品照片、名稱、價格、售罄狀態和刪除下架。"
         title="菜單管理"
       />
       {showForm && (
-        <form className="inline-form" onSubmit={addItem}>
+        <form className="inline-form" onSubmit={saveItem}>
+          <strong className="inline-form-title">{editingId ? "修改菜品" : "新增菜品"}</strong>
           <div className="dish-photo-field">
             {draft.imageUrl ? (
               <img alt="菜品照片預覽" className="dish-photo-preview" src={draft.imageUrl} />
+            ) : editingItem?.image ? (
+              <span
+                aria-label="目前菜品照片"
+                className="dish-photo-empty dish-photo-sprite"
+                role="img"
+                style={{ backgroundPosition: editingItem.image }}
+              />
             ) : (
               <span className="dish-photo-empty">照片</span>
             )}
             <label className="dish-photo-upload">
-              上傳照片
+              {editingId ? "更換照片" : "上傳照片"}
               <input accept="image/*" aria-label="上傳菜品照片" onChange={selectPhoto} type="file" />
             </label>
           </div>
@@ -278,8 +326,8 @@ function MenuManagement({ items, setItems }) {
               value={draft.customCategory}
             />
           )}
-          <button className="management-primary" type="submit">儲存菜品</button>
-          <button className="management-secondary" onClick={() => setShowForm(false)} type="button">取消</button>
+          <button className="management-primary" type="submit">{editingId ? "儲存修改" : "儲存菜品"}</button>
+          <button className="management-secondary" onClick={resetForm} type="button">取消</button>
           {categoryError && <span className="dish-photo-error">{categoryError}</span>}
           {photoError && <span className="dish-photo-error">{photoError}</span>}
         </form>
@@ -331,18 +379,21 @@ function MenuManagement({ items, setItems }) {
                   />
                 </td>
                 <td>
-                  <button
-                    className="management-danger"
-                    onClick={() => {
-                      if (!window.confirm(`確定刪除「${item.name}」嗎？刪除後顧客端將不再顯示。`)) return;
-                      setItems((current) => current.map((entry) => (
-                        entry.id === item.id ? { ...entry, deleted: true } : entry
-                      )));
-                    }}
-                    type="button"
-                  >
-                    刪除
-                  </button>
+                  <div className="management-row-actions">
+                    <button className="management-secondary" onClick={() => editItem(item)} type="button">修改</button>
+                    <button
+                      className="management-danger"
+                      onClick={() => {
+                        if (!window.confirm(`確定刪除「${item.name}」嗎？刪除後顧客端將不再顯示。`)) return;
+                        setItems((current) => current.map((entry) => (
+                          entry.id === item.id ? { ...entry, deleted: true } : entry
+                        )));
+                      }}
+                      type="button"
+                    >
+                      刪除
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -424,8 +475,13 @@ function TableManagement({ tables, setTables }) {
 function Reports({ menuItems, orders }) {
   const ranked = useMemo(() => {
     const quantities = new Map(menuItems.map((item) => [item.id, 0]));
-    orders.forEach((order) => order.items.forEach((item) => quantities.set(item.id, (quantities.get(item.id) || 0) + item.quantity)));
-    return menuItems.map((item) => ({ ...item, quantity: quantities.get(item.id) || 0 }))
+    const revenue = new Map(menuItems.map((item) => [item.id, 0]));
+    orders.forEach((order) => order.items.forEach((item) => {
+      const menuItem = menuItems.find((entry) => entry.id === item.id);
+      quantities.set(item.id, (quantities.get(item.id) || 0) + item.quantity);
+      revenue.set(item.id, (revenue.get(item.id) || 0) + (item.unitPrice ?? menuItem?.price ?? 0) * item.quantity);
+    }));
+    return menuItems.map((item) => ({ ...item, quantity: quantities.get(item.id) || 0, revenue: revenue.get(item.id) || 0 }))
       .sort((a, b) => b.quantity - a.quantity);
   }, [menuItems, orders]);
   const revenue = orders.reduce((sum, order) => sum + orderTotal(order, menuItems), 0);
@@ -448,7 +504,7 @@ function Reports({ menuItems, orders }) {
                 <td><strong className="report-rank">{index + 1}</strong></td>
                 <td>{item.name}</td>
                 <td>{item.quantity} 份</td>
-                <td>{money(item.quantity * item.price)}</td>
+                <td>{money(item.revenue)}</td>
               </tr>
             ))}
           </tbody>

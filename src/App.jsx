@@ -63,8 +63,8 @@ const seedOrders = [
     createdAt: "2026-06-02T11:36:00+08:00",
     status: "pending",
     items: [
-      { id: "shrimp-dumpling", quantity: 2 },
-      { id: "mango-pomelo", quantity: 1 },
+      { id: "shrimp-dumpling", quantity: 2, unitPrice: 42 },
+      { id: "mango-pomelo", quantity: 1, unitPrice: 38 },
     ],
   },
   {
@@ -74,8 +74,8 @@ const seedOrders = [
     createdAt: "2026-06-02T11:41:00+08:00",
     status: "pending",
     items: [
-      { id: "stir-fried-beef", quantity: 1 },
-      { id: "char-siu", quantity: 2 },
+      { id: "stir-fried-beef", quantity: 1, unitPrice: 88 },
+      { id: "char-siu", quantity: 2, unitPrice: 68 },
     ],
   },
   {
@@ -85,8 +85,8 @@ const seedOrders = [
     createdAt: "2026-06-02T11:48:00+08:00",
     status: "printed",
     items: [
-      { id: "wonton-noodle", quantity: 2 },
-      { id: "shrimp-dumpling", quantity: 1 },
+      { id: "wonton-noodle", quantity: 2, unitPrice: 56 },
+      { id: "shrimp-dumpling", quantity: 1, unitPrice: 42 },
     ],
   },
   {
@@ -96,9 +96,9 @@ const seedOrders = [
     createdAt: "2026-06-02T12:02:00+08:00",
     status: "settled",
     items: [
-      { id: "steamed-fish", quantity: 1 },
-      { id: "char-siu", quantity: 1 },
-      { id: "mango-pomelo", quantity: 2 },
+      { id: "steamed-fish", quantity: 1, unitPrice: 138 },
+      { id: "char-siu", quantity: 1, unitPrice: 68 },
+      { id: "mango-pomelo", quantity: 2, unitPrice: 38 },
     ],
   },
 ];
@@ -111,7 +111,17 @@ function loadOrders() {
   }
 
   try {
-    return JSON.parse(existing);
+    return JSON.parse(existing).map((order) => ({
+      ...order,
+      items: order.items.map((item) => {
+        const menuItem = getMenuItem(item.id);
+        return {
+          ...item,
+          name: item.name || menuItem?.name,
+          unitPrice: item.unitPrice ?? menuItem?.price,
+        };
+      }),
+    }));
   } catch {
     return seedOrders;
   }
@@ -143,7 +153,7 @@ function getMenuItem(id, items = seedMenuItems) {
 
 function getOrderTotal(order, items = seedMenuItems) {
   return order.items.reduce(
-    (total, item) => total + (getMenuItem(item.id, items)?.price || 0) * item.quantity,
+    (total, item) => total + (item.unitPrice ?? getMenuItem(item.id, items)?.price ?? 0) * item.quantity,
     0,
   );
 }
@@ -367,7 +377,7 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
   function submitOrder() {
     if (!cartItems.length) return;
     const order = onPlaceOrder(
-      cartItems.map(({ id, quantity }) => ({ id, quantity })),
+      cartItems.map(({ id, name, price, quantity }) => ({ id, name, quantity, unitPrice: price })),
     );
     if (!order) {
       setStockNotice("部分菜品已售罄，請重新確認購物車。");
@@ -659,7 +669,7 @@ function OrderCard({ menuItems, order, onPrint, onSettle }) {
           const item = getMenuItem(line.id, menuItems);
           return (
             <div key={line.id}>
-              <span>{item?.name || "已移除菜品"}</span>
+              <span>{line.name || item?.name || "已移除菜品"}</span>
               <strong>x {line.quantity}</strong>
             </div>
           );

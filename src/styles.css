@@ -1243,6 +1243,11 @@ p {
   padding: 7px 10px;
 }
 
+.management-row-actions {
+  display: flex;
+  gap: 7px;
+}
+
 .metrics-row {
   display: grid;
   gap: 12px;
@@ -1411,6 +1416,12 @@ p {
   padding: 12px;
 }
 
+.inline-form-title {
+  color: var(--green-dark);
+  font-size: 13px;
+  width: 100%;
+}
+
 .dish-photo-field {
   align-items: center;
   display: flex;
@@ -1445,6 +1456,13 @@ p {
 
 .dish-photo-upload input {
   display: none;
+}
+
+.dish-photo-sprite {
+  background-image: url("/menu-dishes.png");
+  background-repeat: no-repeat;
+  background-size: 200% 300%;
+  border-style: solid;
 }
 
 .dish-photo-error {
