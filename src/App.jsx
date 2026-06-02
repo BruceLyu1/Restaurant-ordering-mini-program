@@ -261,13 +261,22 @@ function Icon({ name, size = 20 }) {
 }
 
 function DishImage({ item, size = "normal" }) {
+  const hasPhoto = Boolean(item.imageUrl);
+  const hasSprite = Boolean(item.image);
+
   return (
     <div
       aria-label={`${item.name}圖片`}
-      className={`dish-image ${size}`}
+      className={`dish-image ${size} ${!hasPhoto && !hasSprite ? "empty" : ""}`}
       role="img"
-      style={{ backgroundPosition: item.image }}
-    />
+      style={hasPhoto ? {
+        backgroundImage: `url(${JSON.stringify(item.imageUrl)})`,
+        backgroundPosition: "center",
+        backgroundSize: "cover",
+      } : { backgroundPosition: item.image }}
+    >
+      {!hasPhoto && !hasSprite && <span>{item.name.slice(0, 1)}</span>}
+    </div>
   );
 }
 

@@ -26,6 +26,35 @@ function money(value) {
   return `HK$ ${value.toLocaleString("zh-HK")}`;
 }
 
+function compressDishPhoto(file) {
+  if (!file.type.startsWith("image/")) {
+    return Promise.reject(new Error("請選擇圖片檔案。"));
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    return Promise.reject(new Error("圖片請勿超過 8MB。"));
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("圖片讀取失敗，請重新選擇。"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("圖片格式無法使用，請選擇 JPG、PNG 或 WebP。"));
+      image.onload = () => {
+        const maxSize = 720;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.78));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function useLocalState(key, initialValue) {
   const [value, setValue] = useState(() => {
     const stored = window.localStorage.getItem(key);
@@ -144,9 +173,23 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
 
 function MenuManagement({ items, setItems }) {
   const [query, setQuery] = useState("");
-  const [draft, setDraft] = useState({ name: "", price: "" });
+  const [draft, setDraft] = useState({ imageUrl: "", name: "", price: "" });
+  const [photoError, setPhotoError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const visible = items.filter((item) => item.name.includes(query.trim()));
+
+  async function selectPhoto(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setPhotoError("");
+    try {
+      const imageUrl = await compressDishPhoto(file);
+      setDraft((current) => ({ ...current, imageUrl }));
+    } catch (error) {
+      setPhotoError(error.message);
+    }
+  }
 
   function addItem(event) {
     event.preventDefault();
@@ -158,11 +201,13 @@ function MenuManagement({ items, setItems }) {
         name: draft.name.trim(),
         category: "新增菜品",
         description: "餐廳後台新增菜品",
+        imageUrl: draft.imageUrl,
         price: Number(draft.price),
         soldOut: false,
       },
     ]);
-    setDraft({ name: "", price: "" });
+    setDraft({ imageUrl: "", name: "", price: "" });
+    setPhotoError("");
     setShowForm(false);
   }
 
@@ -175,6 +220,17 @@ function MenuManagement({ items, setItems }) {
       />
       {showForm && (
         <form className="inline-form" onSubmit={addItem}>
+          <div className="dish-photo-field">
+            {draft.imageUrl ? (
+              <img alt="菜品照片預覽" className="dish-photo-preview" src={draft.imageUrl} />
+            ) : (
+              <span className="dish-photo-empty">照片</span>
+            )}
+            <label className="dish-photo-upload">
+              上傳照片
+              <input accept="image/*" aria-label="上傳菜品照片" onChange={selectPhoto} type="file" />
+            </label>
+          </div>
           <input
             aria-label="菜品名稱"
             onChange={(event) => setDraft({ ...draft, name: event.target.value })}
@@ -191,6 +247,7 @@ function MenuManagement({ items, setItems }) {
           />
           <button className="management-primary" type="submit">儲存菜品</button>
           <button className="management-secondary" onClick={() => setShowForm(false)} type="button">取消</button>
+          {photoError && <span className="dish-photo-error">{photoError}</span>}
         </form>
       )}
       <div className="management-toolbar">
@@ -218,7 +275,11 @@ function MenuManagement({ items, setItems }) {
               <tr key={item.id}>
                 <td>
                   <div className="dish-admin-cell">
-                    <span className="dish-placeholder">{item.name.slice(0, 1)}</span>
+                    {item.imageUrl ? (
+                      <img alt={`${item.name}照片`} className="dish-admin-photo" src={item.imageUrl} />
+                    ) : (
+                      <span className="dish-placeholder">{item.name.slice(0, 1)}</span>
+                    )}
                     <strong>{item.name}</strong>
                   </div>
                 </td>
