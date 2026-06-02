@@ -174,10 +174,12 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
 
 function MenuManagement({ items, setItems }) {
   const [query, setQuery] = useState("");
-  const [draft, setDraft] = useState({ imageUrl: "", name: "", price: "" });
+  const [draft, setDraft] = useState({ category: "飯類", customCategory: "", imageUrl: "", name: "", price: "" });
+  const [categoryError, setCategoryError] = useState("");
   const [photoError, setPhotoError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const activeItems = items.filter((item) => !item.deleted);
+  const categories = [...new Set(items.map((item) => item.category).filter(Boolean))];
   const visible = activeItems.filter((item) => item.name.includes(query.trim()));
 
   async function selectPhoto(event) {
@@ -195,13 +197,18 @@ function MenuManagement({ items, setItems }) {
 
   function addItem(event) {
     event.preventDefault();
+    const category = draft.category === "__custom" ? draft.customCategory.trim() : draft.category;
+    if (!category || category === "全部") {
+      setCategoryError("請選擇分類，或輸入新的分類名稱。");
+      return;
+    }
     if (!draft.name.trim() || !Number(draft.price)) return;
     setItems((current) => [
       ...current,
       {
         id: `custom-${Date.now()}`,
         name: draft.name.trim(),
-        category: "新增菜品",
+        category,
         description: "餐廳後台新增菜品",
         imageUrl: draft.imageUrl,
         price: Number(draft.price),
@@ -209,7 +216,8 @@ function MenuManagement({ items, setItems }) {
         soldOut: false,
       },
     ]);
-    setDraft({ imageUrl: "", name: "", price: "" });
+    setDraft({ category: "飯類", customCategory: "", imageUrl: "", name: "", price: "" });
+    setCategoryError("");
     setPhotoError("");
     setShowForm(false);
   }
@@ -248,8 +256,31 @@ function MenuManagement({ items, setItems }) {
             type="number"
             value={draft.price}
           />
+          <select
+            aria-label="菜品分類"
+            onChange={(event) => {
+              setDraft({ ...draft, category: event.target.value });
+              setCategoryError("");
+            }}
+            value={draft.category}
+          >
+            {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+            <option value="__custom">新增分類...</option>
+          </select>
+          {draft.category === "__custom" && (
+            <input
+              aria-label="新增分類名稱"
+              onChange={(event) => {
+                setDraft({ ...draft, customCategory: event.target.value });
+                setCategoryError("");
+              }}
+              placeholder="輸入新分類名稱"
+              value={draft.customCategory}
+            />
+          )}
           <button className="management-primary" type="submit">儲存菜品</button>
           <button className="management-secondary" onClick={() => setShowForm(false)} type="button">取消</button>
+          {categoryError && <span className="dish-photo-error">{categoryError}</span>}
           {photoError && <span className="dish-photo-error">{photoError}</span>}
         </form>
       )}

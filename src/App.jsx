@@ -55,8 +55,6 @@ const seedMenuItems = [
   },
 ];
 
-const categories = ["全部", "飯類", "點心", "麵類", "小菜", "甜品"];
-
 const seedOrders = [
   {
     id: "HO-1001",
@@ -307,6 +305,10 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
   const [isCartOpen, setCartOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const [stockNotice, setStockNotice] = useState("");
+  const categories = useMemo(
+    () => ["全部", ...new Set(menuItems.filter((item) => !item.deleted).map((item) => item.category).filter(Boolean))],
+    [menuItems],
+  );
 
   const visibleMenu = useMemo(
     () =>
@@ -333,6 +335,10 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
     (sum, item) => sum + item.quantity * item.price,
     0,
   );
+
+  useEffect(() => {
+    if (!categories.includes(activeCategory)) setActiveCategory("全部");
+  }, [activeCategory, categories]);
 
   useEffect(() => {
     const unavailableIds = new Set(menuItems.filter((item) => item.soldOut || item.deleted).map((item) => item.id));
@@ -399,7 +405,10 @@ function GuestApp({ menuItems, onPlaceOrder, orders, setView }) {
           <button
             className={category === activeCategory ? "active" : ""}
             key={category}
-            onClick={() => setActiveCategory(category)}
+            onClick={(event) => {
+              setActiveCategory(category);
+              event.currentTarget.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+            }}
             type="button"
           >
             {category}
