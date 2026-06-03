@@ -791,7 +791,7 @@ const navItems = [
   ["settings", "settings", "設定"],
 ];
 
-function Sidebar({ activeSection, onNavigate }) {
+function Sidebar({ activeSection, onNavigate, orderBadgeCount }) {
   return (
     <aside className="sidebar">
       <div className="admin-brand">
@@ -805,7 +805,7 @@ function Sidebar({ activeSection, onNavigate }) {
           <button className={section === activeSection ? "active" : ""} key={label} onClick={() => onNavigate(section)} type="button">
             <Icon name={icon} size={18} />
             <span>{label}</span>
-            {section === "orders" && <small>2</small>}
+            {section === "orders" && orderBadgeCount > 0 && <small>{orderBadgeCount}</small>}
           </button>
         ))}
       </nav>
@@ -819,7 +819,7 @@ function Sidebar({ activeSection, onNavigate }) {
   );
 }
 
-function MobileAdminNav({ activeSection, onClose, onNavigate }) {
+function MobileAdminNav({ activeSection, onClose, onNavigate, orderBadgeCount }) {
   return (
     <div className="mobile-nav-backdrop" onClick={onClose}>
       <aside className="mobile-admin-nav" onClick={(event) => event.stopPropagation()}>
@@ -847,7 +847,7 @@ function MobileAdminNav({ activeSection, onClose, onNavigate }) {
             >
               <Icon name={icon} size={18} />
               <span>{label}</span>
-              {section === "orders" && <small>2</small>}
+              {section === "orders" && orderBadgeCount > 0 && <small>{orderBadgeCount}</small>}
             </button>
           ))}
         </nav>
@@ -972,6 +972,7 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, menuItems, now, onMenuItemsC
   const pendingOrders = orders
     .filter((order) => order.status !== "settled")
     .sort((a, b) => a.sequence - b.sequence);
+  const newOrderCount = orders.filter((order) => order.status === "pending").length;
   const completedOrders = orders
     .filter((order) => order.status === "settled")
     .sort((a, b) => b.sequence - a.sequence);
@@ -982,9 +983,9 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, menuItems, now, onMenuItemsC
 
   return (
     <main className="admin-shell">
-      <Sidebar activeSection={activeSection} onNavigate={setActiveSection} />
+      <Sidebar activeSection={activeSection} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} />
       {mobileMenuOpen && (
-        <MobileAdminNav activeSection={activeSection} onClose={() => setMobileMenuOpen(false)} onNavigate={setActiveSection} />
+        <MobileAdminNav activeSection={activeSection} onClose={() => setMobileMenuOpen(false)} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} />
       )}
       <section className="admin-workspace">
         <header className="admin-topbar">
