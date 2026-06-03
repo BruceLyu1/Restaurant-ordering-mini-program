@@ -7,6 +7,7 @@ import {
   loadRestaurantSettings,
   SETTINGS_CHANGE_EVENT,
 } from "./restaurantSettings";
+import { loadPrinterSettings } from "./printerSettings";
 
 const STORAGE_KEY = "harbour-ordering-demo-orders";
 const MENU_STORAGE_KEY = "harbour-admin-menu";
@@ -788,7 +789,7 @@ function OrderCard({ menuItems, order, onPrint, onSettle }) {
           {order.status !== "settled" && (
             <button className="outline-button" onClick={() => onPrint(order.id)} type="button">
               <Icon name="printer" size={15} />
-              列印
+              {order.status === "printed" ? "補印" : "列印"}
             </button>
           )}
           {order.status !== "settled" && (
@@ -1008,12 +1009,13 @@ function App() {
 
     const latestOrders = loadOrders();
     const maxSequence = Math.max(...latestOrders.map((order) => order.sequence), 1000);
+    const printerSettings = loadPrinterSettings();
     const order = {
       id: `HO-${maxSequence + 1}`,
       sequence: maxSequence + 1,
       table: "12",
       createdAt: new Date().toISOString(),
-      status: "pending",
+      status: printerSettings.autoPrint ? "printed" : "pending",
       items,
     };
     saveOrders([...latestOrders, order]);

@@ -4,6 +4,7 @@ import {
   loadRestaurantSettings,
   saveRestaurantSettings,
 } from "./restaurantSettings";
+import { DEFAULT_PRINTER_SETTINGS, PRINTER_STORAGE_KEY } from "./printerSettings";
 
 const seededTables = [
   ["01", "available"],
@@ -605,7 +606,7 @@ function StaffManagement() {
 }
 
 function PrinterSettings() {
-  const [settings, setSettings] = useLocalState("harbour-admin-printer", { autoPrint: true, sound: true, printer: "廚房熱敏打印機", copies: "1" });
+  const [settings, setSettings] = useLocalState(PRINTER_STORAGE_KEY, DEFAULT_PRINTER_SETTINGS);
   const [message, setMessage] = useState("");
 
   function save(message) {
