@@ -1539,6 +1539,7 @@ p {
 }
 
 .management-toolbar input,
+.management-toolbar select,
 .inline-form input,
 .inline-form select,
 .settings-panel input,

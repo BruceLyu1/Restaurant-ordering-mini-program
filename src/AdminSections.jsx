@@ -89,6 +89,38 @@ function orderTotal(order, items) {
   );
 }
 
+function getStartOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function getStartOfWeek(date) {
+  const start = getStartOfDay(date);
+  const day = start.getDay() || 7;
+  start.setDate(start.getDate() - day + 1);
+  return start;
+}
+
+function getPeriodRevenue(orders, items) {
+  const now = new Date();
+  const starts = {
+    day: getStartOfDay(now),
+    week: getStartOfWeek(now),
+    month: new Date(now.getFullYear(), now.getMonth(), 1),
+    year: new Date(now.getFullYear(), 0, 1),
+  };
+  const totals = { day: 0, week: 0, month: 0, year: 0 };
+
+  orders.forEach((order) => {
+    const createdAt = new Date(order.createdAt);
+    const total = orderTotal(order, items);
+    Object.entries(starts).forEach(([period, start]) => {
+      if (createdAt >= start && createdAt <= now) totals[period] += total;
+    });
+  });
+
+  return totals;
+}
+
 function SectionHeader({ title, description, action }) {
   return (
     <header className="section-header">
@@ -180,6 +212,7 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
 
 function MenuManagement({ items, setItems }) {
   const [query, setQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("全部分類");
   const allMealPeriodIds = DEFAULT_MEAL_PERIODS.map((period) => period.id);
   const [draft, setDraft] = useState({ category: "飯類", customCategory: "", imageUrl: "", mealPeriods: allMealPeriodIds, name: "", price: "" });
   const [categoryError, setCategoryError] = useState("");
@@ -190,7 +223,10 @@ function MenuManagement({ items, setItems }) {
   const activeItems = items.filter((item) => !item.deleted);
   const categories = [...new Set(items.map((item) => item.category).filter(Boolean))];
   const editingItem = items.find((item) => item.id === editingId);
-  const visible = activeItems.filter((item) => item.name.includes(query.trim()));
+  const visible = activeItems.filter((item) => (
+    item.name.includes(query.trim()) &&
+    (categoryFilter === "全部分類" || item.category === categoryFilter)
+  ));
 
   function resetForm() {
     setDraft({ category: "飯類", customCategory: "", imageUrl: "", mealPeriods: allMealPeriodIds, name: "", price: "" });
@@ -376,7 +412,18 @@ function MenuManagement({ items, setItems }) {
           placeholder="搜尋菜品名稱"
           value={query}
         />
-        <span>共 {activeItems.length} 款菜品</span>
+        <select
+          aria-label="按菜品分類篩選"
+          onChange={(event) => setCategoryFilter(event.target.value)}
+          value={categoryFilter}
+        >
+          <option value="全部分類">全部分類</option>
+          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+        </select>
+        <span>
+          共 {visible.length} 款菜品
+          {categoryFilter !== "全部分類" ? ` · ${categoryFilter}` : ""}
+        </span>
       </div>
       <div className="management-panel table-panel">
         <table className="management-table">
@@ -526,14 +573,17 @@ function Reports({ menuItems, orders }) {
     return menuItems.map((item) => ({ ...item, quantity: quantities.get(item.id) || 0, revenue: revenue.get(item.id) || 0 }))
       .sort((a, b) => b.quantity - a.quantity);
   }, [menuItems, orders]);
-  const revenue = orders.reduce((sum, order) => sum + orderTotal(order, menuItems), 0);
+  const periodRevenue = getPeriodRevenue(orders, menuItems);
   const portions = ranked.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <section className="management-page">
       <SectionHeader description="按銷量排序，快速了解最受歡迎的菜品。" title="報表分析" />
       <div className="metrics-row">
-        <Metric label="今日營業額" note="堂食櫃台結帳" value={money(revenue)} />
+        <Metric label="今日營業額" note="按今天訂單統計" value={money(periodRevenue.day)} />
+        <Metric label="本週營業額" note="由星期一開始統計" value={money(periodRevenue.week)} />
+        <Metric label="本月營業額" note="按本月所有訂單統計" value={money(periodRevenue.month)} />
+        <Metric label="本年營業額" note="按本年所有訂單統計" value={money(periodRevenue.year)} />
         <Metric label="訂單總數" note="包含已結帳訂單" value={`${orders.length} 張`} />
         <Metric label="售出餐點" note="按餐點數量統計" value={`${portions} 份`} />
       </div>

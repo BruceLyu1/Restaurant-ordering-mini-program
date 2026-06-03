@@ -866,7 +866,7 @@ function OrderCard({ menuItems, order, onPrint, onSettle }) {
   );
 }
 
-function PopularDishes({ menuItems, orders }) {
+function PopularDishes({ menuItems, onOpenReports, orders }) {
   const ranked = useMemo(() => {
     const totals = Object.fromEntries(menuItems.map((item) => [item.id, 0]));
     orders
@@ -912,7 +912,7 @@ function PopularDishes({ menuItems, orders }) {
         )}
       </div>
       {ranked.length > 0 && (
-        <button className="ranking-button" type="button">
+        <button className="ranking-button" onClick={onOpenReports} type="button">
         查看完整報表
         </button>
       )}
@@ -1016,7 +1016,7 @@ function AdminApp({ activeMealPeriod, menuItems, now, onMenuItemsChange, orders,
               )}
             </div>
           </section>
-          <PopularDishes menuItems={menuItems} orders={orders} />
+          <PopularDishes menuItems={menuItems} onOpenReports={() => setActiveSection("reports")} orders={orders} />
         </div>}
       </section>
     </main>
