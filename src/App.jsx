@@ -170,6 +170,15 @@ function getOrderCount(order) {
   return order.items.reduce((total, item) => total + item.quantity, 0);
 }
 
+function isSameLocalDate(dateString, date = new Date()) {
+  const value = new Date(dateString);
+  return (
+    value.getFullYear() === date.getFullYear() &&
+    value.getMonth() === date.getMonth() &&
+    value.getDate() === date.getDate()
+  );
+}
+
 function formatTime(dateString) {
   return new Intl.DateTimeFormat("zh-HK", {
     hour: "2-digit",
@@ -390,7 +399,10 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
   const [confirmation, setConfirmation] = useState(null);
   const [stockNotice, setStockNotice] = useState("");
   const tableOrders = useMemo(
-    () => orders.filter((order) => order.table === "12").sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    () =>
+      orders
+        .filter((order) => order.table === "12" && order.status !== "settled")
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     [orders],
   );
   const periodMenuItems = useMemo(
@@ -807,13 +819,16 @@ function OrderCard({ menuItems, order, onPrint, onSettle }) {
 function PopularDishes({ menuItems, orders }) {
   const ranked = useMemo(() => {
     const totals = Object.fromEntries(menuItems.map((item) => [item.id, 0]));
-    orders.forEach((order) => {
-      order.items.forEach((item) => {
-        totals[item.id] = (totals[item.id] || 0) + item.quantity;
+    orders
+      .filter((order) => isSameLocalDate(order.createdAt))
+      .forEach((order) => {
+        order.items.forEach((item) => {
+          totals[item.id] = (totals[item.id] || 0) + item.quantity;
+        });
       });
-    });
     return menuItems
-      .map((item) => ({ ...item, quantity: totals[item.id] }))
+      .map((item) => ({ ...item, quantity: totals[item.id] || 0 }))
+      .filter((item) => item.quantity > 0)
       .sort((a, b) => b.quantity - a.quantity);
   }, [menuItems, orders]);
 
@@ -827,7 +842,8 @@ function PopularDishes({ menuItems, orders }) {
         <Icon name="chart" size={21} />
       </header>
       <div className="ranking-list">
-        {ranked.map((item, index) => (
+        {ranked.length > 0 ? (
+          ranked.map((item, index) => (
           <article className="ranking-item" key={item.id}>
             <strong className={index < 3 ? "top-three" : ""}>{index + 1}</strong>
             <DishImage item={item} size="tiny" />
@@ -836,11 +852,20 @@ function PopularDishes({ menuItems, orders }) {
               <span>銷量 {item.quantity} 份</span>
             </div>
           </article>
-        ))}
+          ))
+        ) : (
+          <div className="ranking-empty">
+            <Icon name="orders" size={26} />
+            <strong>暫時沒有熱門菜式</strong>
+            <span>今天有新訂單後，這裡會即時排序。</span>
+          </div>
+        )}
       </div>
-      <button className="ranking-button" type="button">
+      {ranked.length > 0 && (
+        <button className="ranking-button" type="button">
         查看完整報表
-      </button>
+        </button>
+      )}
     </aside>
   );
 }

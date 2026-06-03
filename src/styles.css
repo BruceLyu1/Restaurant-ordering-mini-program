@@ -1275,6 +1275,29 @@ p {
   margin-top: 3px;
 }
 
+.ranking-empty {
+  align-items: center;
+  border: 1px dashed #c8d1ca;
+  border-radius: 10px;
+  color: var(--green);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 26px 12px;
+  text-align: center;
+}
+
+.ranking-empty strong {
+  color: var(--green-dark);
+  font-size: 13px;
+}
+
+.ranking-empty span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .ranking-button {
   background: transparent;
   border: 1px solid var(--green);
