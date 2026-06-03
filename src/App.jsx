@@ -316,12 +316,82 @@ function ViewToggle({ view, setView }) {
   );
 }
 
+function GuestOrderHistory({ menuItems, onClose, orders }) {
+  const tableTotal = orders.reduce((sum, order) => sum + getOrderTotal(order, menuItems), 0);
+
+  return (
+    <div className="modal-backdrop">
+      <section className="cart-sheet order-history-sheet" aria-label="本桌訂單明細">
+        <div className="sheet-handle" />
+        <header>
+          <div>
+            <h2>本桌訂單</h2>
+            <p>12號桌 · 已提交 {orders.length} 張訂單</p>
+          </div>
+          <button className="text-button" onClick={onClose} type="button">
+            關閉
+          </button>
+        </header>
+        {orders.length ? (
+          <>
+            <div className="guest-order-list">
+              {orders.map((order) => (
+                <article className="guest-order-card" key={order.id}>
+                  <header>
+                    <div>
+                      <span className="order-sequence">{order.id}</span>
+                      <h3>{formatTime(order.createdAt)}</h3>
+                    </div>
+                    <StatusBadge status={order.status} />
+                  </header>
+                  <div className="guest-order-lines">
+                    {order.items.map((line, index) => {
+                      const item = getMenuItem(line.id, menuItems);
+                      const unitPrice = line.unitPrice ?? item?.price ?? 0;
+                      return (
+                        <div key={`${line.id}-${index}`}>
+                          <span>{line.name || item?.name || "已下架菜品"}</span>
+                          <strong>x {line.quantity}</strong>
+                          <em>{money(unitPrice * line.quantity)}</em>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <footer>
+                    <span>小計</span>
+                    <strong>{money(getOrderTotal(order, menuItems))}</strong>
+                  </footer>
+                </article>
+              ))}
+            </div>
+            <div className="order-history-total">
+              <span>本桌合計</span>
+              <strong>{money(tableTotal)}</strong>
+            </div>
+          </>
+        ) : (
+          <div className="empty-order-history">
+            <Icon name="orders" size={30} />
+            <h3>暫時沒有訂單</h3>
+            <p>確認下單後，這裡會顯示訂單號、菜品和金額。</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }) {
   const [activeCategory, setActiveCategory] = useState("全部");
   const [cart, setCart] = useState({});
   const [isCartOpen, setCartOpen] = useState(false);
+  const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const [stockNotice, setStockNotice] = useState("");
+  const tableOrders = useMemo(
+    () => orders.filter((order) => order.table === "12").sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    [orders],
+  );
   const periodMenuItems = useMemo(
     () => menuItems.filter((item) => !item.deleted && isItemAvailableForMealPeriod(item, activeMealPeriod)),
     [activeMealPeriod, menuItems],
@@ -493,13 +563,13 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
         })}
       </section>
 
-      <section className="table-orders">
+      <button className="table-orders" onClick={() => setOrderHistoryOpen(true)} type="button">
         <div>
           <h2>本桌已落單</h2>
-          <p>{orders.filter((order) => order.table === "12").length || "暫無"} 張訂單</p>
+          <p>{tableOrders.length ? `${tableOrders.length} 張訂單 · 點擊查看明細` : "暫無訂單 · 點擊查看"}</p>
         </div>
         <Icon name="orders" size={22} />
-      </section>
+      </button>
 
       {itemCount > 0 && (
         <button className="cart-bar" onClick={() => setCartOpen(true)} type="button">
@@ -578,8 +648,22 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
             <button className="primary-button" onClick={() => setConfirmation(null)} type="button">
               繼續加菜
             </button>
+            <button
+              className="secondary-wide-button"
+              onClick={() => {
+                setConfirmation(null);
+                setOrderHistoryOpen(true);
+              }}
+              type="button"
+            >
+              查看本桌訂單
+            </button>
           </section>
         </div>
+      )}
+
+      {isOrderHistoryOpen && (
+        <GuestOrderHistory menuItems={menuItems} onClose={() => setOrderHistoryOpen(false)} orders={tableOrders} />
       )}
     </main>
   );
