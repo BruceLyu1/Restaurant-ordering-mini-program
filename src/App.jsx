@@ -12,16 +12,18 @@ import { loadPrinterSettings } from "./printerSettings";
 const STORAGE_KEY = "harbour-ordering-demo-orders";
 const MENU_STORAGE_KEY = "harbour-admin-menu";
 
-const DISH_IMAGE_POSITIONS = ["0% 0%", "100% 0%", "0% 50%", "100% 50%", "0% 100%", "100% 100%"];
+function dishPhotoPath(id) {
+  return `${import.meta.env.BASE_URL}dish-photos/${id}.jpg`;
+}
 
-function seedDish(id, name, description, category, price, imageIndex) {
+function seedDish(id, name, description, category, price) {
   return {
     id,
     name,
     description,
     category,
     price,
-    image: DISH_IMAGE_POSITIONS[imageIndex % DISH_IMAGE_POSITIONS.length],
+    imageUrl: dishPhotoPath(id),
   };
 }
 
@@ -182,16 +184,30 @@ function loadMenuItems() {
     const savedItems = JSON.parse(existing);
     if (!Array.isArray(savedItems)) return getDefaultMenuItems();
 
+    const defaultItemsById = new Map(seedMenuItems.map((item) => [item.id, item]));
     const savedIds = new Set(savedItems.map((item) => item.id));
     const newDefaultItems = seedMenuItems
       .filter((item) => !savedIds.has(item.id))
       .map((item) => ({ ...item, soldOut: false }));
     const mergedItems = [
-      ...savedItems.map((item) => ({ ...item, soldOut: Boolean(item.soldOut) })),
+      ...savedItems.map((item) => {
+        const defaultItem = defaultItemsById.get(item.id);
+        const shouldUseDefaultPhoto = defaultItem && (
+          !item.imageUrl ||
+          item.imageUrl.includes("loremflickr.com") ||
+          item.imageUrl.startsWith("data:image/svg+xml")
+        );
+        return {
+          ...(defaultItem || {}),
+          ...item,
+          imageUrl: shouldUseDefaultPhoto ? defaultItem.imageUrl : item.imageUrl,
+          soldOut: Boolean(item.soldOut),
+        };
+      }),
       ...newDefaultItems,
     ];
 
-    if (newDefaultItems.length > 0) {
+    if (newDefaultItems.length > 0 || JSON.stringify(savedItems) !== JSON.stringify(mergedItems)) {
       localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(mergedItems));
     }
 
@@ -463,13 +479,29 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
     () => ["全部", ...new Set(periodMenuItems.map((item) => item.category).filter(Boolean))],
     [periodMenuItems],
   );
+  const cumulativeDishSales = useMemo(() => {
+    const totals = {};
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        totals[item.id] = (totals[item.id] || 0) + item.quantity;
+      });
+    });
+    return totals;
+  }, [orders]);
 
   const visibleMenu = useMemo(
-    () =>
-      activeCategory === "全部"
-        ? periodMenuItems
-        : periodMenuItems.filter((item) => item.category === activeCategory),
-    [activeCategory, periodMenuItems],
+    () => {
+      if (activeCategory !== "全部") {
+        return periodMenuItems.filter((item) => item.category === activeCategory);
+      }
+
+      return [...periodMenuItems].sort((a, b) => {
+        const salesDiff = (cumulativeDishSales[b.id] || 0) - (cumulativeDishSales[a.id] || 0);
+        if (salesDiff !== 0) return salesDiff;
+        return periodMenuItems.findIndex((item) => item.id === a.id) - periodMenuItems.findIndex((item) => item.id === b.id);
+      });
+    },
+    [activeCategory, cumulativeDishSales, periodMenuItems],
   );
 
   const cartItems = useMemo(
@@ -492,7 +524,6 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
   const hasTableOrders = tableOrders.length > 0;
   const guestShellClassName = [
     "guest-shell",
-    hasTableOrders ? "has-floating-orders" : "",
     itemCount > 0 ? "has-cart-bar" : "",
   ].filter(Boolean).join(" ");
 
@@ -547,18 +578,21 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
           <span className="restaurant-name">海港小館</span>
           <span className="table-label">12號桌</span>
         </div>
-        <button className="language-button" type="button">
-          中 <span>繁</span>
-        </button>
+        <div className="guest-header-actions">
+          <button className="language-button" type="button">
+            中 <span>繁</span>
+          </button>
+          <button className="admin-shortcut" onClick={() => setView("admin")} type="button">
+            後台
+          </button>
+        </div>
       </header>
 
-      <section className="menu-heading">
-        <div>
-          <h1>菜單</h1>
-          <p>落單後，廚房會按次序準備餐點。</p>
-        </div>
-        <button className="admin-shortcut" onClick={() => setView("admin")} type="button">
-          後台演示
+      <section className="guest-menu-tabs" aria-label="顧客點餐導覽">
+        <button className="active" type="button">菜單</button>
+        <button onClick={() => setOrderHistoryOpen(true)} type="button">
+          訂單詳情
+          {hasTableOrders && <small>{tableOrders.length}</small>}
         </button>
       </section>
 
@@ -573,7 +607,7 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
             }}
             type="button"
           >
-            {category}
+            {category === "全部" ? "推薦" : category}
           </button>
         ))}
       </nav>
@@ -632,29 +666,19 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
         })}
       </section>
 
-      <button
-        className={`table-orders ${hasTableOrders ? "table-orders-floating" : "table-orders-inline"} ${itemCount > 0 ? "with-cart" : ""}`}
-        onClick={() => setOrderHistoryOpen(true)}
-        type="button"
-      >
-        <div>
-          <h2>本桌已落單</h2>
-          <p>{tableOrders.length ? `${tableOrders.length} 張訂單 · 點擊查看明細` : "暫無訂單 · 點擊查看"}</p>
-        </div>
-        <Icon name="orders" size={22} />
-      </button>
-
       {itemCount > 0 && (
         <button className="cart-bar" onClick={() => setCartOpen(true)} type="button">
           <span className="cart-icon">
             <Icon name="cart" size={23} />
             <small>{itemCount}</small>
           </span>
-          <span>
+          <span className="cart-bar-copy">
+            <em>{cartItems.slice(0, 3).map((item) => `${item.name} x${item.quantity}`).join("　")}</em>
             <strong>{money(total)}</strong>
-            <em>查看購物車</em>
           </span>
-          <Icon name="chevron" size={18} />
+          <span className="cart-bar-action">
+            確認下單
+          </span>
         </button>
       )}
 
