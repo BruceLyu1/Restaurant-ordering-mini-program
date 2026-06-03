@@ -12,55 +12,85 @@ import { loadPrinterSettings } from "./printerSettings";
 const STORAGE_KEY = "harbour-ordering-demo-orders";
 const MENU_STORAGE_KEY = "harbour-admin-menu";
 
+const DISH_IMAGE_POSITIONS = ["0% 0%", "100% 0%", "0% 50%", "100% 50%", "0% 100%", "100% 100%"];
+
+function seedDish(id, name, description, category, price, imageIndex) {
+  return {
+    id,
+    name,
+    description,
+    category,
+    price,
+    image: DISH_IMAGE_POSITIONS[imageIndex % DISH_IMAGE_POSITIONS.length],
+  };
+}
+
 const seedMenuItems = [
-  {
-    id: "char-siu",
-    name: "蜜汁叉燒飯",
-    description: "明爐叉燒、時蔬、香米飯",
-    category: "飯類",
-    price: 68,
-    image: "0% 0%",
-  },
-  {
-    id: "shrimp-dumpling",
-    name: "鮮蝦餃皇",
-    description: "晶瑩薄皮，鮮蝦爽彈",
-    category: "點心",
-    price: 42,
-    image: "100% 0%",
-  },
-  {
-    id: "wonton-noodle",
-    name: "鮮蝦雲吞麵",
-    description: "竹昇細麵、鮮蝦雲吞、清湯",
-    category: "麵類",
-    price: 56,
-    image: "0% 50%",
-  },
-  {
-    id: "stir-fried-beef",
-    name: "時蔬炒牛肉",
-    description: "鑊氣十足，牛肉嫩滑",
-    category: "小菜",
-    price: 88,
-    image: "100% 50%",
-  },
-  {
-    id: "steamed-fish",
-    name: "清蒸海上鮮",
-    description: "薑蔥豉油，每日新鮮供應",
-    category: "小菜",
-    price: 138,
-    image: "0% 100%",
-  },
-  {
-    id: "mango-pomelo",
-    name: "楊枝甘露",
-    description: "香芒、柚子、西米，清甜順滑",
-    category: "甜品",
-    price: 38,
-    image: "100% 100%",
-  },
+  seedDish("char-siu", "蜜汁叉燒飯", "明爐叉燒、時蔬、香米飯", "飯類", 68, 0),
+  seedDish("roast-goose-rice", "燒鵝飯", "脆皮燒鵝、油香白飯、梅子醬", "飯類", 98, 0),
+  seedDish("soy-chicken-rice", "豉油雞飯", "嫩滑豉油雞、薑蓉、菜心", "飯類", 62, 0),
+  seedDish("hainan-chicken-rice", "海南雞飯", "白切雞、雞油飯、三色醬", "飯類", 72, 0),
+  seedDish("beef-brisket-rice", "牛腩飯", "柱侯牛腩、蘿蔔、香米飯", "飯類", 78, 3),
+  seedDish("curry-beef-rice", "咖喱牛腩飯", "港式咖喱、軟腍牛腩、薯仔", "飯類", 82, 3),
+  seedDish("tomato-porkchop-rice", "鮮茄豬扒飯", "香煎豬扒、鮮茄汁、白飯", "飯類", 76, 3),
+  seedDish("yangzhou-fried-rice", "揚州炒飯", "蝦仁、叉燒、雞蛋、青豆", "飯類", 68, 0),
+  seedDish("seafood-fried-rice", "海鮮炒飯", "鮮蝦、帶子、蟹柳、蛋香飯", "飯類", 88, 4),
+  seedDish("claypot-eel-rice", "鰻魚煲仔飯", "蒲燒鰻魚、煲仔飯、甜豉油", "飯類", 108, 4),
+
+  seedDish("shrimp-dumpling", "鮮蝦餃皇", "晶瑩薄皮，鮮蝦爽彈", "點心", 42, 1),
+  seedDish("pork-siu-mai", "蟹籽燒賣", "豬肉鮮蝦、蟹籽點綴", "點心", 38, 1),
+  seedDish("bbq-pork-bun", "叉燒包", "鬆軟包皮、蜜汁叉燒餡", "點心", 32, 1),
+  seedDish("custard-bun", "流沙奶皇包", "鹹蛋黃奶皇、熱食流心", "點心", 36, 5),
+  seedDish("turnip-cake", "香煎蘿蔔糕", "臘味蘿蔔糕、外脆內軟", "點心", 34, 1),
+  seedDish("spring-roll", "脆皮春卷", "鮮蔬肉絲、香脆金黃", "點心", 30, 1),
+  seedDish("rice-roll", "鮮蝦腸粉", "滑身腸粉、鮮蝦、甜豉油", "點心", 46, 1),
+  seedDish("phoenix-claw", "豉汁鳳爪", "蒸至軟糯、豉汁入味", "點心", 36, 3),
+  seedDish("spare-ribs", "豉汁蒸排骨", "蒜香豉汁、排骨嫩滑", "點心", 42, 3),
+  seedDish("xiao-long-bao", "小籠湯包", "薄皮湯汁、鮮肉餡", "點心", 44, 1),
+
+  seedDish("wonton-noodle", "鮮蝦雲吞麵", "竹昇細麵、鮮蝦雲吞、清湯", "麵類", 56, 2),
+  seedDish("beef-brisket-noodle", "牛腩湯麵", "柱侯牛腩、清湯幼麵", "麵類", 68, 2),
+  seedDish("fishball-noodle", "魚蛋河粉", "彈牙魚蛋、滑身河粉", "麵類", 52, 2),
+  seedDish("satay-beef-noodle", "沙嗲牛肉麵", "濃香沙嗲、嫩牛肉片", "麵類", 58, 2),
+  seedDish("cart-noodle", "港式車仔麵", "多款配料、惹味湯底", "麵類", 48, 2),
+  seedDish("roast-goose-lai-fun", "燒鵝瀨粉", "燒鵝件、米香瀨粉", "麵類", 88, 2),
+  seedDish("dry-scallion-noodle", "薑蔥撈麵", "薑蔥油香、爽口竹昇麵", "麵類", 46, 2),
+  seedDish("seafood-laksa", "海鮮喇沙", "椰香湯底、鮮蝦魚片", "麵類", 78, 4),
+  seedDish("black-pepper-udon", "黑椒牛柳烏冬", "黑椒汁、牛柳、彈牙烏冬", "麵類", 82, 3),
+  seedDish("tomato-egg-noodle", "番茄蛋湯麵", "鮮茄湯底、滑蛋、幼麵", "麵類", 50, 2),
+
+  seedDish("stir-fried-beef", "時蔬炒牛肉", "鑊氣十足，牛肉嫩滑", "小菜", 88, 3),
+  seedDish("steamed-fish", "清蒸海上鮮", "薑蔥豉油，每日新鮮供應", "小菜", 138, 4),
+  seedDish("sweet-sour-pork", "菠蘿咕嚕肉", "酸甜開胃、外脆內嫩", "小菜", 86, 3),
+  seedDish("salt-pepper-squid", "椒鹽鮮魷", "椒鹽香脆、鮮魷彈牙", "小菜", 98, 4),
+  seedDish("garlic-choi-sum", "蒜蓉菜心", "清甜菜心、蒜香惹味", "小菜", 48, 3),
+  seedDish("claypot-tofu", "海鮮豆腐煲", "滑豆腐、海鮮、濃郁煲汁", "小菜", 92, 4),
+  seedDish("typhoon-crab", "避風塘炒蟹", "蒜酥香辣、蟹肉鮮甜", "小菜", 188, 4),
+  seedDish("black-bean-clams", "豉椒炒蜆", "豉椒鮮香、蜆肉飽滿", "小菜", 88, 4),
+  seedDish("swiss-wings", "瑞士雞翼", "甜豉油滷香、雞翼入味", "小菜", 58, 3),
+  seedDish("mapo-tofu", "麻婆豆腐", "微辣惹味、豆腐嫩滑", "小菜", 62, 3),
+
+  seedDish("mango-pomelo", "楊枝甘露", "香芒、柚子、西米，清甜順滑", "甜品", 38, 5),
+  seedDish("egg-tart", "酥皮蛋撻", "牛油酥皮、嫩滑蛋香", "甜品", 18, 5),
+  seedDish("coconut-pudding", "椰汁糕", "椰香濃郁、口感清爽", "甜品", 28, 5),
+  seedDish("red-bean-soup", "陳皮紅豆沙", "紅豆綿密、陳皮清香", "甜品", 32, 5),
+  seedDish("tofu-pudding", "薑汁豆腐花", "豆香細滑、薑汁微辣", "甜品", 30, 5),
+  seedDish("sesame-soup", "芝麻糊", "黑芝麻香濃、熱食暖胃", "甜品", 34, 5),
+  seedDish("grass-jelly", "仙草涼粉", "清涼爽滑、配糖水", "甜品", 26, 5),
+  seedDish("mango-pancake", "芒果班戟", "鮮芒果、忌廉、薄班戟皮", "甜品", 42, 5),
+  seedDish("pineapple-bun", "菠蘿油", "香脆菠蘿包、厚切牛油", "甜品", 24, 5),
+  seedDish("milk-tea-pudding", "奶茶布甸", "港式奶茶香、滑身布甸", "甜品", 36, 5),
+
+  seedDish("hk-milk-tea", "港式奶茶", "茶味濃厚、奶香順滑", "飲品", 22, 5),
+  seedDish("lemon-tea", "凍檸茶", "紅茶清香、新鮮檸檬", "飲品", 24, 5),
+  seedDish("yuenyeung", "鴛鴦", "咖啡奶茶混合、港式經典", "飲品", 25, 5),
+  seedDish("lemon-coke", "凍檸樂", "可樂氣泡、檸檬清新", "飲品", 24, 5),
+  seedDish("red-bean-ice", "紅豆冰", "紅豆、淡奶、碎冰", "飲品", 32, 5),
+  seedDish("soy-milk", "冰豆漿", "豆香清甜、冰涼解膩", "飲品", 18, 5),
+  seedDish("chrysanthemum-tea", "菊花茶", "清香回甘、冷熱皆宜", "飲品", 18, 5),
+  seedDish("iced-coffee", "凍咖啡", "香濃咖啡、冰涼提神", "飲品", 25, 5),
+  seedDish("lime-soda", "青檸梳打", "青檸酸香、氣泡清爽", "飲品", 28, 5),
+  seedDish("bottled-water", "樽裝水", "簡單清爽、佐餐必備", "飲品", 12, 5),
 ];
 
 const seedOrders = [
@@ -140,14 +170,34 @@ function saveOrders(orders) {
   window.dispatchEvent(new CustomEvent("harbour-orders-change"));
 }
 
+function getDefaultMenuItems() {
+  return seedMenuItems.map((item) => ({ ...item, soldOut: false }));
+}
+
 function loadMenuItems() {
   const existing = localStorage.getItem(MENU_STORAGE_KEY);
-  if (!existing) return seedMenuItems.map((item) => ({ ...item, soldOut: false }));
+  if (!existing) return getDefaultMenuItems();
 
   try {
-    return JSON.parse(existing);
+    const savedItems = JSON.parse(existing);
+    if (!Array.isArray(savedItems)) return getDefaultMenuItems();
+
+    const savedIds = new Set(savedItems.map((item) => item.id));
+    const newDefaultItems = seedMenuItems
+      .filter((item) => !savedIds.has(item.id))
+      .map((item) => ({ ...item, soldOut: false }));
+    const mergedItems = [
+      ...savedItems.map((item) => ({ ...item, soldOut: Boolean(item.soldOut) })),
+      ...newDefaultItems,
+    ];
+
+    if (newDefaultItems.length > 0) {
+      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(mergedItems));
+    }
+
+    return mergedItems;
   } catch {
-    return seedMenuItems.map((item) => ({ ...item, soldOut: false }));
+    return getDefaultMenuItems();
   }
 }
 
