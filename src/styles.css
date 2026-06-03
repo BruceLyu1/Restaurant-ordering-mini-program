@@ -1527,6 +1527,7 @@ p {
 }
 
 .management-toolbar,
+.category-manager,
 .inline-form {
   align-items: center;
   display: flex;
@@ -1538,8 +1539,35 @@ p {
   justify-content: space-between;
 }
 
+.category-manager {
+  background: #f7f8f5;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  flex-wrap: wrap;
+  padding: 12px;
+}
+
+.category-manager > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 250px;
+}
+
+.category-manager strong {
+  color: var(--green-dark);
+  font-size: 13px;
+}
+
+.category-manager span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .management-toolbar input,
 .management-toolbar select,
+.category-manager input,
+.category-manager select,
 .inline-form input,
 .inline-form select,
 .settings-panel input,

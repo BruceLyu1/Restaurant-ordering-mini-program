@@ -28,6 +28,18 @@ const seededStaff = [
   { id: 4, name: "廚房打印機", role: "系統帳戶", active: false },
 ];
 
+const CATEGORY_ALIASES = {
+  饭类: "飯類",
+  点心: "點心",
+  面类: "麵類",
+  饮品: "飲品",
+};
+
+function normalizeCategoryName(category) {
+  const trimmed = category.trim();
+  return CATEGORY_ALIASES[trimmed] || trimmed;
+}
+
 function money(value) {
   return `HK$ ${value.toLocaleString("zh-HK")}`;
 }
@@ -213,6 +225,9 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
 function MenuManagement({ items, setItems }) {
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("全部分類");
+  const [categoryDraft, setCategoryDraft] = useState("");
+  const [categoryTarget, setCategoryTarget] = useState("");
+  const [categoryNotice, setCategoryNotice] = useState("");
   const allMealPeriodIds = DEFAULT_MEAL_PERIODS.map((period) => period.id);
   const [draft, setDraft] = useState({ category: "飯類", customCategory: "", imageUrl: "", mealPeriods: allMealPeriodIds, name: "", price: "" });
   const [categoryError, setCategoryError] = useState("");
@@ -220,13 +235,43 @@ function MenuManagement({ items, setItems }) {
   const [photoError, setPhotoError] = useState("");
   const [periodError, setPeriodError] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const activeItems = items.filter((item) => !item.deleted);
-  const categories = [...new Set(items.map((item) => item.category).filter(Boolean))];
+  const activeItems = useMemo(() => items.filter((item) => !item.deleted), [items]);
+  const categories = useMemo(
+    () => [...new Set(activeItems.map((item) => normalizeCategoryName(item.category || "")).filter(Boolean))],
+    [activeItems],
+  );
   const editingItem = items.find((item) => item.id === editingId);
   const visible = activeItems.filter((item) => (
     item.name.includes(query.trim()) &&
-    (categoryFilter === "全部分類" || item.category === categoryFilter)
+    (categoryFilter === "全部分類" || normalizeCategoryName(item.category || "") === categoryFilter)
   ));
+
+  useEffect(() => {
+    let changed = false;
+    const normalizedItems = items.map((item) => {
+      const normalizedCategory = normalizeCategoryName(item.category || "");
+      if (normalizedCategory && normalizedCategory !== item.category) {
+        changed = true;
+        return { ...item, category: normalizedCategory };
+      }
+      return item;
+    });
+
+    if (changed) {
+      setItems(normalizedItems);
+      setCategoryNotice("已自動合併重複分類，例如「饮品」已歸入「飲品」。");
+    }
+  }, [items, setItems]);
+
+  useEffect(() => {
+    if (categoryFilter !== "全部分類" && !categories.includes(categoryFilter)) {
+      setCategoryFilter("全部分類");
+    }
+    if (categoryTarget && !categories.includes(categoryTarget)) {
+      setCategoryTarget("");
+      setCategoryDraft("");
+    }
+  }, [categories, categoryFilter, categoryTarget]);
 
   function resetForm() {
     setDraft({ category: "飯類", customCategory: "", imageUrl: "", mealPeriods: allMealPeriodIds, name: "", price: "" });
@@ -258,6 +303,55 @@ function MenuManagement({ items, setItems }) {
     setShowForm(true);
   }
 
+  function selectCategoryForEdit(category) {
+    setCategoryTarget(category);
+    setCategoryDraft(category);
+    setCategoryNotice("");
+  }
+
+  function renameCategory() {
+    const from = categoryTarget;
+    const to = normalizeCategoryName(categoryDraft);
+    if (!from || !to) {
+      setCategoryNotice("請先選擇分類並輸入新的分類名稱。");
+      return;
+    }
+    if (to === "全部分類" || to === "__custom") {
+      setCategoryNotice("這個分類名稱不能使用，請換一個名稱。");
+      return;
+    }
+
+    const affectedCount = activeItems.filter((item) => normalizeCategoryName(item.category || "") === from).length;
+    setItems((current) => current.map((item) => (
+      normalizeCategoryName(item.category || "") === from ? { ...item, category: to } : item
+    )));
+    setCategoryFilter(to);
+    setCategoryTarget(to);
+    setCategoryDraft(to);
+    setCategoryNotice(from === to
+      ? "分類名稱沒有變更。"
+      : `已將「${from}」${categories.includes(to) ? "合併到" : "改名為"}「${to}」，共更新 ${affectedCount} 款菜品。`);
+  }
+
+  function deleteCategory() {
+    const category = categoryTarget;
+    if (!category) {
+      setCategoryNotice("請先選擇要刪除的分類。");
+      return;
+    }
+
+    const affectedCount = activeItems.filter((item) => normalizeCategoryName(item.category || "") === category).length;
+    if (!window.confirm(`確定刪除「${category}」分類嗎？該分類 ${affectedCount} 款菜品會一併下架。`)) return;
+
+    setItems((current) => current.map((item) => (
+      normalizeCategoryName(item.category || "") === category ? { ...item, deleted: true } : item
+    )));
+    setCategoryFilter("全部分類");
+    setCategoryTarget("");
+    setCategoryDraft("");
+    setCategoryNotice(`已刪除「${category}」分類，並下架 ${affectedCount} 款菜品。`);
+  }
+
   async function selectPhoto(event) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -273,7 +367,7 @@ function MenuManagement({ items, setItems }) {
 
   function saveItem(event) {
     event.preventDefault();
-    const category = draft.category === "__custom" ? draft.customCategory.trim() : draft.category;
+    const category = normalizeCategoryName(draft.category === "__custom" ? draft.customCategory : draft.category);
     if (!category || category === "全部") {
       setCategoryError("請選擇分類，或輸入新的分類名稱。");
       return;
@@ -405,6 +499,29 @@ function MenuManagement({ items, setItems }) {
           {photoError && <span className="dish-photo-error">{photoError}</span>}
         </form>
       )}
+      <div className="category-manager">
+        <div>
+          <strong>分類管理</strong>
+          <span>可修改分類名稱；若新名稱已存在，會自動合併分類。</span>
+        </div>
+        <select
+          aria-label="選擇要管理的分類"
+          onChange={(event) => selectCategoryForEdit(event.target.value)}
+          value={categoryTarget}
+        >
+          <option value="">選擇分類</option>
+          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+        </select>
+        <input
+          aria-label="分類新名稱"
+          onChange={(event) => setCategoryDraft(event.target.value)}
+          placeholder="分類新名稱"
+          value={categoryDraft}
+        />
+        <button className="management-primary" onClick={renameCategory} type="button">儲存分類</button>
+        <button className="management-danger" onClick={deleteCategory} type="button">刪除分類</button>
+        {categoryNotice && <span className="category-manager-notice">{categoryNotice}</span>}
+      </div>
       <div className="management-toolbar">
         <input
           aria-label="搜尋菜品"
