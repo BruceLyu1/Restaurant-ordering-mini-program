@@ -610,23 +610,25 @@ function MenuManagement({ items, setItems }) {
   );
 }
 
-function TableManagement({ tables, setTables }) {
+function TableManagement({ guestBaseUrl, tables, setTables }) {
   const [selected, setSelected] = useState(null);
 
-  function isQrDark(index) {
-    const row = Math.floor(index / 9);
-    const column = index % 9;
-    const tableSeed = Number(selected.number);
-    const finder = (startRow, startColumn) => (
-      row >= startRow && row < startRow + 3 &&
-      column >= startColumn && column < startColumn + 3
-    );
-
-    if (finder(0, 0) || finder(0, 6) || finder(6, 0)) {
-      return row % 3 !== 1 || column % 3 !== 1;
-    }
-    return (row * 11 + column * 7 + row * column + tableSeed * 3) % 5 < 2;
+  function getTableGuestUrl(tableNumber) {
+    const url = new URL(guestBaseUrl || window.location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("view", "guest");
+    url.searchParams.set("table", tableNumber);
+    return url.toString();
   }
+
+  function getQrCodeUrl(tableNumber) {
+    const tableUrl = getTableGuestUrl(tableNumber);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(tableUrl)}`;
+  }
+
+  const selectedTableUrl = selected ? getTableGuestUrl(selected.number) : "";
+  const selectedQrUrl = selected ? getQrCodeUrl(selected.number) : "";
 
   return (
     <section className="management-page">
@@ -665,12 +667,26 @@ function TableManagement({ tables, setTables }) {
         <div className="admin-modal-backdrop">
           <section className="qr-modal">
             <button aria-label="關閉桌碼" className="modal-close" onClick={() => setSelected(null)} type="button">×</button>
-            <div className="fake-qr">
-              {Array.from({ length: 81 }, (_, index) => <i className={isQrDark(index) ? "dark" : ""} key={index} />)}
-            </div>
+            <img
+              alt={`${selected.number}號桌二維碼`}
+              className="table-qr-image"
+              src={selectedQrUrl}
+            />
             <h2>{selected.number}號桌桌碼</h2>
-            <p>列印後放在餐桌上，顧客掃碼即可進入菜單。</p>
-            <button className="management-primary" onClick={() => window.print()} type="button">列印桌碼</button>
+            <p>列印後放在餐桌上，顧客掃碼會進入 {selected.number}號桌的點餐頁。</p>
+            <a className="qr-link" href={selectedTableUrl} rel="noreferrer" target="_blank">
+              {selectedTableUrl}
+            </a>
+            <div className="qr-modal-actions">
+              <button
+                className="management-secondary"
+                onClick={() => navigator.clipboard?.writeText(selectedTableUrl)}
+                type="button"
+              >
+                複製連結
+              </button>
+              <button className="management-primary" onClick={() => window.print()} type="button">列印桌碼</button>
+            </div>
           </section>
         </div>
       )}
@@ -863,12 +879,12 @@ function RestaurantSettings() {
   );
 }
 
-export function AdminSection({ activeSection, menuItems, onMenuItemsChange, onNavigate, orders }) {
+export function AdminSection({ activeSection, guestBaseUrl, menuItems, onMenuItemsChange, onNavigate, orders }) {
   const [tables, setTables] = useLocalState("harbour-admin-tables", seededTables);
 
   if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={onNavigate} orders={orders} tables={tables} />;
   if (activeSection === "menu") return <MenuManagement items={menuItems} setItems={onMenuItemsChange} />;
-  if (activeSection === "tables") return <TableManagement setTables={setTables} tables={tables} />;
+  if (activeSection === "tables") return <TableManagement guestBaseUrl={guestBaseUrl} setTables={setTables} tables={tables} />;
   if (activeSection === "reports") return <Reports menuItems={menuItems} orders={orders} />;
   if (activeSection === "staff") return <StaffManagement />;
   if (activeSection === "printer") return <PrinterSettings />;

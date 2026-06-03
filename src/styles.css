@@ -1894,23 +1894,15 @@ p {
   top: 8px;
 }
 
-.fake-qr {
+.table-qr-image {
   background: #fff;
-  display: grid;
-  gap: 2px;
-  grid-template-columns: repeat(9, 1fr);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  display: block;
+  height: 220px;
   margin: 4px auto 15px;
-  padding: 6px;
-  width: 146px;
-}
-
-.fake-qr i {
-  aspect-ratio: 1;
-  background: #fff;
-}
-
-.fake-qr i.dark {
-  background: var(--green-dark);
+  padding: 8px;
+  width: 220px;
 }
 
 .qr-modal h2 {
@@ -1923,6 +1915,26 @@ p {
   font-size: 12px;
   line-height: 1.6;
   margin: 7px 0 14px;
+}
+
+.qr-link {
+  background: #f5f8f5;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--green);
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+  padding: 10px;
+  text-align: left;
+}
+
+.qr-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
 
 .report-rank {

@@ -253,6 +253,19 @@ function formatTime(dateString) {
   }).format(new Date(dateString));
 }
 
+function getTableNumberFromUrl() {
+  const rawTable = new URLSearchParams(window.location.search).get("table") || "12";
+  const cleaned = rawTable.replace(/[^\dA-Za-z-]/g, "").slice(0, 8);
+  return cleaned || "12";
+}
+
+function getGuestBaseUrl() {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 function Icon({ name, size = 20 }) {
   const paths = {
     menu: <path d="M4 6h16M4 12h16M4 18h16" />,
@@ -392,7 +405,7 @@ function ViewToggle({ view, setView }) {
   );
 }
 
-function GuestOrderHistory({ menuItems, onClose, orders }) {
+function GuestOrderHistory({ menuItems, onClose, orders, tableNumber }) {
   const tableTotal = orders.reduce((sum, order) => sum + getOrderTotal(order, menuItems), 0);
 
   return (
@@ -402,7 +415,7 @@ function GuestOrderHistory({ menuItems, onClose, orders }) {
         <header>
           <div>
             <h2>本桌訂單</h2>
-            <p>12號桌 · 已提交 {orders.length} 張訂單</p>
+            <p>{tableNumber}號桌 · 已提交 {orders.length} 張訂單</p>
           </div>
           <button className="text-button" onClick={onClose} type="button">
             關閉
@@ -457,7 +470,7 @@ function GuestOrderHistory({ menuItems, onClose, orders }) {
   );
 }
 
-function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }) {
+function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView, tableNumber }) {
   const [activeCategory, setActiveCategory] = useState("全部");
   const [cart, setCart] = useState({});
   const [isCartOpen, setCartOpen] = useState(false);
@@ -467,9 +480,9 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
   const tableOrders = useMemo(
     () =>
       orders
-        .filter((order) => order.table === "12" && order.status !== "settled")
+        .filter((order) => order.table === tableNumber && order.status !== "settled")
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
-    [orders],
+    [orders, tableNumber],
   );
   const periodMenuItems = useMemo(
     () => menuItems.filter((item) => !item.deleted && isItemAvailableForMealPeriod(item, activeMealPeriod)),
@@ -561,6 +574,7 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
     if (!cartItems.length) return;
     const order = onPlaceOrder(
       cartItems.map(({ id, name, price, quantity }) => ({ id, name, quantity, unitPrice: price })),
+      tableNumber,
     );
     if (!order) {
       setStockNotice("部分菜品已售罄，請重新確認購物車。");
@@ -576,7 +590,7 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
       <header className="guest-header">
         <div>
           <span className="restaurant-name">海港小館</span>
-          <span className="table-label">12號桌</span>
+          <span className="table-label">{tableNumber}號桌</span>
         </div>
         <div className="guest-header-actions">
           <button className="language-button" type="button">
@@ -689,7 +703,7 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
             <header>
               <div>
                 <h2>購物車</h2>
-                <p>12號桌 · 請確認餐點數量</p>
+                <p>{tableNumber}號桌 · 請確認餐點數量</p>
               </div>
               <button className="text-button" onClick={() => setCartOpen(false)} type="button">
                 關閉
@@ -738,7 +752,7 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
             <p>訂單 {confirmation.id} 已送到餐廳，廚房會按次序準備。</p>
             <div className="confirmation-meta">
               <span>桌號</span>
-              <strong>12號桌</strong>
+              <strong>{tableNumber}號桌</strong>
               <span>金額</span>
               <strong>{money(getOrderTotal(confirmation, menuItems))}</strong>
             </div>
@@ -760,7 +774,7 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
       )}
 
       {isOrderHistoryOpen && (
-        <GuestOrderHistory menuItems={menuItems} onClose={() => setOrderHistoryOpen(false)} orders={tableOrders} />
+        <GuestOrderHistory menuItems={menuItems} onClose={() => setOrderHistoryOpen(false)} orders={tableOrders} tableNumber={tableNumber} />
       )}
     </main>
   );
@@ -954,7 +968,7 @@ function PopularDishes({ menuItems, onOpenReports, orders }) {
   );
 }
 
-function AdminApp({ activeMealPeriod, menuItems, now, onMenuItemsChange, orders, onPrint, onReset, onSettle, setView }) {
+function AdminApp({ activeMealPeriod, guestBaseUrl, menuItems, now, onMenuItemsChange, orders, onPrint, onReset, onSettle, setView }) {
   const pendingOrders = orders
     .filter((order) => order.status !== "settled")
     .sort((a, b) => a.sequence - b.sequence);
@@ -995,6 +1009,7 @@ function AdminApp({ activeMealPeriod, menuItems, now, onMenuItemsChange, orders,
         {activeSection !== "orders" ? (
           <AdminSection
             activeSection={activeSection}
+            guestBaseUrl={guestBaseUrl}
             menuItems={menuItems}
             onMenuItemsChange={onMenuItemsChange}
             onNavigate={setActiveSection}
@@ -1063,10 +1078,12 @@ function App() {
       ? "admin"
       : "guest",
   );
+  const [tableNumber, setTableNumber] = useState(getTableNumberFromUrl);
   const [orders, setOrders] = useState(loadOrders);
   const [menuItems, setMenuItems] = useState(loadMenuItems);
   const [restaurantSettings, setRestaurantSettings] = useState(loadRestaurantSettings);
   const [now, setNow] = useState(() => new Date());
+  const guestBaseUrl = useMemo(getGuestBaseUrl, []);
   const activeMealPeriod = getCurrentMealPeriod(restaurantSettings, now);
 
   useEffect(() => {
@@ -1084,6 +1101,14 @@ function App() {
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60 * 1000);
     return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    function syncTableNumber() {
+      setTableNumber(getTableNumberFromUrl());
+    }
+    window.addEventListener("popstate", syncTableNumber);
+    return () => window.removeEventListener("popstate", syncTableNumber);
   }, []);
 
   useEffect(() => {
@@ -1110,7 +1135,7 @@ function App() {
     return () => window.removeEventListener("storage", syncMenuItems);
   }, []);
 
-  function placeOrder(items) {
+  function placeOrder(items, table = tableNumber) {
     if (items.some((line) => {
       const item = getMenuItem(line.id, menuItems);
       return !item || item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod);
@@ -1122,7 +1147,7 @@ function App() {
     const order = {
       id: `HO-${maxSequence + 1}`,
       sequence: maxSequence + 1,
-      table: "12",
+      table,
       createdAt: new Date().toISOString(),
       status: printerSettings.autoPrint ? "printed" : "pending",
       items,
@@ -1145,10 +1170,11 @@ function App() {
     <>
       <ViewToggle setView={setView} view={view} />
       {view === "guest" ? (
-        <GuestApp activeMealPeriod={activeMealPeriod} menuItems={menuItems} onPlaceOrder={placeOrder} orders={orders} setView={setView} />
+        <GuestApp activeMealPeriod={activeMealPeriod} menuItems={menuItems} onPlaceOrder={placeOrder} orders={orders} setView={setView} tableNumber={tableNumber} />
       ) : (
         <AdminApp
           activeMealPeriod={activeMealPeriod}
+          guestBaseUrl={guestBaseUrl}
           menuItems={menuItems}
           now={now}
           onMenuItemsChange={setMenuItems}
