@@ -1537,8 +1537,8 @@ p {
 
 .table-mini-grid span {
   align-items: center;
-  background: #f1f4f1;
-  border: 1px solid var(--line);
+  background: #edf7f0;
+  border: 1px solid #c6dfd0;
   border-radius: 7px;
   color: var(--green);
   display: flex;
@@ -1549,9 +1549,9 @@ p {
 }
 
 .table-mini-grid span.occupied {
-  background: var(--orange-pale);
-  border-color: #f1d0bc;
-  color: var(--orange);
+  background: #fde9e2;
+  border-color: #efb9a6;
+  color: #d45525;
 }
 
 .management-toolbar,
@@ -1823,6 +1823,15 @@ p {
   padding: 14px;
 }
 
+.table-card.available {
+  border-color: #c6dfd0;
+}
+
+.table-card.occupied {
+  border-color: #efb9a6;
+  background: #fff8f5;
+}
+
 .table-card > div {
   align-items: center;
   display: flex;
@@ -1840,6 +1849,11 @@ p {
   height: 46px;
   justify-content: center;
   width: 46px;
+}
+
+.table-card.occupied > div > span {
+  background: #fde9e2;
+  color: #d45525;
 }
 
 .table-card h2 {

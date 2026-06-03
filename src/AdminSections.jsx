@@ -101,6 +101,24 @@ function orderTotal(order, items) {
   );
 }
 
+function normalizeTableNumber(value) {
+  const raw = String(value || "").trim();
+  return /^\d+$/.test(raw) ? raw.padStart(2, "0") : raw;
+}
+
+function getTablesWithOrderStatus(tables, orders) {
+  const occupiedTables = new Set(
+    orders
+      .filter((order) => order.status !== "settled")
+      .map((order) => normalizeTableNumber(order.table)),
+  );
+
+  return tables.map((table) => ({
+    ...table,
+    status: occupiedTables.has(normalizeTableNumber(table.number)) ? "occupied" : "available",
+  }));
+}
+
 function getStartOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -610,7 +628,7 @@ function MenuManagement({ items, setItems }) {
   );
 }
 
-function TableManagement({ guestBaseUrl, tables, setTables }) {
+function TableManagement({ guestBaseUrl, tables }) {
   const [selected, setSelected] = useState(null);
 
   function getTableGuestUrl(tableNumber) {
@@ -638,27 +656,16 @@ function TableManagement({ guestBaseUrl, tables, setTables }) {
       />
       <div className="table-management-grid">
         {tables.map((table) => (
-          <article className="table-card" key={table.number}>
+          <article className={`table-card ${table.status}`} key={table.number}>
             <div>
               <span>{table.number}</span>
               <div>
                 <h2>{table.number}號桌</h2>
-                <p>{table.status === "occupied" ? "用餐中" : "可使用"}</p>
+                <p>{table.status === "occupied" ? "用餐中：已有未結賬訂單" : "空桌：暫無未結賬訂單"}</p>
               </div>
             </div>
             <footer>
               <button className="management-secondary" onClick={() => setSelected(table)} type="button">查看桌碼</button>
-              <button
-                className="table-status-button"
-                onClick={() => setTables((current) => current.map((entry) => (
-                  entry.number === table.number
-                    ? { ...entry, status: entry.status === "occupied" ? "available" : "occupied" }
-                    : entry
-                )))}
-                type="button"
-              >
-                {table.status === "occupied" ? "設為空桌" : "設為用餐中"}
-              </button>
             </footer>
           </article>
         ))}
@@ -880,11 +887,12 @@ function RestaurantSettings() {
 }
 
 export function AdminSection({ activeSection, guestBaseUrl, menuItems, onMenuItemsChange, onNavigate, orders }) {
-  const [tables, setTables] = useLocalState("harbour-admin-tables", seededTables);
+  const [tables] = useLocalState("harbour-admin-tables", seededTables);
+  const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
 
-  if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={onNavigate} orders={orders} tables={tables} />;
+  if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={onNavigate} orders={orders} tables={tablesWithStatus} />;
   if (activeSection === "menu") return <MenuManagement items={menuItems} setItems={onMenuItemsChange} />;
-  if (activeSection === "tables") return <TableManagement guestBaseUrl={guestBaseUrl} setTables={setTables} tables={tables} />;
+  if (activeSection === "tables") return <TableManagement guestBaseUrl={guestBaseUrl} tables={tablesWithStatus} />;
   if (activeSection === "reports") return <Reports menuItems={menuItems} orders={orders} />;
   if (activeSection === "staff") return <StaffManagement />;
   if (activeSection === "printer") return <PrinterSettings />;
