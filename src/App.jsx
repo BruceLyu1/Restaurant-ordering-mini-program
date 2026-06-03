@@ -489,6 +489,12 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
     (sum, item) => sum + item.quantity * item.price,
     0,
   );
+  const hasTableOrders = tableOrders.length > 0;
+  const guestShellClassName = [
+    "guest-shell",
+    hasTableOrders ? "has-floating-orders" : "",
+    itemCount > 0 ? "has-cart-bar" : "",
+  ].filter(Boolean).join(" ");
 
   useEffect(() => {
     if (!categories.includes(activeCategory)) setActiveCategory("全部");
@@ -535,7 +541,7 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
   }
 
   return (
-    <main className="guest-shell">
+    <main className={guestShellClassName}>
       <header className="guest-header">
         <div>
           <span className="restaurant-name">海港小館</span>
@@ -626,7 +632,11 @@ function GuestApp({ activeMealPeriod, menuItems, onPlaceOrder, orders, setView }
         })}
       </section>
 
-      <button className="table-orders" onClick={() => setOrderHistoryOpen(true)} type="button">
+      <button
+        className={`table-orders ${hasTableOrders ? "table-orders-floating" : "table-orders-inline"} ${itemCount > 0 ? "with-cart" : ""}`}
+        onClick={() => setOrderHistoryOpen(true)}
+        type="button"
+      >
         <div>
           <h2>本桌已落單</h2>
           <p>{tableOrders.length ? `${tableOrders.length} 張訂單 · 點擊查看明細` : "暫無訂單 · 點擊查看"}</p>
