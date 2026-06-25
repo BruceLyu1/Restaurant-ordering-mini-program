@@ -1,0 +1,156 @@
+import React, { useMemo, useState } from "react";
+import { MobileAdminNav } from "../components/admin/MobileAdminNav";
+import { OrderCard } from "../components/admin/OrderCard";
+import { PopularDishes } from "../components/admin/PopularDishes";
+import { Sidebar } from "../components/admin/Sidebar";
+import { Icon } from "../components/ui/Icon";
+import { seededTables } from "../data/tables";
+import { useFormatAdminDate } from "../i18n/useFormatAdminDate";
+import { useTranslation } from "../i18n/useTranslation";
+import { listActiveOrders, listSettledOrders } from "../services/orderService";
+import { useMenuStore } from "../stores/menuStore";
+import { useOrderStore } from "../stores/orderStore";
+import { useSettingsStore } from "../stores/settingsStore";
+import { getTablesWithOrderStatus } from "../utils/table";
+import { useLocalState } from "../utils/useLocalState";
+import { Dashboard } from "./Dashboard";
+import { MenuManagement } from "./MenuManagement";
+import { PrinterSettings } from "./PrinterSettings";
+import { Reports } from "./Reports";
+import { RestaurantSettings } from "./RestaurantSettings";
+import { StaffManagement } from "./StaffManagement";
+import { TableManagement } from "./TableManagement";
+import type { MealPeriod, TableInfo } from "../types";
+
+interface AdminAppProps {
+  activeMealPeriod: MealPeriod | null;
+  guestBaseUrl: string;
+  now: Date;
+  setView: (view: "guest" | "admin") => void;
+}
+
+export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: AdminAppProps) {
+  const { t } = useTranslation();
+  const formatAdminDate = useFormatAdminDate();
+  const menuItems = useMenuStore((state) => state.items);
+  const updateMenuItems = useMenuStore((state) => state.updateItems);
+  const orders = useOrderStore((state) => state.orders);
+  const pendingOrders = useMemo(() => listActiveOrders(orders), [orders]);
+  const newOrderCount = useMemo(() => orders.filter((order) => order.status === "pending").length, [orders]);
+  const completedOrders = useMemo(() => listSettledOrders(orders), [orders]);
+  const restaurantName = useSettingsStore((state) => state.restaurant.name);
+  const [filter, setFilter] = useState<"pending" | "settled">("pending");
+  const [activeSection, setActiveSection] = useState("orders");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
+  const [tables] = useLocalState<TableInfo[]>("harbour-admin-tables", seededTables);
+  const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
+
+  function handlePrint(id: string): void {
+    useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
+  }
+
+  function handleReset(): void {
+    useOrderStore.getState().resetDemo(useMenuStore.getState().items);
+  }
+
+  function handleSettle(id: string): void {
+    useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
+  }
+
+  function renderAdminSection() {
+    if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={setActiveSection} orders={orders} tables={tablesWithStatus} />;
+    if (activeSection === "menu") return <MenuManagement items={menuItems} setItems={updateMenuItems} />;
+    if (activeSection === "tables") return <TableManagement guestBaseUrl={guestBaseUrl} tables={tablesWithStatus} />;
+    if (activeSection === "reports") return <Reports menuItems={menuItems} orders={orders} />;
+    if (activeSection === "staff") return <StaffManagement />;
+    if (activeSection === "printer") return <PrinterSettings />;
+    return <RestaurantSettings />;
+  }
+
+  return (
+    <main className="admin-shell">
+      <Sidebar activeSection={activeSection} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
+      {mobileMenuOpen && (
+        <MobileAdminNav activeSection={activeSection} onClose={() => setMobileMenuOpen(false)} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
+      )}
+      <section className="admin-workspace">
+        <header className="admin-topbar">
+          <button className="mobile-nav-trigger" onClick={() => setMobileMenuOpen(true)} type="button">
+            <Icon name="menu" size={18} />
+            {t("adminApp.managementMenu")}
+          </button>
+          <div>
+            <span>{formatAdminDate(now)}</span>
+            <strong>{activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed")}</strong>
+          </div>
+          <div>
+            <button aria-label={t("adminApp.notification")} className="topbar-icon" type="button">
+              <Icon name="bell" size={18} />
+              {pendingOrders.some((order) => order.status === "pending") && <small />}
+            </button>
+            <button className="guest-shortcut" onClick={() => setView("guest")} type="button">
+              {t("adminApp.guestShortcut")}
+            </button>
+          </div>
+        </header>
+        {activeSection !== "orders" ? renderAdminSection() : (
+          <div className="admin-layout">
+            <section className="orders-panel">
+              <header className="orders-header">
+                <div>
+                  <p>{t("adminApp.orders.label")}</p>
+                  <h1>
+                    {t("adminApp.orders.heading")}<span>{pendingOrders.length}</span>
+                  </h1>
+                </div>
+                <div className="admin-actions">
+                  {import.meta.env.DEV && (
+                    <button className="reset-button" onClick={handleReset} type="button">
+                      <Icon name="rotate" size={15} />
+                      {t("adminApp.actions.resetDemo")}
+                    </button>
+                  )}
+                </div>
+              </header>
+              <div className="orders-tabs">
+                <button
+                  className={filter === "pending" ? "active" : ""}
+                  onClick={() => setFilter("pending")}
+                  type="button"
+                >
+                  {t("adminApp.orders.activeTab")}<span>{pendingOrders.length}</span>
+                </button>
+                <button
+                  className={filter === "settled" ? "active" : ""}
+                  onClick={() => setFilter("settled")}
+                  type="button"
+                >
+                  {t("adminApp.orders.completedTab")}<span>{completedOrders.length}</span>
+                </button>
+              </div>
+              <div className="queue-note">
+                <span>{t("adminApp.orders.flowTitle")}</span>
+                <p>{t("adminApp.orders.flowDescription")}</p>
+              </div>
+              <div className="orders-grid">
+                {visibleOrders.length ? (
+                  visibleOrders.map((order) => (
+                    <OrderCard key={order.id} menuItems={menuItems} onPrint={handlePrint} onSettle={handleSettle} order={order} />
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <Icon name="orders" size={30} />
+                    <h3>{t("common.empty.noOrders")}</h3>
+                    <p>{t("common.empty.noOrdersDesc")}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+            <PopularDishes menuItems={menuItems} onOpenReports={() => setActiveSection("reports")} orders={orders} />
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}

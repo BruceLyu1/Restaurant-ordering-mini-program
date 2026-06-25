@@ -3,3 +3,4 @@ dist/
 .playwright-cli/
 work/
 outputs/
+vite-dev.*.log
