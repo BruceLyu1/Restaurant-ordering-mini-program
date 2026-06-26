@@ -1,0 +1,142 @@
+/* harbour-ordering-h5 table management styles */
+
+.table-management-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.table-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px;
+}
+
+.table-card.available {
+  border-color: #c6dfd0;
+}
+
+.table-card.occupied {
+  border-color: #efb9a6;
+  background: #fff8f5;
+}
+
+.table-card > div {
+  align-items: center;
+  display: flex;
+  gap: 11px;
+}
+
+.table-card > div > span {
+  align-items: center;
+  background: var(--green-pale);
+  border-radius: 8px;
+  color: var(--green);
+  display: flex;
+  font-size: 17px;
+  font-weight: 900;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+
+.table-card.occupied > div > span {
+  background: #fde9e2;
+  color: #d45525;
+}
+
+.table-card h2 {
+  color: var(--green-dark);
+  font-size: 15px;
+}
+
+.table-card p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.table-card footer {
+  display: flex;
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.table-status-button {
+  background: #eef4ef;
+  color: var(--green);
+}
+
+.admin-modal-backdrop {
+  align-items: center;
+  background: rgba(18, 31, 24, 0.44);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 40;
+}
+
+.qr-modal {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 310px;
+  padding: 23px;
+  position: relative;
+  text-align: center;
+  width: calc(100% - 32px);
+}
+
+.modal-close {
+  background: transparent;
+  color: var(--muted);
+  font-size: 23px;
+  line-height: 1;
+  position: absolute;
+  right: 10px;
+  top: 8px;
+}
+
+.table-qr-image {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  display: block;
+  height: 220px;
+  margin: 4px auto 15px;
+  padding: 8px;
+  width: 220px;
+}
+
+.qr-modal h2 {
+  color: var(--green-dark);
+  font-size: 19px;
+}
+
+.qr-modal p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 7px 0 14px;
+}
+
+.qr-link {
+  background: #f5f8f5;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--green);
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+  padding: 10px;
+  text-align: left;
+}
+
+.qr-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}

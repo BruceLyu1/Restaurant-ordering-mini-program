@@ -1,0 +1,51 @@
+/* harbour-ordering-h5 base styles: CSS variables, reset, element defaults */
+
+:root {
+  color: #1e2822;
+  background: #f7f5ef;
+  font-family:
+    "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --bg: #f7f5ef;
+  --surface: #fffefa;
+  --surface-raised: #ffffff;
+  --text: #1e2822;
+  --muted: #6f786f;
+  --line: #e5e6de;
+  --green: #275d45;
+  --green-dark: #173d2d;
+  --green-pale: #e7f1ea;
+  --orange: #c96732;
+  --orange-pale: #fbede4;
+  --shadow: 0 14px 36px rgba(38, 50, 42, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}

@@ -1,0 +1,98 @@
+/* harbour-ordering-h5 settings page styles */
+
+.settings-panel {
+  display: grid;
+  gap: 15px;
+  max-width: 680px;
+  padding: 18px;
+}
+
+.settings-panel label > span {
+  color: var(--green-dark);
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 7px;
+}
+
+.settings-panel label input,
+.settings-panel label select {
+  width: 100%;
+}
+
+.setting-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  padding-top: 14px;
+}
+
+.setting-row strong {
+  color: var(--green-dark);
+  font-size: 13px;
+}
+
+.setting-row p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.settings-panel footer {
+  display: flex;
+  gap: 8px;
+  justify-content: end;
+  padding-top: 4px;
+}
+
+.meal-period-settings {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  padding-top: 15px;
+}
+
+.meal-period-settings h2 {
+  color: var(--green-dark);
+  font-size: 15px;
+}
+
+.meal-period-settings p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.meal-period-row {
+  align-items: end;
+  background: #f7f8f5;
+  border-radius: 7px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 70px 1fr 1fr;
+  padding: 10px;
+}
+
+.meal-period-row > strong {
+  align-self: center;
+  color: var(--green-dark);
+  font-size: 13px;
+}
+
+.meal-period-row label > span {
+  font-size: 11px;
+  margin-bottom: 5px;
+}
+
+.save-message {
+  background: var(--green-pale);
+  border-radius: 7px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 14px;
+  max-width: 680px;
+  padding: 11px 13px;
+}

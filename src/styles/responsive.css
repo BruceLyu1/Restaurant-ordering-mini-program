@@ -1,0 +1,154 @@
+/* harbour-ordering-h5 responsive breakpoints */
+
+@media (max-width: 1050px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .ranking-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 740px) {
+  .view-toggle {
+    display: none;
+  }
+
+  .guest-header {
+    padding: 22px 18px 16px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-nav-trigger {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--green);
+    display: flex;
+    font-size: 12px;
+    font-weight: 800;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .admin-topbar {
+    height: 61px;
+    padding: 0 12px;
+  }
+
+  .admin-topbar > div:first-of-type {
+    display: none;
+  }
+
+  .admin-topbar > div:last-child {
+    margin-left: auto;
+  }
+
+  .admin-layout {
+    min-height: calc(100vh - 61px);
+  }
+
+  .orders-panel {
+    padding: 18px 12px;
+  }
+
+  .orders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-panel {
+    padding: 20px 12px;
+  }
+
+  .ranking-list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .management-page {
+    padding: 18px 12px;
+  }
+
+  .management-split,
+  .table-management-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-row {
+    gap: 8px;
+  }
+
+  .metric-card {
+    padding: 12px;
+  }
+
+  .metric-card strong {
+    font-size: 19px;
+  }
+
+  .management-panel.table-panel {
+    overflow-x: auto;
+  }
+
+  .management-table {
+    min-width: 790px;
+  }
+
+  .meal-period-picker {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .restaurant-name {
+    font-size: 22px;
+  }
+
+  .guest-header-actions {
+    gap: 6px;
+  }
+
+  .dish-image {
+    height: 88px;
+    width: 116px;
+  }
+
+  .menu-item {
+    gap: 9px;
+    min-height: 104px;
+  }
+
+  .menu-item-copy h2 {
+    font-size: 15px;
+  }
+
+  .menu-item-copy p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .quantity-control {
+    height: 30px;
+    width: 30px;
+  }
+
+  .cart-bar-action {
+    padding: 12px 14px;
+  }
+}

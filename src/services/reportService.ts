@@ -22,6 +22,7 @@ export function getSalesRanking(orders: Order[], menuItems: MenuItem[]): SalesRa
 
   return menuItems
     .map((item) => ({ ...item, quantity: quantities.get(item.id) || 0, revenue: revenue.get(item.id) || 0 }))
+    .filter((item) => item.quantity > 0)
     .sort((a, b) => b.quantity - a.quantity);
 }
 

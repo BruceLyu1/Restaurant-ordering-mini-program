@@ -1,0 +1,51 @@
+/* harbour-ordering-h5 menu management photo styles */
+
+.dish-photo-field {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+}
+
+.dish-photo-empty,
+.dish-photo-preview {
+  align-items: center;
+  background: #fff;
+  border: 1px dashed #b9c9c1;
+  border-radius: 7px;
+  color: var(--muted);
+  display: flex;
+  font-size: 11px;
+  height: 46px;
+  justify-content: center;
+  object-fit: cover;
+  width: 64px;
+}
+
+.dish-photo-upload {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 10px 11px;
+}
+
+.dish-photo-upload input {
+  display: none;
+}
+
+.dish-photo-sprite {
+  background-image: url("/menu-dishes.png");
+  background-repeat: no-repeat;
+  background-size: 200% 300%;
+  border-style: solid;
+}
+
+.dish-photo-error {
+  color: var(--orange);
+  font-size: 12px;
+  font-weight: 700;
+  width: 100%;
+}

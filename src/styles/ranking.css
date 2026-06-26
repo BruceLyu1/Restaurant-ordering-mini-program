@@ -1,0 +1,100 @@
+/* harbour-ordering-h5 ranking/popular dishes styles */
+
+.ranking-panel {
+  background: #fff;
+  border-left: 1px solid var(--line);
+  padding: 25px 16px;
+}
+
+.ranking-panel header {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ranking-panel h2 {
+  color: var(--green-dark);
+  font-family: Georgia, "Noto Serif TC", serif;
+  font-size: 21px;
+}
+
+.ranking-panel p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.ranking-panel header .icon {
+  color: var(--green);
+}
+
+.ranking-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.ranking-item {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.ranking-item > strong {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  width: 16px;
+}
+
+.ranking-item > strong.top-three {
+  color: var(--orange);
+}
+
+.ranking-item h3 {
+  font-size: 12px;
+}
+
+.ranking-item span {
+  color: var(--muted);
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+.ranking-empty {
+  align-items: center;
+  border: 1px dashed #c8d1ca;
+  border-radius: 10px;
+  color: var(--green);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 26px 12px;
+  text-align: center;
+}
+
+.ranking-empty strong {
+  color: var(--green-dark);
+  font-size: 13px;
+}
+
+.ranking-empty span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.ranking-button {
+  background: transparent;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 16px;
+  padding: 9px;
+  width: 100%;
+}
