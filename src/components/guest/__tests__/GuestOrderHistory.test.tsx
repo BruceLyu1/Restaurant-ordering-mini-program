@@ -9,7 +9,7 @@ const menuItems: MenuItem[] = [
   { category: "Food", description: "", id: "soup", name: "Soup", price: 40, soldOut: false },
 ];
 const orders: Order[] = [
-  { createdAt: "2026-06-24T10:00:00.000Z", id: "HO-1", items: [{ id: "soup", quantity: 2, unitPrice: 40 }], sequence: 1, status: "printed", table: "05" },
+  { createdAt: "2026-06-24T10:00:00.000Z", id: "HO-1", items: [{ id: "soup", notes: "No onion", quantity: 2, unitPrice: 40 }], sequence: 1, status: "printed", table: "05" },
 ];
 
 function renderWithLanguage(ui: React.ReactElement) {
@@ -24,6 +24,7 @@ describe("GuestOrderHistory", () => {
     expect(screen.getByRole("heading", { name: "Table orders" })).toBeTruthy();
     expect(screen.getByText("Printed")).toBeTruthy();
     expect(screen.getByText("Soup")).toBeTruthy();
+    expect(screen.getByText("No onion")).toBeTruthy();
     expect(screen.getAllByText("HK$ 80").length).toBeGreaterThan(0);
   });
 

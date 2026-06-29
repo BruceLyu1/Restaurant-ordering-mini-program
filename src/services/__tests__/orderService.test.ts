@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { ORDER_STORAGE_KEY } from "../../data/orders";
-import type { MenuItem, Order, PrinterSettings } from "../../types";
+import type { MealPeriod, MenuItem, Order, PrinterSettings } from "../../types";
 import { listActiveOrders, listSettledOrders, loadOrders, placeOrder, updateOrderStatus } from "../orderService";
 
 const menuItems: MenuItem[] = [
   {
-    category: "飯類",
-    description: "明爐叉燒、時蔬、香米飯",
+    category: "Rice",
+    description: "Char siu with rice",
     id: "rice",
-    name: "叉燒飯",
+    name: "BBQ Rice",
     price: 68,
     soldOut: false,
     deleted: false,
@@ -16,8 +16,8 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-const activeMealPeriod = { id: "lunch", name: "午市", start: "11:00", end: "17:00" };
-const printerSettings: PrinterSettings = { autoPrint: false, copies: "1", printer: "廚房熱敏打印機", sound: true };
+const activeMealPeriod: MealPeriod = { id: "lunch", name: "Lunch", start: "11:00", end: "17:00" };
+const printerSettings: PrinterSettings = { autoPrint: false, copies: "1", printer: "Kitchen", sound: true };
 
 describe("orderService", () => {
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe("orderService", () => {
   it("places, prints, and settles an order", () => {
     const order = placeOrder({
       activeMealPeriod,
-      items: [{ id: "rice", name: "叉燒飯", quantity: 2, unitPrice: 68 }],
+      items: [{ id: "rice", name: "BBQ Rice", quantity: 2, unitPrice: 68 }],
       menuItems,
       printerSettings,
       table: "02",
@@ -42,6 +42,32 @@ describe("orderService", () => {
 
     updateOrderStatus(order!.id, "settled", menuItems);
     expect(loadOrders(menuItems)[0].status).toBe("settled");
+  });
+
+  it("deduplicates orders with the same id when loading from storage", () => {
+    const duplicateOrders: Order[] = [
+      {
+        id: "HO-1001",
+        sequence: 1001,
+        status: "pending",
+        table: "12",
+        createdAt: "2026-06-23T12:00:00.000Z",
+        items: [{ id: "rice", quantity: 1, unitPrice: 68 }],
+      },
+      {
+        id: "HO-1001",
+        sequence: 1001,
+        status: "printed",
+        table: "12",
+        createdAt: "2026-06-23T12:00:00.000Z",
+        items: [{ id: "rice", quantity: 1, unitPrice: 68 }],
+      },
+    ];
+    window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(duplicateOrders));
+
+    const loadedOrders = loadOrders(menuItems);
+    expect(loadedOrders).toHaveLength(1);
+    expect(loadedOrders[0].status).toBe("printed");
   });
 
   it("lists active orders by oldest created time first", () => {

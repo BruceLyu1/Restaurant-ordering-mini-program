@@ -5,10 +5,14 @@ import { GuestApp } from "./pages/GuestApp";
 import { MENU_CHANGE_EVENT } from "./services/menuService";
 import { ORDER_CHANGE_EVENT } from "./services/orderService";
 import { getCurrentMealPeriod, SETTINGS_CHANGE_EVENT } from "./services/settingsService";
+import { STAFF_CHANGE_EVENT } from "./services/staffService";
 import { subscribeToStorage } from "./services/storage";
+import { TABLE_CHANGE_EVENT } from "./services/tableService";
 import { useMenuStore } from "./stores/menuStore";
 import { useOrderStore } from "./stores/orderStore";
 import { useSettingsStore } from "./stores/settingsStore";
+import { useStaffStore } from "./stores/staffStore";
+import { useTableStore } from "./stores/tableStore";
 import { getGuestBaseUrl, getTableNumberFromUrl } from "./utils/table";
 import type { MealPeriod } from "./types";
 
@@ -24,6 +28,8 @@ function App() {
   const loadMenu = useMenuStore((state) => state.load);
   const loadOrders = useOrderStore((state) => state.load);
   const loadSettings = useSettingsStore((state) => state.load);
+  const loadStaff = useStaffStore((state) => state.load);
+  const loadTables = useTableStore((state) => state.load);
   const restaurantSettings = useSettingsStore((state) => state.restaurant);
   const guestBaseUrl = useMemo<string>(getGuestBaseUrl, []);
   const activeMealPeriod: MealPeriod | null = useMemo(
@@ -65,6 +71,18 @@ function App() {
       loadMenu();
     }, MENU_CHANGE_EVENT);
   }, [loadMenu]);
+
+  useEffect(() => {
+    return subscribeToStorage("harbour-admin-staff", () => {
+      loadStaff();
+    }, STAFF_CHANGE_EVENT);
+  }, [loadStaff]);
+
+  useEffect(() => {
+    return subscribeToStorage("harbour-admin-tables", () => {
+      loadTables();
+    }, TABLE_CHANGE_EVENT);
+  }, [loadTables]);
 
   return (
     <>

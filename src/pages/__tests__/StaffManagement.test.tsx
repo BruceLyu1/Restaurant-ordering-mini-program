@@ -2,6 +2,7 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { LanguageProvider } from "../../i18n/LanguageContext";
+import { useStaffStore } from "../../stores/staffStore";
 import { StaffManagement } from "../StaffManagement";
 import type { StaffMember } from "../../types";
 
@@ -18,6 +19,7 @@ describe("StaffManagement", () => {
   beforeEach(() => {
     window.localStorage.clear();
     window.localStorage.setItem("harbour-admin-staff", JSON.stringify(staff));
+    useStaffStore.setState({ staff });
   });
 
   it("renders staff and toggles account status", () => {

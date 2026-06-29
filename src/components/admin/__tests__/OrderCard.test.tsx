@@ -10,7 +10,7 @@ const menuItems: MenuItem[] = [
 ];
 
 function makeOrder(status: Order["status"]): Order {
-  return { createdAt: "2026-06-24T10:00:00.000Z", id: `HO-${status}`, items: [{ id: "soup", quantity: 2, unitPrice: 40 }], sequence: 7, status, table: "05" };
+  return { createdAt: "2026-06-24T10:00:00.000Z", id: `HO-${status}`, items: [{ id: "soup", notes: "No onion", quantity: 2, unitPrice: 40 }], sequence: 7, status, table: "05" };
 }
 
 function renderWithLanguage(ui: React.ReactElement) {
@@ -27,6 +27,7 @@ describe("OrderCard", () => {
     expect(screen.getByText("#7")).toBeTruthy();
     expect(screen.getByText("Table 05")).toBeTruthy();
     expect(screen.getByText("Pending")).toBeTruthy();
+    expect(screen.getByText("No onion")).toBeTruthy();
     expect(screen.getByText("HK$ 80")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Print/ }));
     fireEvent.click(screen.getByRole("button", { name: /Settle/ }));

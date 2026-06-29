@@ -182,6 +182,14 @@
   color: var(--green);
 }
 
+.order-line-notes {
+  color: var(--orange);
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
 .order-total span {
   color: var(--muted);
   font-size: 11px;

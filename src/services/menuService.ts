@@ -1,4 +1,3 @@
-
 import { getDefaultMenuItems, MENU_STORAGE_KEY, seedMenuItems } from "../data/menu";
 import type { MenuItem } from "../types";
 import { readStorage, writeStorage } from "./storage";

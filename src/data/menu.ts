@@ -1,4 +1,3 @@
-
 import type { MenuItem } from "../types";
 
 export const MENU_STORAGE_KEY = "harbour-admin-menu";
@@ -23,13 +22,13 @@ export function seedDish(id: string, name: string, description: string, category
 export const seedMenuItems: MenuItem[] = [
   seedDish("char-siu", "蜜汁叉燒飯", "明爐叉燒、時蔬、香米飯", "飯類", 68),
   seedDish("roast-goose-rice", "燒鵝飯", "脆皮燒鵝、油香白飯、梅子醬", "飯類", 98),
-  seedDish("soy-chicken-rice", "豉油雞飯", "嫩滑豉油雞、薑蓉、菜心", "飯類", 62),
+  seedDish("soy-chicken-rice", "豉油雞飯", "嫩滑豉油雞、薑蔥、菜心", "飯類", 62),
   seedDish("hainan-chicken-rice", "海南雞飯", "白切雞、雞油飯、三色醬", "飯類", 72),
   seedDish("beef-brisket-rice", "牛腩飯", "柱侯牛腩、蘿蔔、香米飯", "飯類", 78),
   seedDish("curry-beef-rice", "咖喱牛腩飯", "港式咖喱、軟腍牛腩、薯仔", "飯類", 82),
-  seedDish("tomato-porkchop-rice", "鮮茄豬扒飯", "香煎豬扒、鮮茄汁、白飯", "飯類", 76),
+  seedDish("tomato-porkchop-rice", "焗茄汁豬扒飯", "香煎豬扒、番茄汁、白飯", "飯類", 76),
   seedDish("yangzhou-fried-rice", "揚州炒飯", "蝦仁、叉燒、雞蛋、青豆", "飯類", 68),
-  seedDish("seafood-fried-rice", "海鮮炒飯", "鮮蝦、帶子、蟹柳、蛋香飯", "飯類", 88),
+  seedDish("seafood-fried-rice", "海鮮炒飯", "鮮蝦、帶子、魷魚、蛋香飯", "飯類", 88),
   seedDish("claypot-eel-rice", "鰻魚煲仔飯", "蒲燒鰻魚、煲仔飯、甜豉油", "飯類", 108),
 
   seedDish("shrimp-dumpling", "鮮蝦餃皇", "晶瑩薄皮，鮮蝦爽彈", "點心", 42),
@@ -49,13 +48,13 @@ export const seedMenuItems: MenuItem[] = [
   seedDish("satay-beef-noodle", "沙嗲牛肉麵", "濃香沙嗲、嫩牛肉片", "麵類", 58),
   seedDish("cart-noodle", "港式車仔麵", "多款配料、惹味湯底", "麵類", 48),
   seedDish("roast-goose-lai-fun", "燒鵝瀨粉", "燒鵝件、米香瀨粉", "麵類", 88),
-  seedDish("dry-scallion-noodle", "薑蔥撈麵", "薑蔥油香、爽口竹昇麵", "麵類", 46),
-  seedDish("seafood-laksa", "海鮮喇沙", "椰香湯底、鮮蝦魚片", "麵類", 78),
+  seedDish("dry-scallion-noodle", "蔥油撈麵", "蔥油香、爽口竹昇麵", "麵類", 46),
+  seedDish("seafood-laksa", "海鮮喇沙", "椰香湯底、鮮蝦魷魚", "麵類", 78),
   seedDish("black-pepper-udon", "黑椒牛柳烏冬", "黑椒汁、牛柳、彈牙烏冬", "麵類", 82),
-  seedDish("tomato-egg-noodle", "番茄蛋湯麵", "鮮茄湯底、滑蛋、幼麵", "麵類", 50),
+  seedDish("tomato-egg-noodle", "番茄蛋湯麵", "番茄湯底、滑蛋、幼麵", "麵類", 50),
 
   seedDish("stir-fried-beef", "時蔬炒牛肉", "鑊氣十足，牛肉嫩滑", "小菜", 88),
-  seedDish("steamed-fish", "清蒸海上鮮", "薑蔥豉油，每日新鮮供應", "小菜", 138),
+  seedDish("steamed-fish", "清蒸海上鮮", "蔥薑豉油，每日鮮魚供應", "小菜", 138),
   seedDish("sweet-sour-pork", "菠蘿咕嚕肉", "酸甜開胃、外脆內嫩", "小菜", 86),
   seedDish("salt-pepper-squid", "椒鹽鮮魷", "椒鹽香脆、鮮魷彈牙", "小菜", 98),
   seedDish("garlic-choi-sum", "蒜蓉菜心", "清甜菜心、蒜香惹味", "小菜", 48),

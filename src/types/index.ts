@@ -20,6 +20,7 @@ export interface MenuItem {
 export interface OrderLine {
   id: string;
   name?: string;
+  notes?: string;
   quantity: number;
   unitPrice?: number;
 }

@@ -3,16 +3,11 @@ import { SectionHeader } from "../components/ui/SectionHeader";
 import { Toggle } from "../components/ui/Toggle";
 import { useTranslation } from "../i18n/useTranslation";
 import { DEFAULT_MEAL_PERIODS } from "../services/settingsService";
+import { useMenuStore } from "../stores/menuStore";
 import { normalizeCategoryName } from "../utils/category";
-import { compressDishPhoto } from "../utils/image";
+import { compressDishPhoto, ImageError } from "../utils/image";
 import { money } from "../utils/money";
 import type { MenuItem } from "../types";
-import type { Dispatch, SetStateAction } from "react";
-
-interface MenuManagementProps {
-  items: MenuItem[];
-  setItems: Dispatch<SetStateAction<MenuItem[]>>;
-}
 
 interface MenuItemDraft {
   category: string;
@@ -39,8 +34,10 @@ function createEmptyDraft(category: string, mealPeriods: string[]): MenuItemDraf
   };
 }
 
-export function MenuManagement({ items, setItems }: MenuManagementProps) {
+export function MenuManagement() {
   const { t } = useTranslation();
+  const items = useMenuStore((state) => state.items);
+  const setItems = useMenuStore((state) => state.updateItems);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORIES);
   const [categoryDraft, setCategoryDraft] = useState("");
@@ -184,7 +181,7 @@ export function MenuManagement({ items, setItems }: MenuManagementProps) {
       const imageUrl = await compressDishPhoto(file);
       setDraft((current) => ({ ...current, imageUrl }));
     } catch (error) {
-      setPhotoError(error instanceof Error ? error.message : t("menuManagement.photoError"));
+      setPhotoError(error instanceof ImageError ? t(`imageError.${error.code}`) : t("menuManagement.photoError"));
     }
   }
 
