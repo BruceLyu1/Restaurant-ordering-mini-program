@@ -938,6 +938,24 @@ p {
   font-size: 14px;
 }
 
+.cart-item-notes {
+  color: var(--muted);
+  display: block;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.cart-item-notes-input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: block;
+  font-size: 12px;
+  margin-top: 6px;
+  max-width: 210px;
+  padding: 7px 8px;
+  width: 100%;
+}
+
 .cart-line strong {
   color: var(--green);
   display: block;
@@ -1660,6 +1678,14 @@ p {
 
 .order-lines strong {
   color: var(--green);
+}
+
+.order-line-notes {
+  color: var(--orange);
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
 }
 
 .order-total span {

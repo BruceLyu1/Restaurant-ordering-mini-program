@@ -17325,7 +17325,7 @@ const SETTINGS_STORAGE_KEY = "harbour-admin-settings";
 const SETTINGS_CHANGE_EVENT = "harbour-settings-change";
 const PRINTER_STORAGE_KEY = "harbour-admin-printer";
 const DEFAULT_MEAL_PERIODS = [
-    { id: "breakfast", name: "早餐", start: "07:00", end: "11:00" },
+    { id: "breakfast", name: "早市", start: "07:00", end: "11:00" },
     { id: "lunch", name: "午市", start: "11:00", end: "17:00" },
     { id: "dinner", name: "晚市", start: "17:00", end: "23:59" },
 ];
@@ -17438,7 +17438,7 @@ const translations = {
                 noOrders: "暫時沒有訂單",
                 noOrdersDesc: "新訂單出現時，這裡會即時更新。",
                 noPopularDishes: "暫時沒有銷量",
-                noPopularDishesDesc: "完成幾筆訂單後即可查看熱門菜式。",
+                noPopularDishesDesc: "完成幾張訂單後即可查看熱門菜式。",
                 noTableOrders: "暫無訂單",
                 noTableOrdersDesc: "本桌目前沒有未結帳訂單。",
             },
@@ -17457,6 +17457,7 @@ const translations = {
             languageToggle: "EN",
             menuTab: "菜單",
             navigationLabel: "顧客點餐導覽",
+            notesPlaceholder: "走甜 / 少冰 / 加底...",
             orderDetails: "訂單詳情",
             serviceClosed: "目前非營業時段，暫時無法下單。",
             serviceOpen: "目前供應：{name} {start}-{end}",
@@ -17492,7 +17493,7 @@ const translations = {
                 activeTab: "待處理及已列印",
                 completedTab: "已結帳",
                 flowTitle: "出餐次序",
-                flowDescription: "系統按照顧客提交時間排列，較早落單會優先顯示。",
+                flowDescription: "系統按顧客提交時間排列，較早落單會優先顯示。",
                 heading: "新訂單",
                 itemCount: "{count} 件餐點",
                 label: "訂單管理",
@@ -17511,9 +17512,9 @@ const translations = {
                 occupied: "使用中桌位",
                 occupiedNote: "共 {count} 張桌",
                 pending: "待處理訂單",
-                pendingNote: "按下單時間順序處理",
+                pendingNote: "按下單時間排序處理",
                 revenue: "今日營業額",
-                revenueNote: "已包含所有測試訂單",
+                revenueNote: "已包含所有演示訂單",
             },
             tableStatus: "桌位狀況",
             title: "營運總覽",
@@ -17522,6 +17523,12 @@ const translations = {
                 orders: "{count} 張",
                 tables: "{count} 張",
             },
+        },
+        imageError: {
+            DECODE_FAILED: "圖片格式無法使用，請選擇 JPG、PNG 或 WebP。",
+            NOT_IMAGE: "請選擇圖片檔案。",
+            READ_FAILED: "圖片讀取失敗，請重新選擇。",
+            TOO_LARGE: "圖片請勿超過 8MB。",
         },
         menuManagement: {
             addDish: "新增菜品",
@@ -17585,19 +17592,19 @@ const translations = {
             viewReports: "查看完整報表",
         },
         printerSettings: {
-            autoPrint: "自動打印新訂單",
+            autoPrint: "自動列印新訂單",
             autoPrintDesc: "後台收到顧客訂單後自動列印廚房小票。",
             cashierPrinter: "前台收銀打印機",
             copies: "每張訂單份數",
-            description: "設定後廚小票打印方式，打印失敗時可在訂單頁補打。",
+            description: "設定後廚小票列印方式，打印失敗時可在訂單頁補印。",
             kitchenPrinter: "廚房熱敏打印機",
-            printTest: "打印測試小票",
+            printTest: "列印測試小票",
             printer: "打印機",
             save: "儲存設定",
             saved: "打印設定已儲存",
             sound: "新訂單提示聲",
             soundDesc: "即使打印機離線，也會播放提示聲。",
-            testQueued: "測試小票已加入打印隊列",
+            testQueued: "測試小票已加入打印佇列",
             title: "打印設定",
         },
         reports: {
@@ -17634,7 +17641,7 @@ const translations = {
             endTime: "{name}結束時間",
             language: "預設語言",
             mealPeriods: "供應時段",
-            mealPeriodsDescription: "修改早餐、午市和晚市的營業時間。顧客只會看到目前時段可供應的菜品。",
+            mealPeriodsDescription: "修改早市、午市和晚市的營業時間。顧客只會看到目前時段可供應的菜品。",
             name: "餐廳名稱",
             phone: "聯絡電話",
             save: "儲存餐廳資料",
@@ -17752,6 +17759,7 @@ const translations = {
             languageToggle: "中",
             menuTab: "Menu",
             navigationLabel: "Guest ordering navigation",
+            notesPlaceholder: "Less sweet / No ice / Extra base...",
             orderDetails: "Order details",
             serviceClosed: "Outside business hours. Ordering is currently unavailable.",
             serviceOpen: "Now serving: {name} {start}-{end}",
@@ -17817,6 +17825,12 @@ const translations = {
                 orders: "{count} orders",
                 tables: "{count} tables",
             },
+        },
+        imageError: {
+            DECODE_FAILED: "The image format cannot be used. Please choose JPG, PNG, or WebP.",
+            NOT_IMAGE: "Please choose an image file.",
+            READ_FAILED: "Failed to read the image. Please choose again.",
+            TOO_LARGE: "Images must be 8 MB or smaller.",
         },
         menuManagement: {
             addDish: "Add dish",
@@ -18162,7 +18176,7 @@ function OrderCard({ menuItems, order, onPrint, onSettle }) {
     const { t } = useTranslation();
     return (jsxs("article", { className: `order-card ${order.status}`, children: [jsxs("header", { children: [jsxs("div", { children: [jsxs("span", { className: "order-sequence", children: ["#", order.sequence] }), jsx("h3", { children: t("common.table.tableLabel", { number: order.table }) })] }), jsxs("div", { className: "order-time", children: [jsx("strong", { children: formatTime(order.createdAt) }), jsx("span", { children: t("adminApp.orders.itemCount", { count: getOrderCount(order) }) })] })] }), jsx("div", { className: "order-lines", children: order.items.map((line) => {
                     const item = getMenuItem(line.id, menuItems);
-                    return (jsxs("div", { children: [jsx("span", { children: line.name || item?.name || t("adminApp.orders.removedDish") }), jsxs("strong", { children: ["x ", line.quantity] })] }, line.id));
+                    return (jsxs("div", { children: [jsxs("span", { children: [line.name || item?.name || t("adminApp.orders.removedDish"), line.notes && jsx("small", { className: "order-line-notes", children: line.notes })] }), jsxs("strong", { children: ["x ", line.quantity] })] }, line.id));
                 }) }), jsxs("div", { className: "order-total", children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(getOrderTotal(order, menuItems)) })] }), jsxs("footer", { children: [jsx(StatusBadge, { status: order.status }), jsxs("div", { children: [order.status !== "settled" && (jsxs("button", { className: "outline-button", onClick: () => onPrint(order.id), type: "button", children: [jsx(Icon, { name: "printer", size: 15 }), order.status === "printed" ? t("adminApp.orders.reprint") : t("common.print")] })), order.status !== "settled" && (jsxs("button", { className: "settle-button", onClick: () => onSettle(order.id), type: "button", children: [jsx(Icon, { name: "check", size: 15 }), t("adminApp.orders.settle")] }))] })] })] }));
 }
 
@@ -18198,21 +18212,6 @@ function Sidebar({ activeSection, onNavigate, orderBadgeCount, restaurantName })
     const { t } = useTranslation();
     return (jsxs("aside", { className: "sidebar", children: [jsxs("div", { className: "admin-brand", children: [jsx("span", { className: "brand-mark", children: jsx(Icon, { name: "store", size: 20 }) }), jsx("strong", { children: restaurantName })] }), jsx("nav", { children: navItems.map(([section, icon]) => (jsxs("button", { className: section === activeSection ? "active" : "", onClick: () => onNavigate(section), type: "button", children: [jsx(Icon, { name: icon, size: 18 }), jsx("span", { children: t(`navigation.${section}`) }), section === "orders" && orderBadgeCount > 0 && jsx("small", { children: orderBadgeCount })] }, section))) }), jsx("div", { className: "sidebar-bottom", children: jsxs("button", { type: "button", children: [jsx(Icon, { name: "user", size: 18 }), jsx("span", { children: t("adminApp.account") })] }) })] }));
 }
-
-const seededTables = [
-    ["01", "available"],
-    ["02", "occupied"],
-    ["03", "occupied"],
-    ["04", "available"],
-    ["05", "available"],
-    ["06", "occupied"],
-    ["07", "available"],
-    ["08", "occupied"],
-    ["09", "available"],
-    ["10", "available"],
-    ["11", "available"],
-    ["12", "available"],
-].map(([number, status]) => ({ number, seats: 4, status: status }));
 
 function useFormatAdminDate() {
     const { t } = useTranslation();
@@ -18280,11 +18279,8 @@ function byCreatedAtAsc(a, b) {
 function byCreatedAtDesc(a, b) {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }
-function loadOrders(menuItems) {
-    const orders = readStorage(ORDER_STORAGE_KEY, seedOrders);
-    if (!Array.isArray(orders))
-        return seedOrders;
-    return orders.map((order) => ({
+function normalizeOrder(order, menuItems) {
+    return {
         ...order,
         items: order.items.map((item) => {
             const menuItem = getMenuItem(item.id, menuItems);
@@ -18294,7 +18290,17 @@ function loadOrders(menuItems) {
                 unitPrice: item.unitPrice ?? menuItem?.price,
             };
         }),
-    }));
+    };
+}
+function loadOrders(menuItems) {
+    const orders = readStorage(ORDER_STORAGE_KEY, seedOrders);
+    if (!Array.isArray(orders))
+        return seedOrders;
+    const ordersById = new Map();
+    orders.forEach((order) => {
+        ordersById.set(order.id, order);
+    });
+    return Array.from(ordersById.values()).map((order) => normalizeOrder(order, menuItems));
 }
 function saveOrders(orders) {
     writeStorage(ORDER_STORAGE_KEY, orders, ORDER_CHANGE_EVENT);
@@ -18400,13 +18406,13 @@ function seedDish(id, name, description, category, price) {
 const seedMenuItems = [
     seedDish("char-siu", "蜜汁叉燒飯", "明爐叉燒、時蔬、香米飯", "飯類", 68),
     seedDish("roast-goose-rice", "燒鵝飯", "脆皮燒鵝、油香白飯、梅子醬", "飯類", 98),
-    seedDish("soy-chicken-rice", "豉油雞飯", "嫩滑豉油雞、薑蓉、菜心", "飯類", 62),
+    seedDish("soy-chicken-rice", "豉油雞飯", "嫩滑豉油雞、薑蔥、菜心", "飯類", 62),
     seedDish("hainan-chicken-rice", "海南雞飯", "白切雞、雞油飯、三色醬", "飯類", 72),
     seedDish("beef-brisket-rice", "牛腩飯", "柱侯牛腩、蘿蔔、香米飯", "飯類", 78),
     seedDish("curry-beef-rice", "咖喱牛腩飯", "港式咖喱、軟腍牛腩、薯仔", "飯類", 82),
-    seedDish("tomato-porkchop-rice", "鮮茄豬扒飯", "香煎豬扒、鮮茄汁、白飯", "飯類", 76),
+    seedDish("tomato-porkchop-rice", "焗茄汁豬扒飯", "香煎豬扒、番茄汁、白飯", "飯類", 76),
     seedDish("yangzhou-fried-rice", "揚州炒飯", "蝦仁、叉燒、雞蛋、青豆", "飯類", 68),
-    seedDish("seafood-fried-rice", "海鮮炒飯", "鮮蝦、帶子、蟹柳、蛋香飯", "飯類", 88),
+    seedDish("seafood-fried-rice", "海鮮炒飯", "鮮蝦、帶子、魷魚、蛋香飯", "飯類", 88),
     seedDish("claypot-eel-rice", "鰻魚煲仔飯", "蒲燒鰻魚、煲仔飯、甜豉油", "飯類", 108),
     seedDish("shrimp-dumpling", "鮮蝦餃皇", "晶瑩薄皮，鮮蝦爽彈", "點心", 42),
     seedDish("pork-siu-mai", "蟹籽燒賣", "豬肉鮮蝦、蟹籽點綴", "點心", 38),
@@ -18424,12 +18430,12 @@ const seedMenuItems = [
     seedDish("satay-beef-noodle", "沙嗲牛肉麵", "濃香沙嗲、嫩牛肉片", "麵類", 58),
     seedDish("cart-noodle", "港式車仔麵", "多款配料、惹味湯底", "麵類", 48),
     seedDish("roast-goose-lai-fun", "燒鵝瀨粉", "燒鵝件、米香瀨粉", "麵類", 88),
-    seedDish("dry-scallion-noodle", "薑蔥撈麵", "薑蔥油香、爽口竹昇麵", "麵類", 46),
-    seedDish("seafood-laksa", "海鮮喇沙", "椰香湯底、鮮蝦魚片", "麵類", 78),
+    seedDish("dry-scallion-noodle", "蔥油撈麵", "蔥油香、爽口竹昇麵", "麵類", 46),
+    seedDish("seafood-laksa", "海鮮喇沙", "椰香湯底、鮮蝦魷魚", "麵類", 78),
     seedDish("black-pepper-udon", "黑椒牛柳烏冬", "黑椒汁、牛柳、彈牙烏冬", "麵類", 82),
-    seedDish("tomato-egg-noodle", "番茄蛋湯麵", "鮮茄湯底、滑蛋、幼麵", "麵類", 50),
+    seedDish("tomato-egg-noodle", "番茄蛋湯麵", "番茄湯底、滑蛋、幼麵", "麵類", 50),
     seedDish("stir-fried-beef", "時蔬炒牛肉", "鑊氣十足，牛肉嫩滑", "小菜", 88),
-    seedDish("steamed-fish", "清蒸海上鮮", "薑蔥豉油，每日新鮮供應", "小菜", 138),
+    seedDish("steamed-fish", "清蒸海上鮮", "蔥薑豉油，每日鮮魚供應", "小菜", 138),
     seedDish("sweet-sour-pork", "菠蘿咕嚕肉", "酸甜開胃、外脆內嫩", "小菜", 86),
     seedDish("salt-pepper-squid", "椒鹽鮮魷", "椒鹽香脆、鮮魷彈牙", "小菜", 98),
     seedDish("garlic-choi-sum", "蒜蓉菜心", "清甜菜心、蒜香惹味", "小菜", 48),
@@ -18544,7 +18550,9 @@ const useOrderStore = create((set) => ({
     placeOrder: (params) => {
         const order = placeOrder(params);
         if (order) {
-            set({ orders: loadOrders(params.menuItems) });
+            set((state) => (state.orders.some((entry) => entry.id === order.id)
+                ? { orders: state.orders }
+                : { orders: [...state.orders, order] }));
         }
         return order;
     },
@@ -18554,7 +18562,9 @@ const useOrderStore = create((set) => ({
     },
     updateStatus: (id, status, menuItems) => {
         updateOrderStatus(id, status, menuItems);
-        set({ orders: loadOrders(menuItems) });
+        set((state) => ({
+            orders: state.orders.map((order) => (order.id === id ? { ...order, status } : order)),
+        }));
     },
 }));
 
@@ -18574,6 +18584,35 @@ const useSettingsStore = create((set) => ({
     updateRestaurant: (settings) => {
         saveRestaurantSettings(settings);
         set({ restaurant: settings });
+    },
+}));
+
+const seededTables = [
+    ["01", "available"],
+    ["02", "occupied"],
+    ["03", "occupied"],
+    ["04", "available"],
+    ["05", "available"],
+    ["06", "occupied"],
+    ["07", "available"],
+    ["08", "occupied"],
+    ["09", "available"],
+    ["10", "available"],
+    ["11", "available"],
+    ["12", "available"],
+].map(([number, status]) => ({ number, seats: 4, status: status }));
+
+const TABLE_STORAGE_KEY = "harbour-admin-tables";
+const TABLE_CHANGE_EVENT = "harbour-tables-change";
+function loadTables() {
+    const tables = readStorage(TABLE_STORAGE_KEY, seededTables);
+    return Array.isArray(tables) ? tables : seededTables;
+}
+
+const useTableStore = create((set) => ({
+    tables: loadTables(),
+    load: () => {
+        set({ tables: loadTables() });
     },
 }));
 
@@ -18600,14 +18639,6 @@ function getTablesWithOrderStatus(tables, orders) {
         ...table,
         status: occupiedTables.has(normalizeTableNumber(table.number)) ? "occupied" : "available",
     }));
-}
-
-function useLocalState(key, initialValue, eventName) {
-    const [value, setValue] = useState(() => readStorage(key, typeof initialValue === "function" ? initialValue() : initialValue));
-    useEffect(() => {
-        writeStorage(key, value, eventName);
-    }, [eventName, key, value]);
-    return [value, setValue];
 }
 
 function Metric({ label, value, note }) {
@@ -18643,19 +18674,37 @@ function normalizeCategoryName(category) {
     return CATEGORY_ALIASES[trimmed] || trimmed;
 }
 
+const IMAGE_ERROR_CODES = {
+    DECODE_FAILED: "DECODE_FAILED",
+    NOT_IMAGE: "NOT_IMAGE",
+    READ_FAILED: "READ_FAILED",
+    TOO_LARGE: "TOO_LARGE",
+};
+class ImageError extends Error {
+    constructor(code) {
+        super(code);
+        Object.defineProperty(this, "code", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        this.code = code;
+    }
+}
 function compressDishPhoto(file) {
     if (!file.type.startsWith("image/")) {
-        return Promise.reject(new Error("請選擇圖片檔案。"));
+        return Promise.reject(new ImageError(IMAGE_ERROR_CODES.NOT_IMAGE));
     }
     if (file.size > 8 * 1024 * 1024) {
-        return Promise.reject(new Error("圖片請勿超過 8MB。"));
+        return Promise.reject(new ImageError(IMAGE_ERROR_CODES.TOO_LARGE));
     }
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onerror = () => reject(new Error("圖片讀取失敗，請重新選擇。"));
+        reader.onerror = () => reject(new ImageError(IMAGE_ERROR_CODES.READ_FAILED));
         reader.onload = () => {
             const image = new Image();
-            image.onerror = () => reject(new Error("圖片格式無法使用，請選擇 JPG、PNG 或 WebP。"));
+            image.onerror = () => reject(new ImageError(IMAGE_ERROR_CODES.DECODE_FAILED));
             image.onload = () => {
                 const maxSize = 720;
                 const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
@@ -18684,8 +18733,10 @@ function createEmptyDraft(category, mealPeriods) {
         price: "",
     };
 }
-function MenuManagement({ items, setItems }) {
+function MenuManagement() {
     const { t } = useTranslation();
+    const items = useMenuStore((state) => state.items);
+    const setItems = useMenuStore((state) => state.updateItems);
     const [query, setQuery] = useState("");
     const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORIES);
     const [categoryDraft, setCategoryDraft] = useState("");
@@ -18809,7 +18860,7 @@ function MenuManagement({ items, setItems }) {
             setDraft((current) => ({ ...current, imageUrl }));
         }
         catch (error) {
-            setPhotoError(error instanceof Error ? error.message : t("menuManagement.photoError"));
+            setPhotoError(error instanceof ImageError ? t(`imageError.${error.code}`) : t("menuManagement.photoError"));
         }
     }
     function saveItem(event) {
@@ -18986,6 +19037,43 @@ const seededStaff = [
     { id: 4, name: "廚房打印機", role: "系統帳戶", active: false },
 ];
 
+const STAFF_STORAGE_KEY = "harbour-admin-staff";
+const STAFF_CHANGE_EVENT = "harbour-staff-change";
+function loadStaff() {
+    const staff = readStorage(STAFF_STORAGE_KEY, seededStaff);
+    return Array.isArray(staff) ? staff : seededStaff;
+}
+function saveStaff(staff) {
+    writeStorage(STAFF_STORAGE_KEY, staff, STAFF_CHANGE_EVENT);
+}
+function createStaffMember(staff, member) {
+    return [...staff, { ...member, id: Date.now() }];
+}
+function toggleStaffActive(staff, id) {
+    return staff.map((member) => (member.id === id ? { ...member, active: !member.active } : member));
+}
+
+const useStaffStore = create((set) => ({
+    staff: loadStaff(),
+    add: (member) => {
+        set((state) => {
+            const updated = createStaffMember(state.staff, member);
+            saveStaff(updated);
+            return { staff: updated };
+        });
+    },
+    load: () => {
+        set({ staff: loadStaff() });
+    },
+    toggleActive: (id) => {
+        set((state) => {
+            const updated = toggleStaffActive(state.staff, id);
+            saveStaff(updated);
+            return { staff: updated };
+        });
+    },
+}));
+
 const DEFAULT_ROLE = "樓面";
 const ROLE_OPTIONS = [
     { labelKey: "staffManagement.roles.floor", value: DEFAULT_ROLE },
@@ -18994,18 +19082,20 @@ const ROLE_OPTIONS = [
 ];
 function StaffManagement() {
     const { t } = useTranslation();
-    const [staff, setStaff] = useLocalState("harbour-admin-staff", seededStaff);
+    const staff = useStaffStore((state) => state.staff);
+    const add = useStaffStore((state) => state.add);
+    const toggleActive = useStaffStore((state) => state.toggleActive);
     const [showForm, setShowForm] = useState(false);
     const [draft, setDraft] = useState({ name: "", role: DEFAULT_ROLE });
     function addStaff(event) {
         event.preventDefault();
         if (!draft.name.trim())
             return;
-        setStaff((current) => [...current, { id: Date.now(), ...draft, active: true }]);
+        add({ name: draft.name.trim(), role: draft.role, active: true });
         setDraft({ name: "", role: DEFAULT_ROLE });
         setShowForm(false);
     }
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", onClick: () => setShowForm(true), type: "button", children: t("staffManagement.add") }), description: t("staffManagement.description"), title: t("staffManagement.title") }), showForm && (jsxs("form", { className: "inline-form", onSubmit: addStaff, children: [jsx("input", { "aria-label": t("staffManagement.name"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("staffManagement.name"), value: draft.name }), jsx("select", { "aria-label": t("staffManagement.role"), onChange: (event) => setDraft({ ...draft, role: event.target.value }), value: draft.role, children: ROLE_OPTIONS.map((role) => jsx("option", { value: role.value, children: t(role.labelKey) }, role.value)) }), jsx("button", { className: "management-primary", type: "submit", children: t("staffManagement.createAccount") }), jsx("button", { className: "management-secondary", onClick: () => setShowForm(false), type: "button", children: t("common.cancel") })] })), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("staffManagement.table.staff") }), jsx("th", { children: t("staffManagement.table.role") }), jsx("th", { children: t("staffManagement.table.status") }), jsx("th", { children: t("staffManagement.table.enabled") })] }) }), jsx("tbody", { children: staff.map((member) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { children: member.name }) }), jsx("td", { children: member.role }), jsx("td", { children: jsx("span", { className: `list-status ${member.active ? "active" : "inactive"}`, children: member.active ? t("staffManagement.active") : t("staffManagement.inactive") }) }), jsx("td", { children: jsx(Toggle, { checked: member.active, label: t("staffManagement.toggle", { name: member.name }), onChange: () => setStaff((current) => current.map((entry) => entry.id === member.id ? { ...entry, active: !entry.active } : entry)) }) })] }, member.id))) })] }) })] }));
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", onClick: () => setShowForm(true), type: "button", children: t("staffManagement.add") }), description: t("staffManagement.description"), title: t("staffManagement.title") }), showForm && (jsxs("form", { className: "inline-form", onSubmit: addStaff, children: [jsx("input", { "aria-label": t("staffManagement.name"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("staffManagement.name"), value: draft.name }), jsx("select", { "aria-label": t("staffManagement.role"), onChange: (event) => setDraft({ ...draft, role: event.target.value }), value: draft.role, children: ROLE_OPTIONS.map((role) => jsx("option", { value: role.value, children: t(role.labelKey) }, role.value)) }), jsx("button", { className: "management-primary", type: "submit", children: t("staffManagement.createAccount") }), jsx("button", { className: "management-secondary", onClick: () => setShowForm(false), type: "button", children: t("common.cancel") })] })), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("staffManagement.table.staff") }), jsx("th", { children: t("staffManagement.table.role") }), jsx("th", { children: t("staffManagement.table.status") }), jsx("th", { children: t("staffManagement.table.enabled") })] }) }), jsx("tbody", { children: staff.map((member) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { children: member.name }) }), jsx("td", { children: member.role }), jsx("td", { children: jsx("span", { className: `list-status ${member.active ? "active" : "inactive"}`, children: member.active ? t("staffManagement.active") : t("staffManagement.inactive") }) }), jsx("td", { children: jsx(Toggle, { checked: member.active, label: t("staffManagement.toggle", { name: member.name }), onChange: () => toggleActive(member.id) }) })] }, member.id))) })] }) })] }));
 }
 
 function TableManagement({ guestBaseUrl, tables }) {
@@ -19032,8 +19122,8 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
     const { t } = useTranslation();
     const formatAdminDate = useFormatAdminDate();
     const menuItems = useMenuStore((state) => state.items);
-    const updateMenuItems = useMenuStore((state) => state.updateItems);
     const orders = useOrderStore((state) => state.orders);
+    const tables = useTableStore((state) => state.tables);
     const pendingOrders = useMemo(() => listActiveOrders(orders), [orders]);
     const newOrderCount = useMemo(() => orders.filter((order) => order.status === "pending").length, [orders]);
     const completedOrders = useMemo(() => listSettledOrders(orders), [orders]);
@@ -19042,7 +19132,6 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
     const [activeSection, setActiveSection] = useState("orders");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
-    const [tables] = useLocalState("harbour-admin-tables", seededTables);
     const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
     function handlePrint(id) {
         useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
@@ -19054,7 +19143,7 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
         if (activeSection === "dashboard")
             return jsx(Dashboard, { menuItems: menuItems, onNavigate: setActiveSection, orders: orders, tables: tablesWithStatus });
         if (activeSection === "menu")
-            return jsx(MenuManagement, { items: menuItems, setItems: updateMenuItems });
+            return jsx(MenuManagement, {});
         if (activeSection === "tables")
             return jsx(TableManagement, { guestBaseUrl: guestBaseUrl, tables: tablesWithStatus });
         if (activeSection === "reports")
@@ -19075,9 +19164,9 @@ function CartBar({ cartItems, itemCount, onOpen, total }) {
     return (jsxs("button", { className: "cart-bar", onClick: onOpen, type: "button", children: [jsxs("span", { className: "cart-icon", children: [jsx(Icon, { name: "cart", size: 23 }), jsx("small", { children: itemCount })] }), jsxs("span", { className: "cart-bar-copy", children: [jsx("em", { children: cartItems.slice(0, 3).map((item) => `${item.name} x${item.quantity}`).join("、") }), jsx("strong", { children: money(total) })] }), jsx("span", { className: "cart-bar-action", children: t("guestApp.confirmOrder") })] }));
 }
 
-function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, updateItem }) {
+function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, updateItem, updateItemNote }) {
     const { t } = useTranslation();
-    return (jsx("div", { className: "modal-backdrop", children: jsxs("section", { className: "cart-sheet", "aria-label": t("guestApp.cart"), children: [jsx("div", { className: "sheet-handle" }), jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("guestApp.cart") }), jsx("p", { children: t("common.table.tablePrefix", { number: tableNumber, text: t("guestApp.cartHint") }) })] }), jsx("button", { className: "text-button", onClick: onClose, type: "button", children: t("common.close") })] }), jsx("div", { className: "cart-lines", children: cartItems.map((item) => (jsxs("article", { className: "cart-line", children: [jsx(DishImage, { item: item, size: "small" }), jsxs("div", { children: [jsx("h3", { children: item.name }), jsx("strong", { children: money(item.price) })] }), jsxs("div", { className: "cart-line-controls", children: [jsx("button", { onClick: () => updateItem(item.id, -1), type: "button", children: jsx(Icon, { name: item.quantity === 1 ? "trash" : "minus", size: 15 }) }), jsx("span", { children: item.quantity }), jsx("button", { onClick: () => updateItem(item.id, 1), type: "button", children: jsx(Icon, { name: "plus", size: 15 }) })] })] }, item.id))) }), jsxs("footer", { className: "cart-footer", children: [jsxs("div", { children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(total) })] }), jsx("button", { className: "primary-button", onClick: onSubmit, type: "button", children: t("guestApp.confirmOrder") })] })] }) }));
+    return (jsx("div", { className: "modal-backdrop", children: jsxs("section", { className: "cart-sheet", "aria-label": t("guestApp.cart"), children: [jsx("div", { className: "sheet-handle" }), jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("guestApp.cart") }), jsx("p", { children: t("common.table.tablePrefix", { number: tableNumber, text: t("guestApp.cartHint") }) })] }), jsx("button", { className: "text-button", onClick: onClose, type: "button", children: t("common.close") })] }), jsx("div", { className: "cart-lines", children: cartItems.map((item) => (jsxs("article", { className: "cart-line", children: [jsx(DishImage, { item: item, size: "small" }), jsxs("div", { children: [jsx("h3", { children: item.name }), item.notes && jsx("small", { className: "cart-item-notes", children: item.notes }), jsx("strong", { children: money(item.price) }), jsx("input", { "aria-label": `${item.name} ${t("guestApp.notesPlaceholder")}`, className: "cart-item-notes-input", onChange: (event) => updateItemNote?.(item.id, event.target.value), placeholder: t("guestApp.notesPlaceholder"), value: item.notes || "" })] }), jsxs("div", { className: "cart-line-controls", children: [jsx("button", { onClick: () => updateItem(item.id, -1), type: "button", children: jsx(Icon, { name: item.quantity === 1 ? "trash" : "minus", size: 15 }) }), jsx("span", { children: item.quantity }), jsx("button", { onClick: () => updateItem(item.id, 1), type: "button", children: jsx(Icon, { name: "plus", size: 15 }) })] })] }, item.id))) }), jsxs("footer", { className: "cart-footer", children: [jsxs("div", { children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(total) })] }), jsx("button", { className: "primary-button", onClick: onSubmit, type: "button", children: t("guestApp.confirmOrder") })] })] }) }));
 }
 
 function ConfirmationCard({ menuItems, onClose, onViewOrderHistory, order, tableNumber }) {
@@ -19091,7 +19180,7 @@ function GuestOrderHistory({ menuItems, onClose, orders, tableNumber }) {
     return (jsx("div", { className: "modal-backdrop", children: jsxs("section", { className: "cart-sheet order-history-sheet", "aria-label": t("guestApp.history.label"), children: [jsx("div", { className: "sheet-handle" }), jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("guestApp.history.title") }), jsx("p", { children: t("guestApp.history.summary", { count: orders.length, number: tableNumber }) })] }), jsx("button", { className: "text-button", onClick: onClose, type: "button", children: t("common.close") })] }), orders.length ? (jsxs(Fragment, { children: [jsx("div", { className: "guest-order-list", children: orders.map((order) => (jsxs("article", { className: "guest-order-card", children: [jsxs("header", { children: [jsxs("div", { children: [jsx("span", { className: "order-sequence", children: order.id }), jsx("h3", { children: formatTime(order.createdAt) })] }), jsx(StatusBadge, { status: order.status })] }), jsx("div", { className: "guest-order-lines", children: order.items.map((line, index) => {
                                             const item = getMenuItem(line.id, menuItems);
                                             const unitPrice = line.unitPrice ?? item?.price ?? 0;
-                                            return (jsxs("div", { children: [jsx("span", { children: line.name || item?.name || t("guestApp.history.removedDish") }), jsxs("strong", { children: ["x ", line.quantity] }), jsx("em", { children: money(unitPrice * line.quantity) })] }, `${line.id}-${index}`));
+                                            return (jsxs("div", { children: [jsxs("span", { children: [line.name || item?.name || t("guestApp.history.removedDish"), line.notes && jsx("small", { className: "order-line-notes", children: line.notes })] }), jsxs("strong", { children: ["x ", line.quantity] }), jsx("em", { children: money(unitPrice * line.quantity) })] }, `${line.id}-${index}`));
                                         }) }), jsxs("footer", { children: [jsx("span", { children: t("common.table.subtotal") }), jsx("strong", { children: money(getOrderTotal(order, menuItems)) })] })] }, order.id))) }), jsxs("div", { className: "order-history-total", children: [jsx("span", { children: t("guestApp.history.tableTotal") }), jsx("strong", { children: money(tableTotal) })] })] })) : (jsxs("div", { className: "empty-order-history", children: [jsx(Icon, { name: "orders", size: 30 }), jsx("h3", { children: t("common.empty.noTableOrders") }), jsx("p", { children: t("common.empty.noTableOrdersDesc") })] }))] }) }));
 }
 
@@ -19103,6 +19192,7 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
     const restaurantName = useSettingsStore((state) => state.restaurant.name);
     const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY);
     const [cart, setCart] = useState({});
+    const [itemNotes, setItemNotes] = useState({});
     const [isCartOpen, setCartOpen] = useState(false);
     const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
     const [confirmation, setConfirmation] = useState(null);
@@ -19123,20 +19213,23 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
         if (activeCategory !== ALL_CATEGORY) {
             return periodMenuItems.filter((item) => item.category === activeCategory);
         }
+        const indexMap = new Map(periodMenuItems.map((item, index) => [item.id, index]));
         return [...periodMenuItems].sort((a, b) => {
             const salesDiff = (cumulativeDishSales[b.id] || 0) - (cumulativeDishSales[a.id] || 0);
             if (salesDiff !== 0)
                 return salesDiff;
-            return periodMenuItems.findIndex((item) => item.id === a.id) - periodMenuItems.findIndex((item) => item.id === b.id);
+            return (indexMap.get(a.id) ?? 0) - (indexMap.get(b.id) ?? 0);
         });
     }, [activeCategory, cumulativeDishSales, periodMenuItems]);
-    const cartItems = useMemo(() => Object.entries(cart)
-        .filter(([, quantity]) => quantity > 0)
-        .map(([id, quantity]) => {
+    const cartItems = useMemo(() => Object.entries(cart).reduce((items, [id, quantity]) => {
+        if (quantity <= 0)
+            return items;
         const item = getMenuItem(id, menuItems);
-        return item ? { ...item, quantity } : null;
-    })
-        .filter((item) => Boolean(item)), [cart, menuItems]);
+        if (!item)
+            return items;
+        items.push({ ...item, notes: itemNotes[id] || "", quantity });
+        return items;
+    }, []), [cart, itemNotes, menuItems]);
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     const total = cartItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
     const hasTableOrders = tableOrders.length > 0;
@@ -19166,7 +19259,19 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
         }
         setCart((current) => {
             const nextQuantity = Math.max(0, (current[id] || 0) + delta);
+            if (nextQuantity === 0) {
+                setItemNotes((notes) => Object.fromEntries(Object.entries(notes).filter(([key]) => key !== id)));
+            }
             return { ...current, [id]: nextQuantity };
+        });
+    }
+    function updateItemNote(id, notes) {
+        setItemNotes((current) => {
+            const trimmedNotes = notes.trimStart();
+            if (!trimmedNotes) {
+                return Object.fromEntries(Object.entries(current).filter(([key]) => key !== id));
+            }
+            return { ...current, [id]: trimmedNotes };
         });
     }
     function submitOrder() {
@@ -19174,7 +19279,13 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
             return;
         const order = useOrderStore.getState().placeOrder({
             activeMealPeriod,
-            items: cartItems.map(({ id, name, price, quantity }) => ({ id, name, quantity, unitPrice: price })),
+            items: cartItems.map(({ id, name, notes, price, quantity }) => ({
+                id,
+                name,
+                notes: notes?.trim() || undefined,
+                quantity,
+                unitPrice: price,
+            })),
             menuItems: useMenuStore.getState().items,
             printerSettings: useSettingsStore.getState().printer,
             table: tableNumber,
@@ -19185,6 +19296,7 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
         }
         setConfirmation(order);
         setCart({});
+        setItemNotes({});
         setCartOpen(false);
     }
     return (jsxs("main", { className: guestShellClassName, children: [jsxs("header", { className: "guest-header", children: [jsxs("div", { children: [jsx("span", { className: "restaurant-name", children: restaurantName }), jsx("span", { className: "table-label", children: t("common.table.tableLabel", { number: tableNumber }) })] }), jsxs("div", { className: "guest-header-actions", children: [jsx("button", { className: "language-button", onClick: () => setLanguage(language === "zh-Hant" ? "en" : "zh-Hant"), type: "button", children: t("guestApp.languageToggle") }), jsx("button", { className: "admin-shortcut", onClick: () => setView("admin"), type: "button", children: t("guestApp.adminShortcut") })] })] }), jsxs("section", { className: "guest-menu-tabs", "aria-label": t("guestApp.navigationLabel"), children: [jsx("button", { className: "active", type: "button", children: t("guestApp.menuTab") }), jsxs("button", { onClick: () => setOrderHistoryOpen(true), type: "button", children: [t("guestApp.orderDetails"), hasTableOrders && jsx("small", { children: tableOrders.length })] })] }), jsx("nav", { className: "category-tabs", "aria-label": t("guestApp.categoryLabel"), children: categories.map((category) => (jsx("button", { className: category === activeCategory ? "active" : "", onClick: (event) => {
@@ -19195,7 +19307,7 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
                     : t("guestApp.serviceClosed") }), stockNotice && (jsxs("div", { className: "stock-notice", children: [jsx("span", { children: stockNotice }), jsx("button", { "aria-label": t("guestApp.closeNotice"), onClick: () => setStockNotice(""), type: "button", children: "x" })] })), jsx("section", { className: "menu-list", children: visibleMenu.map((item) => {
                     const quantity = cart[item.id] || 0;
                     return (jsxs("article", { className: `menu-item ${item.soldOut ? "sold-out" : ""}`, children: [jsx(DishImage, { item: item }), jsxs("div", { className: "menu-item-copy", children: [jsx("h2", { children: item.name }), jsx("p", { children: item.description }), jsx("strong", { children: money(item.price) }), item.soldOut && jsx("span", { className: "sold-out-label", children: t("guestApp.soldOut") })] }), jsxs("div", { className: "menu-item-control", children: [quantity > 0 && (jsxs(Fragment, { children: [jsx("button", { "aria-label": t("guestApp.decreaseItem", { name: item.name }), className: "quantity-control secondary", onClick: () => updateItem(item.id, -1), type: "button", children: jsx(Icon, { name: "minus", size: 16 }) }), jsx("span", { children: quantity })] })), jsx("button", { "aria-label": item.soldOut ? t("guestApp.itemSoldOut", { name: item.name }) : t("guestApp.addItem", { name: item.name }), className: "quantity-control", disabled: item.soldOut, onClick: () => updateItem(item.id, 1), type: "button", children: jsx(Icon, { name: "plus", size: 18 }) })] })] }, item.id));
-                }) }), jsx(CartBar, { cartItems: cartItems, itemCount: itemCount, onOpen: () => setCartOpen(true), total: total }), isCartOpen && (jsx(CartSheet, { cartItems: cartItems, onClose: () => setCartOpen(false), onSubmit: submitOrder, tableNumber: tableNumber, total: total, updateItem: updateItem })), confirmation && (jsx(ConfirmationCard, { menuItems: menuItems, onClose: () => setConfirmation(null), onViewOrderHistory: () => {
+                }) }), jsx(CartBar, { cartItems: cartItems, itemCount: itemCount, onOpen: () => setCartOpen(true), total: total }), isCartOpen && (jsx(CartSheet, { cartItems: cartItems, onClose: () => setCartOpen(false), onSubmit: submitOrder, tableNumber: tableNumber, total: total, updateItem: updateItem, updateItemNote: updateItemNote })), confirmation && (jsx(ConfirmationCard, { menuItems: menuItems, onClose: () => setConfirmation(null), onViewOrderHistory: () => {
                     setConfirmation(null);
                     setOrderHistoryOpen(true);
                 }, order: confirmation, tableNumber: tableNumber })), isOrderHistoryOpen && (jsx(GuestOrderHistory, { menuItems: menuItems, onClose: () => setOrderHistoryOpen(false), orders: tableOrders, tableNumber: tableNumber }))] }));
@@ -19211,6 +19323,8 @@ function App() {
     const loadMenu = useMenuStore((state) => state.load);
     const loadOrders = useOrderStore((state) => state.load);
     const loadSettings = useSettingsStore((state) => state.load);
+    const loadStaff = useStaffStore((state) => state.load);
+    const loadTables = useTableStore((state) => state.load);
     const restaurantSettings = useSettingsStore((state) => state.restaurant);
     const guestBaseUrl = useMemo(getGuestBaseUrl, []);
     const activeMealPeriod = useMemo(() => getCurrentMealPeriod(restaurantSettings, now), [now, restaurantSettings]);
@@ -19243,6 +19357,16 @@ function App() {
             loadMenu();
         }, MENU_CHANGE_EVENT);
     }, [loadMenu]);
+    useEffect(() => {
+        return subscribeToStorage("harbour-admin-staff", () => {
+            loadStaff();
+        }, STAFF_CHANGE_EVENT);
+    }, [loadStaff]);
+    useEffect(() => {
+        return subscribeToStorage("harbour-admin-tables", () => {
+            loadTables();
+        }, TABLE_CHANGE_EVENT);
+    }, [loadTables]);
     return (jsxs(Fragment, { children: [jsx(ViewToggle, { setView: setView, view: view }), view === "guest" ? (jsx(GuestApp, { activeMealPeriod: activeMealPeriod, setView: setView, tableNumber: tableNumber })) : (jsx(AdminApp, { activeMealPeriod: activeMealPeriod, guestBaseUrl: guestBaseUrl, now: now, setView: setView }))] }));
 }
 
