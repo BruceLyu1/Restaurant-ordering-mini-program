@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { seededStaff } from "../data/staff";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { Toggle } from "../components/ui/Toggle";
 import { useTranslation } from "../i18n/useTranslation";
-import { useLocalState } from "../utils/useLocalState";
-import type { StaffMember } from "../types";
+import { useStaffStore } from "../stores/staffStore";
 
 const DEFAULT_ROLE = "樓面";
 const ROLE_OPTIONS = [
@@ -15,14 +13,16 @@ const ROLE_OPTIONS = [
 
 export function StaffManagement() {
   const { t } = useTranslation();
-  const [staff, setStaff] = useLocalState<StaffMember[]>("harbour-admin-staff", seededStaff);
+  const staff = useStaffStore((state) => state.staff);
+  const add = useStaffStore((state) => state.add);
+  const toggleActive = useStaffStore((state) => state.toggleActive);
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState({ name: "", role: DEFAULT_ROLE });
 
   function addStaff(event: React.FormEvent): void {
     event.preventDefault();
     if (!draft.name.trim()) return;
-    setStaff((current) => [...current, { id: Date.now(), ...draft, active: true }]);
+    add({ name: draft.name.trim(), role: draft.role, active: true });
     setDraft({ name: "", role: DEFAULT_ROLE });
     setShowForm(false);
   }
@@ -53,7 +53,7 @@ export function StaffManagement() {
                 <td><strong>{member.name}</strong></td>
                 <td>{member.role}</td>
                 <td><span className={`list-status ${member.active ? "active" : "inactive"}`}>{member.active ? t("staffManagement.active") : t("staffManagement.inactive")}</span></td>
-                <td><Toggle checked={member.active} label={t("staffManagement.toggle", { name: member.name })} onChange={() => setStaff((current) => current.map((entry) => entry.id === member.id ? { ...entry, active: !entry.active } : entry))} /></td>
+                <td><Toggle checked={member.active} label={t("staffManagement.toggle", { name: member.name })} onChange={() => toggleActive(member.id)} /></td>
               </tr>
             ))}
           </tbody>

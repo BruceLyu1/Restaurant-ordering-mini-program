@@ -23,11 +23,8 @@ function byCreatedAtDesc(a: Order, b: Order): number {
   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }
 
-export function loadOrders(menuItems: MenuItem[]): Order[] {
-  const orders = readStorage<Order[]>(ORDER_STORAGE_KEY, seedOrders);
-  if (!Array.isArray(orders)) return seedOrders;
-
-  return orders.map((order) => ({
+function normalizeOrder(order: Order, menuItems: MenuItem[]): Order {
+  return {
     ...order,
     items: order.items.map((item) => {
       const menuItem = getMenuItem(item.id, menuItems);
@@ -37,7 +34,19 @@ export function loadOrders(menuItems: MenuItem[]): Order[] {
         unitPrice: item.unitPrice ?? menuItem?.price,
       };
     }),
-  }));
+  };
+}
+
+export function loadOrders(menuItems: MenuItem[]): Order[] {
+  const orders = readStorage<Order[]>(ORDER_STORAGE_KEY, seedOrders);
+  if (!Array.isArray(orders)) return seedOrders;
+
+  const ordersById = new Map<string, Order>();
+  orders.forEach((order) => {
+    ordersById.set(order.id, order);
+  });
+
+  return Array.from(ordersById.values()).map((order) => normalizeOrder(order, menuItems));
 }
 
 export function saveOrders(orders: Order[]): void {

@@ -49,7 +49,10 @@ export function GuestOrderHistory({ menuItems, onClose, orders, tableNumber }: G
                       const unitPrice = line.unitPrice ?? item?.price ?? 0;
                       return (
                         <div key={`${line.id}-${index}`}>
-                          <span>{line.name || item?.name || t("guestApp.history.removedDish")}</span>
+                          <span>
+                            {line.name || item?.name || t("guestApp.history.removedDish")}
+                            {line.notes && <small className="order-line-notes">{line.notes}</small>}
+                          </span>
                           <strong>x {line.quantity}</strong>
                           <em>{money(unitPrice * line.quantity)}</em>
                         </div>

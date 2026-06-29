@@ -34,7 +34,10 @@ export function OrderCard({ menuItems, order, onPrint, onSettle }: OrderCardProp
           const item = getMenuItem(line.id, menuItems);
           return (
             <div key={line.id}>
-              <span>{line.name || item?.name || t("adminApp.orders.removedDish")}</span>
+              <span>
+                {line.name || item?.name || t("adminApp.orders.removedDish")}
+                {line.notes && <small className="order-line-notes">{line.notes}</small>}
+              </span>
               <strong>x {line.quantity}</strong>
             </div>
           );

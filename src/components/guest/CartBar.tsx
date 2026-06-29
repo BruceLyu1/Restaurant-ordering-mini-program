@@ -5,6 +5,7 @@ import { money } from "../../utils/money";
 import type { MenuItem } from "../../types";
 
 export interface CartItem extends MenuItem {
+  notes?: string;
   quantity: number;
 }
 

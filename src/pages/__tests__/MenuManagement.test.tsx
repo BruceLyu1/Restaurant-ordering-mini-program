@@ -1,7 +1,8 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
 import { LanguageProvider } from "../../i18n/LanguageContext";
+import { useMenuStore } from "../../stores/menuStore";
 import { MenuManagement } from "../MenuManagement";
 import type { MenuItem } from "../../types";
 
@@ -17,17 +18,22 @@ const menuItem: MenuItem = {
   soldOut: false,
 };
 
-function renderMenuManagement(setItems = vi.fn()) {
+function renderMenuManagement() {
   window.localStorage.setItem("harbour-language", "zh-Hant");
+  useMenuStore.setState({ items: [menuItem] });
   render(
     <LanguageProvider>
-      <MenuManagement items={[menuItem]} setItems={setItems} />
+      <MenuManagement />
     </LanguageProvider>,
   );
-  return setItems;
 }
 
 describe("MenuManagement", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    useMenuStore.setState({ items: [menuItem] });
+  });
+
   it("renders the menu table without runtime reference errors", () => {
     renderMenuManagement();
 
@@ -36,7 +42,7 @@ describe("MenuManagement", () => {
   });
 
   it("saves descriptions when creating dishes", () => {
-    const setItems = renderMenuManagement();
+    renderMenuManagement();
 
     fireEvent.click(screen.getByRole("button", { name: "新增菜品" }));
     fireEvent.change(screen.getByLabelText("菜品名稱"), { target: { value: "Test Dish" } });
@@ -44,8 +50,19 @@ describe("MenuManagement", () => {
     fireEvent.change(screen.getByLabelText("菜品描述"), { target: { value: "Crisp and fresh" } });
     fireEvent.click(screen.getByRole("button", { name: "儲存菜品" }));
 
-    const updater = setItems.mock.calls.at(-1)?.[0];
-    expect(typeof updater).toBe("function");
-    expect(updater([])[0].description).toBe("Crisp and fresh");
+    expect(useMenuStore.getState().items.at(-1)?.description).toBe("Crisp and fresh");
+  });
+
+  it("shows translated image validation errors", async () => {
+    renderMenuManagement();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增菜品" }));
+    fireEvent.change(screen.getByLabelText("上傳菜品照片"), {
+      target: { files: [new File(["not-image"], "notes.txt", { type: "text/plain" })] },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("請選擇圖片檔案。")).toBeTruthy();
+    });
   });
 });

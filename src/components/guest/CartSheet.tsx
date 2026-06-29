@@ -12,9 +12,10 @@ interface CartSheetProps {
   tableNumber: string;
   total: number;
   updateItem: (id: string, delta: number) => void;
+  updateItemNote?: (id: string, notes: string) => void;
 }
 
-export function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, updateItem }: CartSheetProps) {
+export function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, updateItem, updateItemNote }: CartSheetProps) {
   const { t } = useTranslation();
 
   return (
@@ -36,7 +37,15 @@ export function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, up
               <DishImage item={item} size="small" />
               <div>
                 <h3>{item.name}</h3>
+                {item.notes && <small className="cart-item-notes">{item.notes}</small>}
                 <strong>{money(item.price)}</strong>
+                <input
+                  aria-label={`${item.name} ${t("guestApp.notesPlaceholder")}`}
+                  className="cart-item-notes-input"
+                  onChange={(event) => updateItemNote?.(item.id, event.target.value)}
+                  placeholder={t("guestApp.notesPlaceholder")}
+                  value={item.notes || ""}
+                />
               </div>
               <div className="cart-line-controls">
                 <button onClick={() => updateItem(item.id, -1)} type="button">

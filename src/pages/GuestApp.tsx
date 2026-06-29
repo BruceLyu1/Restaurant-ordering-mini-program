@@ -31,6 +31,7 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
   const restaurantName = useSettingsStore((state) => state.restaurant.name);
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY);
   const [cart, setCart] = useState<Record<string, number>>({});
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [isCartOpen, setCartOpen] = useState(false);
   const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<Order | null>(null);
@@ -63,25 +64,25 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
         return periodMenuItems.filter((item) => item.category === activeCategory);
       }
 
+      const indexMap = new Map(periodMenuItems.map((item, index) => [item.id, index]));
       return [...periodMenuItems].sort((a, b) => {
         const salesDiff = (cumulativeDishSales[b.id] || 0) - (cumulativeDishSales[a.id] || 0);
         if (salesDiff !== 0) return salesDiff;
-        return periodMenuItems.findIndex((item) => item.id === a.id) - periodMenuItems.findIndex((item) => item.id === b.id);
+        return (indexMap.get(a.id) ?? 0) - (indexMap.get(b.id) ?? 0);
       });
     },
     [activeCategory, cumulativeDishSales, periodMenuItems],
   );
 
   const cartItems = useMemo(
-    () =>
-      Object.entries(cart)
-        .filter(([, quantity]) => quantity > 0)
-        .map(([id, quantity]) => {
-          const item = getMenuItem(id, menuItems);
-          return item ? { ...item, quantity } : null;
-        })
-        .filter((item): item is CartItem => Boolean(item)),
-    [cart, menuItems],
+    () => Object.entries(cart).reduce<CartItem[]>((items, [id, quantity]) => {
+      if (quantity <= 0) return items;
+      const item = getMenuItem(id, menuItems);
+      if (!item) return items;
+      items.push({ ...item, notes: itemNotes[id] || "", quantity });
+      return items;
+    }, []),
+    [cart, itemNotes, menuItems],
   );
 
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -121,7 +122,20 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
 
     setCart((current) => {
       const nextQuantity = Math.max(0, (current[id] || 0) + delta);
+      if (nextQuantity === 0) {
+        setItemNotes((notes) => Object.fromEntries(Object.entries(notes).filter(([key]) => key !== id)));
+      }
       return { ...current, [id]: nextQuantity };
+    });
+  }
+
+  function updateItemNote(id: string, notes: string): void {
+    setItemNotes((current) => {
+      const trimmedNotes = notes.trimStart();
+      if (!trimmedNotes) {
+        return Object.fromEntries(Object.entries(current).filter(([key]) => key !== id));
+      }
+      return { ...current, [id]: trimmedNotes };
     });
   }
 
@@ -129,7 +143,13 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
     if (!cartItems.length) return;
     const order = useOrderStore.getState().placeOrder({
       activeMealPeriod,
-      items: cartItems.map(({ id, name, price, quantity }) => ({ id, name, quantity, unitPrice: price })),
+      items: cartItems.map(({ id, name, notes, price, quantity }) => ({
+        id,
+        name,
+        notes: notes?.trim() || undefined,
+        quantity,
+        unitPrice: price,
+      })),
       menuItems: useMenuStore.getState().items,
       printerSettings: useSettingsStore.getState().printer,
       table: tableNumber,
@@ -140,6 +160,7 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
     }
     setConfirmation(order);
     setCart({});
+    setItemNotes({});
     setCartOpen(false);
   }
 
@@ -248,6 +269,7 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
           tableNumber={tableNumber}
           total={total}
           updateItem={updateItem}
+          updateItemNote={updateItemNote}
         />
       )}
 

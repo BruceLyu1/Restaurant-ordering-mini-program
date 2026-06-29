@@ -4,15 +4,14 @@ import { OrderCard } from "../components/admin/OrderCard";
 import { PopularDishes } from "../components/admin/PopularDishes";
 import { Sidebar } from "../components/admin/Sidebar";
 import { Icon } from "../components/ui/Icon";
-import { seededTables } from "../data/tables";
 import { useFormatAdminDate } from "../i18n/useFormatAdminDate";
 import { useTranslation } from "../i18n/useTranslation";
 import { listActiveOrders, listSettledOrders } from "../services/orderService";
 import { useMenuStore } from "../stores/menuStore";
 import { useOrderStore } from "../stores/orderStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { useTableStore } from "../stores/tableStore";
 import { getTablesWithOrderStatus } from "../utils/table";
-import { useLocalState } from "../utils/useLocalState";
 import { Dashboard } from "./Dashboard";
 import { MenuManagement } from "./MenuManagement";
 import { PrinterSettings } from "./PrinterSettings";
@@ -20,7 +19,7 @@ import { Reports } from "./Reports";
 import { RestaurantSettings } from "./RestaurantSettings";
 import { StaffManagement } from "./StaffManagement";
 import { TableManagement } from "./TableManagement";
-import type { MealPeriod, TableInfo } from "../types";
+import type { MealPeriod } from "../types";
 
 interface AdminAppProps {
   activeMealPeriod: MealPeriod | null;
@@ -33,8 +32,8 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   const { t } = useTranslation();
   const formatAdminDate = useFormatAdminDate();
   const menuItems = useMenuStore((state) => state.items);
-  const updateMenuItems = useMenuStore((state) => state.updateItems);
   const orders = useOrderStore((state) => state.orders);
+  const tables = useTableStore((state) => state.tables);
   const pendingOrders = useMemo(() => listActiveOrders(orders), [orders]);
   const newOrderCount = useMemo(() => orders.filter((order) => order.status === "pending").length, [orders]);
   const completedOrders = useMemo(() => listSettledOrders(orders), [orders]);
@@ -43,7 +42,6 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   const [activeSection, setActiveSection] = useState("orders");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
-  const [tables] = useLocalState<TableInfo[]>("harbour-admin-tables", seededTables);
   const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
 
   function handlePrint(id: string): void {
@@ -60,7 +58,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
 
   function renderAdminSection() {
     if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={setActiveSection} orders={orders} tables={tablesWithStatus} />;
-    if (activeSection === "menu") return <MenuManagement items={menuItems} setItems={updateMenuItems} />;
+    if (activeSection === "menu") return <MenuManagement />;
     if (activeSection === "tables") return <TableManagement guestBaseUrl={guestBaseUrl} tables={tablesWithStatus} />;
     if (activeSection === "reports") return <Reports menuItems={menuItems} orders={orders} />;
     if (activeSection === "staff") return <StaffManagement />;

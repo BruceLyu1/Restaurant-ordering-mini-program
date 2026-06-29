@@ -1,4 +1,3 @@
-
 import { readStorage, writeStorage } from "./storage";
 import type { MealPeriod, MenuItem, PrinterSettings, RestaurantSettings } from "../types";
 
@@ -7,7 +6,7 @@ export const SETTINGS_CHANGE_EVENT = "harbour-settings-change";
 export const PRINTER_STORAGE_KEY = "harbour-admin-printer";
 
 export const DEFAULT_MEAL_PERIODS: MealPeriod[] = [
-  { id: "breakfast", name: "早餐", start: "07:00", end: "11:00" },
+  { id: "breakfast", name: "早市", start: "07:00", end: "11:00" },
   { id: "lunch", name: "午市", start: "11:00", end: "17:00" },
   { id: "dinner", name: "晚市", start: "17:00", end: "23:59" },
 ];

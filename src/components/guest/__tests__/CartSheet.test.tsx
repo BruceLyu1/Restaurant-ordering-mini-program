@@ -6,7 +6,7 @@ import { CartSheet } from "../CartSheet";
 import type { CartItem } from "../CartBar";
 
 const cartItems: CartItem[] = [
-  { category: "Food", description: "", id: "soup", name: "Soup", price: 40, quantity: 2, soldOut: false },
+  { category: "Food", description: "", id: "soup", name: "Soup", notes: "No onion", price: 40, quantity: 2, soldOut: false },
 ];
 
 function renderWithLanguage(ui: React.ReactElement) {
@@ -15,27 +15,31 @@ function renderWithLanguage(ui: React.ReactElement) {
 }
 
 describe("CartSheet", () => {
-  it("renders cart lines, table hint, and total", () => {
+  it("renders cart lines, table hint, notes, and total", () => {
     renderWithLanguage(<CartSheet cartItems={cartItems} onClose={vi.fn()} onSubmit={vi.fn()} tableNumber="05" total={80} updateItem={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Cart" })).toBeTruthy();
     expect(screen.getByText("Table 05 · Please confirm item quantities")).toBeTruthy();
     expect(screen.getByText("Soup")).toBeTruthy();
+    expect(screen.getByText("No onion")).toBeTruthy();
     expect(screen.getByText("HK$ 80")).toBeTruthy();
   });
 
-  it("calls close, submit, and update callbacks", () => {
+  it("calls close, submit, quantity, and note callbacks", () => {
     const onClose = vi.fn();
     const onSubmit = vi.fn();
     const updateItem = vi.fn();
-    renderWithLanguage(<CartSheet cartItems={cartItems} onClose={onClose} onSubmit={onSubmit} tableNumber="05" total={80} updateItem={updateItem} />);
+    const updateItemNote = vi.fn();
+    renderWithLanguage(<CartSheet cartItems={cartItems} onClose={onClose} onSubmit={onSubmit} tableNumber="05" total={80} updateItem={updateItem} updateItemNote={updateItemNote} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     fireEvent.click(screen.getByRole("button", { name: "Place order" }));
     fireEvent.click(screen.getAllByRole("button")[2]);
+    fireEvent.change(screen.getByLabelText("Soup Less sweet / No ice / Extra base..."), { target: { value: "Less salt" } });
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(updateItem).toHaveBeenCalledWith("soup", 1);
+    expect(updateItemNote).toHaveBeenCalledWith("soup", "Less salt");
   });
 });

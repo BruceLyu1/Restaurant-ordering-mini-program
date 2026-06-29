@@ -33,7 +33,11 @@ export const useOrderStore = create<OrderStore>((set) => ({
   placeOrder: (params) => {
     const order = placeOrderService(params);
     if (order) {
-      set({ orders: loadOrders(params.menuItems) });
+      set((state) => (
+        state.orders.some((entry) => entry.id === order.id)
+          ? { orders: state.orders }
+          : { orders: [...state.orders, order] }
+      ));
     }
     return order;
   },
@@ -45,6 +49,10 @@ export const useOrderStore = create<OrderStore>((set) => ({
 
   updateStatus: (id, status, menuItems) => {
     updateOrderStatus(id, status, menuItems);
-    set({ orders: loadOrders(menuItems) });
+    set((state) => ({
+      orders: state.orders.map((order) => (
+        order.id === id ? { ...order, status } : order
+      )),
+    }));
   },
 }));
