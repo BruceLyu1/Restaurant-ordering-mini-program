@@ -624,7 +624,7 @@ commonjsExports$4.useLayoutEffect;
 const useMemo = commonjsExports$4.useMemo;
 commonjsExports$4.useOptimistic;
 commonjsExports$4.useReducer;
-commonjsExports$4.useRef;
+const useRef = commonjsExports$4.useRef;
 const useState = commonjsExports$4.useState;
 commonjsExports$4.useSyncExternalStore;
 commonjsExports$4.useTransition;
@@ -17324,6 +17324,7 @@ function subscribeToStorage(key, callback, eventName) {
 const SETTINGS_STORAGE_KEY = "harbour-admin-settings";
 const SETTINGS_CHANGE_EVENT = "harbour-settings-change";
 const PRINTER_STORAGE_KEY = "harbour-admin-printer";
+const PRINTER_CHANGE_EVENT = "harbour-printer-change";
 const DEFAULT_MEAL_PERIODS = [
     { id: "breakfast", name: "早市", start: "07:00", end: "11:00" },
     { id: "lunch", name: "午市", start: "11:00", end: "17:00" },
@@ -17335,6 +17336,7 @@ const DEFAULT_RESTAURANT_SETTINGS = {
     address: "香港灣仔軒尼詩道 88 號",
     language: "繁體中文",
     mealPeriods: DEFAULT_MEAL_PERIODS,
+    pin: "000000",
 };
 const DEFAULT_PRINTER_SETTINGS = {
     autoPrint: true,
@@ -17355,6 +17357,9 @@ function loadRestaurantSettings() {
         ...DEFAULT_RESTAURANT_SETTINGS,
         ...settings,
         mealPeriods: normalizeMealPeriods(settings.mealPeriods),
+        pin: typeof settings.pin === "string" && /^\d{6}$/.test(settings.pin)
+            ? settings.pin
+            : DEFAULT_RESTAURANT_SETTINGS.pin,
     };
 }
 function saveRestaurantSettings(settings) {
@@ -17367,7 +17372,7 @@ function loadPrinterSettings() {
     };
 }
 function savePrinterSettings(settings) {
-    writeStorage(PRINTER_STORAGE_KEY, settings);
+    writeStorage(PRINTER_STORAGE_KEY, settings, PRINTER_CHANGE_EVENT);
 }
 function timeToMinutes(time) {
     if (!/^\d{2}:\d{2}$/.test(time || ""))
@@ -17500,6 +17505,13 @@ const translations = {
                 removedDish: "已移除菜品",
                 reprint: "補印",
                 settle: "結帳",
+            },
+            pin: {
+                description: "請輸入 6 位數字密碼以進入後台",
+                digitLabel: "第 {position} 位數字",
+                incorrect: "密碼錯誤，請重新輸入",
+                reset: "清除",
+                title: "管理員驗證",
             },
         },
         dashboard: {
@@ -17636,6 +17648,8 @@ const translations = {
         },
         restaurantSettings: {
             address: "餐廳地址",
+            changePin: "修改管理密碼",
+            changePinDesc: "設定 6 位數字密碼，用於進入管理後台",
             description: "這些資料會顯示在顧客手機菜單中。",
             end: "結束",
             endTime: "{name}結束時間",
@@ -17643,7 +17657,10 @@ const translations = {
             mealPeriods: "供應時段",
             mealPeriodsDescription: "修改早市、午市和晚市的營業時間。顧客只會看到目前時段可供應的菜品。",
             name: "餐廳名稱",
+            newPin: "新密碼",
+            newPinPlaceholder: "輸入 6 位數字",
             phone: "聯絡電話",
+            pinValidation: "請輸入 6 位數字密碼，或留空不修改。",
             save: "儲存餐廳資料",
             saved: "餐廳資料已儲存",
             start: "開始",
@@ -17803,6 +17820,13 @@ const translations = {
                 reprint: "Reprint",
                 settle: "Settle",
             },
+            pin: {
+                description: "Enter the 6-digit PIN to access the dashboard",
+                digitLabel: "Digit {position}",
+                incorrect: "Incorrect PIN, please try again",
+                reset: "Clear",
+                title: "Admin Verification",
+            },
         },
         dashboard: {
             description: "Track lunch orders, table usage, and menu status.",
@@ -17938,6 +17962,8 @@ const translations = {
         },
         restaurantSettings: {
             address: "Restaurant address",
+            changePin: "Change Admin PIN",
+            changePinDesc: "Set a 6-digit PIN to protect the admin dashboard",
             description: "These details appear on the guest mobile menu.",
             end: "End",
             endTime: "{name} end time",
@@ -17945,7 +17971,10 @@ const translations = {
             mealPeriods: "Service periods",
             mealPeriodsDescription: "Adjust breakfast, lunch, and dinner service hours. Guests only see dishes available in the current period.",
             name: "Restaurant name",
+            newPin: "New PIN",
+            newPinPlaceholder: "Enter 6 digits",
             phone: "Phone",
+            pinValidation: "Enter a 6-digit PIN or leave it blank.",
             save: "Save restaurant details",
             saved: "Restaurant details saved",
             start: "Start",
@@ -18180,6 +18209,145 @@ function OrderCard({ menuItems, order, onPrint, onSettle }) {
                 }) }), jsxs("div", { className: "order-total", children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(getOrderTotal(order, menuItems)) })] }), jsxs("footer", { children: [jsx(StatusBadge, { status: order.status }), jsxs("div", { children: [order.status !== "settled" && (jsxs("button", { className: "outline-button", onClick: () => onPrint(order.id), type: "button", children: [jsx(Icon, { name: "printer", size: 15 }), order.status === "printed" ? t("adminApp.orders.reprint") : t("common.print")] })), order.status !== "settled" && (jsxs("button", { className: "settle-button", onClick: () => onSettle(order.id), type: "button", children: [jsx(Icon, { name: "check", size: 15 }), t("adminApp.orders.settle")] }))] })] })] }));
 }
 
+const createStoreImpl = (createState) => {
+  let state;
+  const listeners = /* @__PURE__ */ new Set();
+  const setState = (partial, replace) => {
+    const nextState = typeof partial === "function" ? partial(state) : partial;
+    if (!Object.is(nextState, state)) {
+      const previousState = state;
+      state = (replace != null ? replace : typeof nextState !== "object" || nextState === null) ? nextState : Object.assign({}, state, nextState);
+      listeners.forEach((listener) => listener(state, previousState));
+    }
+  };
+  const getState = () => state;
+  const getInitialState = () => initialState;
+  const subscribe = (listener) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  };
+  const api = { setState, getState, getInitialState, subscribe };
+  const initialState = state = createState(setState, getState, api);
+  return api;
+};
+const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
+
+const identity = (arg) => arg;
+function useStore(api, selector = identity) {
+  const slice = commonjsExports$4.useSyncExternalStore(
+    api.subscribe,
+    commonjsExports$4.useCallback(() => selector(api.getState()), [api, selector]),
+    commonjsExports$4.useCallback(() => selector(api.getInitialState()), [api, selector])
+  );
+  commonjsExports$4.useDebugValue(slice);
+  return slice;
+}
+const createImpl = (createState) => {
+  const api = createStore(createState);
+  const useBoundStore = (selector) => useStore(api, selector);
+  Object.assign(useBoundStore, api);
+  return useBoundStore;
+};
+const create = ((createState) => createState ? createImpl(createState) : createImpl);
+
+const useSettingsStore = create((set) => ({
+    printer: loadPrinterSettings(),
+    restaurant: loadRestaurantSettings(),
+    load: () => {
+        set({
+            printer: loadPrinterSettings(),
+            restaurant: loadRestaurantSettings(),
+        });
+    },
+    updatePrinter: (settings) => {
+        savePrinterSettings(settings);
+        set({ printer: settings });
+    },
+    updateRestaurant: (settings) => {
+        saveRestaurantSettings(settings);
+        set({ restaurant: settings });
+    },
+}));
+
+const PIN_LENGTH = 6;
+const SESSION_KEY = "harbour-admin-unlocked";
+function createEmptyDigits() {
+    return Array.from({ length: PIN_LENGTH }, () => "");
+}
+function PinGuard({ children }) {
+    const { t } = useTranslation();
+    const pin = useSettingsStore((state) => state.restaurant.pin);
+    const [unlocked, setUnlocked] = useState(() => window.sessionStorage.getItem(SESSION_KEY) === "1");
+    const [digits, setDigits] = useState(createEmptyDigits);
+    const [error, setError] = useState("");
+    const inputs = useRef([]);
+    const unlock = useCallback(() => {
+        window.sessionStorage.setItem(SESSION_KEY, "1");
+        setUnlocked(true);
+    }, []);
+    const reset = useCallback(() => {
+        setDigits(createEmptyDigits());
+        setError("");
+        window.setTimeout(() => inputs.current[0]?.focus(), 0);
+    }, []);
+    const verifyPin = useCallback((value) => {
+        if (value === pin) {
+            unlock();
+            return;
+        }
+        setError(t("adminApp.pin.incorrect"));
+        window.setTimeout(reset, 600);
+    }, [pin, reset, t, unlock]);
+    const handleChange = useCallback((index, value) => {
+        if (!/^\d?$/.test(value))
+            return;
+        const next = [...digits];
+        next[index] = value;
+        setDigits(next);
+        setError("");
+        if (value && index < PIN_LENGTH - 1) {
+            inputs.current[index + 1]?.focus();
+        }
+        const fullPin = next.join("");
+        if (fullPin.length === PIN_LENGTH && next.every(Boolean)) {
+            verifyPin(fullPin);
+        }
+    }, [digits, verifyPin]);
+    const handleKeyDown = useCallback((index, event) => {
+        if (event.key === "Backspace" && !digits[index] && index > 0) {
+            inputs.current[index - 1]?.focus();
+        }
+    }, [digits]);
+    const handlePaste = useCallback((event) => {
+        event.preventDefault();
+        const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, PIN_LENGTH);
+        if (!pasted)
+            return;
+        const next = createEmptyDigits();
+        pasted.split("").forEach((digit, index) => {
+            next[index] = digit;
+        });
+        setDigits(next);
+        setError("");
+        if (pasted.length === PIN_LENGTH) {
+            verifyPin(pasted);
+        }
+        else {
+            inputs.current[pasted.length]?.focus();
+        }
+    }, [verifyPin]);
+    useEffect(() => {
+        if (!unlocked) {
+            inputs.current[0]?.focus();
+        }
+    }, [unlocked]);
+    if (unlocked)
+        return jsx(Fragment, { children: children });
+    return (jsx("main", { className: "pin-guard", children: jsxs("section", { className: "pin-card", children: [jsx("h1", { children: t("adminApp.pin.title") }), jsx("p", { children: t("adminApp.pin.description") }), jsx("div", { className: "pin-digits", "data-testid": "pin-digits", onPaste: handlePaste, children: digits.map((digit, index) => (jsx("input", { "aria-label": t("adminApp.pin.digitLabel", { position: index + 1 }), autoComplete: "off", className: `pin-digit ${error ? "pin-digit-error" : ""}`, inputMode: "numeric", maxLength: 1, onChange: (event) => handleChange(index, event.target.value), onKeyDown: (event) => handleKeyDown(index, event), ref: (element) => {
+                            inputs.current[index] = element;
+                        }, type: "text", value: digit }, index))) }), error && jsx("span", { className: "pin-error", children: error }), jsx("button", { className: "management-secondary", onClick: reset, type: "button", children: t("adminApp.pin.reset") })] }) }));
+}
+
 function DishImage({ item, size = "normal" }) {
     const hasPhoto = Boolean(item.imageUrl);
     return (jsx("span", { "aria-label": item.name, className: `dish-image ${size} ${hasPhoto ? "has-photo" : ""}`, role: "img", style: hasPhoto ? {
@@ -18345,47 +18513,6 @@ function listOrdersByTable(orders, table) {
 function resetDemoOrders() {
     saveOrders(seedOrders);
 }
-
-const createStoreImpl = (createState) => {
-  let state;
-  const listeners = /* @__PURE__ */ new Set();
-  const setState = (partial, replace) => {
-    const nextState = typeof partial === "function" ? partial(state) : partial;
-    if (!Object.is(nextState, state)) {
-      const previousState = state;
-      state = (replace != null ? replace : typeof nextState !== "object" || nextState === null) ? nextState : Object.assign({}, state, nextState);
-      listeners.forEach((listener) => listener(state, previousState));
-    }
-  };
-  const getState = () => state;
-  const getInitialState = () => initialState;
-  const subscribe = (listener) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  };
-  const api = { setState, getState, getInitialState, subscribe };
-  const initialState = state = createState(setState, getState, api);
-  return api;
-};
-const createStore = ((createState) => createState ? createStoreImpl(createState) : createStoreImpl);
-
-const identity = (arg) => arg;
-function useStore(api, selector = identity) {
-  const slice = commonjsExports$4.useSyncExternalStore(
-    api.subscribe,
-    commonjsExports$4.useCallback(() => selector(api.getState()), [api, selector]),
-    commonjsExports$4.useCallback(() => selector(api.getInitialState()), [api, selector])
-  );
-  commonjsExports$4.useDebugValue(slice);
-  return slice;
-}
-const createImpl = (createState) => {
-  const api = createStore(createState);
-  const useBoundStore = (selector) => useStore(api, selector);
-  Object.assign(useBoundStore, api);
-  return useBoundStore;
-};
-const create = ((createState) => createState ? createImpl(createState) : createImpl);
 
 const MENU_STORAGE_KEY = "harbour-admin-menu";
 function dishPhotoPath(id) {
@@ -18568,25 +18695,6 @@ const useOrderStore = create((set) => ({
     },
 }));
 
-const useSettingsStore = create((set) => ({
-    printer: loadPrinterSettings(),
-    restaurant: loadRestaurantSettings(),
-    load: () => {
-        set({
-            printer: loadPrinterSettings(),
-            restaurant: loadRestaurantSettings(),
-        });
-    },
-    updatePrinter: (settings) => {
-        savePrinterSettings(settings);
-        set({ printer: settings });
-    },
-    updateRestaurant: (settings) => {
-        saveRestaurantSettings(settings);
-        set({ restaurant: settings });
-    },
-}));
-
 const seededTables = [
     ["01", "available"],
     ["02", "occupied"],
@@ -18650,9 +18758,41 @@ function SectionHeader({ title, description, action }) {
     return (jsxs("header", { className: "section-header", children: [jsxs("div", { children: [jsx("p", { children: t("ui.sectionHeader.breadcrumb") }), jsx("h1", { children: title }), jsx("span", { children: description })] }), action] }));
 }
 
+function getStartOfDay(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function getStartOfWeek(date) {
+    const start = getStartOfDay(date);
+    const day = start.getDay() || 7;
+    start.setDate(start.getDate() - day + 1);
+    return start;
+}
+function getPeriodRevenue(orders, items) {
+    const now = new Date();
+    const starts = {
+        day: getStartOfDay(now),
+        week: getStartOfWeek(now),
+        month: new Date(now.getFullYear(), now.getMonth(), 1),
+        year: new Date(now.getFullYear(), 0, 1),
+    };
+    const totals = { day: 0, week: 0, month: 0, year: 0 };
+    orders.forEach((order) => {
+        const createdAt = new Date(order.createdAt);
+        const total = getOrderTotal(order, items);
+        Object.entries(starts).forEach(([period, start]) => {
+            if (createdAt >= start)
+                totals[period] += total;
+        });
+    });
+    return totals;
+}
+
 function Dashboard({ menuItems, onNavigate, orders, tables }) {
     const { t } = useTranslation();
-    const todayRevenue = orders.reduce((sum, order) => sum + getOrderTotal(order, menuItems), 0);
+    const todayStart = getStartOfDay(new Date());
+    const todayRevenue = orders
+        .filter((order) => new Date(order.createdAt) >= todayStart)
+        .reduce((sum, order) => sum + getOrderTotal(order, menuItems), 0);
     const pending = orders.filter((order) => order.status !== "settled").length;
     const occupied = tables.filter((table) => table.status === "occupied").length;
     const activeMenuItems = menuItems.filter((item) => !item.deleted);
@@ -18737,6 +18877,7 @@ function MenuManagement() {
     const { t } = useTranslation();
     const items = useMenuStore((state) => state.items);
     const setItems = useMenuStore((state) => state.updateItems);
+    const toggleSoldOut = useMenuStore((state) => state.toggleSoldOut);
     const [query, setQuery] = useState("");
     const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORIES);
     const [categoryDraft, setCategoryDraft] = useState("");
@@ -18922,7 +19063,7 @@ function MenuManagement() {
                                         }, type: "checkbox" }), jsx("span", { children: period.name })] }, period.id)))] }), jsx("button", { className: "management-primary", type: "submit", children: editingId ? t("menuManagement.saveEdit") : t("menuManagement.saveDish") }), jsx("button", { className: "management-secondary", onClick: resetForm, type: "button", children: t("common.cancel") }), categoryError && jsx("span", { className: "dish-photo-error", children: categoryError }), periodError && jsx("span", { className: "dish-photo-error", children: periodError }), photoError && jsx("span", { className: "dish-photo-error", children: photoError })] })), jsxs("div", { className: "category-manager", children: [jsxs("div", { children: [jsx("strong", { children: t("menuManagement.categoryManagementTitle") }), jsx("span", { children: t("menuManagement.categoryManagementDescription") })] }), jsxs("select", { "aria-label": t("menuManagement.chooseCategory"), onChange: (event) => selectCategoryForEdit(event.target.value), value: categoryTarget, children: [jsx("option", { value: "", children: t("menuManagement.chooseCategory") }), categories.map((category) => jsx("option", { value: category, children: category }, category))] }), jsx("input", { "aria-label": t("menuManagement.categoryNewName"), onChange: (event) => setCategoryDraft(event.target.value), placeholder: t("menuManagement.categoryNewName"), value: categoryDraft }), jsx("button", { className: "management-primary", onClick: renameCategory, type: "button", children: t("menuManagement.saveCategory") }), jsx("button", { className: "management-danger", onClick: deleteCategory, type: "button", children: t("menuManagement.deleteCategory") }), categoryNotice && jsx("span", { className: "category-manager-notice", children: categoryNotice })] }), jsxs("div", { className: "management-toolbar", children: [jsx("input", { "aria-label": t("menuManagement.searchPlaceholder"), onChange: (event) => setQuery(event.target.value), placeholder: t("menuManagement.searchPlaceholder"), value: query }), jsxs("select", { "aria-label": t("menuManagement.filterByCategory"), onChange: (event) => setCategoryFilter(event.target.value), value: categoryFilter, children: [jsx("option", { value: ALL_CATEGORIES, children: t("menuManagement.categoryAll") }), categories.map((category) => jsx("option", { value: category, children: category }, category))] }), jsxs("span", { children: [t("menuManagement.totalDishes", { count: visible.length }), categoryFilter !== ALL_CATEGORIES ? ` · ${categoryFilter}` : ""] })] }), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("menuManagement.table.dish") }), jsx("th", { children: t("menuManagement.table.category") }), jsx("th", { children: t("menuManagement.table.periods") }), jsx("th", { children: t("menuManagement.table.price") }), jsx("th", { children: t("menuManagement.table.status") }), jsx("th", { children: t("menuManagement.table.soldOut") }), jsx("th", { children: t("menuManagement.table.actions") })] }) }), jsx("tbody", { children: visible.map((item) => (jsxs("tr", { children: [jsx("td", { children: jsxs("div", { className: "dish-admin-cell", children: [item.imageUrl ? (jsx("img", { alt: t("menuManagement.dishPhotoAlt", { name: item.name }), className: "dish-admin-photo", src: item.imageUrl })) : (jsx("span", { className: "dish-placeholder", children: item.name.slice(0, 1) })), jsxs("div", { children: [jsx("strong", { children: item.name }), item.description && jsx("small", { children: item.description })] })] }) }), jsx("td", { children: item.category }), jsx("td", { children: (Array.isArray(item.mealPeriods) ? item.mealPeriods : allMealPeriodIds)
                                             .map((id) => DEFAULT_MEAL_PERIODS.find((period) => period.id === id)?.name)
                                             .filter(Boolean)
-                                            .join("、") }), jsx("td", { children: money(item.price) }), jsx("td", { children: jsx("span", { className: `list-status ${item.soldOut ? "inactive" : "active"}`, children: item.soldOut ? t("menuManagement.soldOut") : t("menuManagement.available") }) }), jsx("td", { children: jsx(Toggle, { checked: item.soldOut, label: t("menuManagement.toggleSoldOut", { name: item.name }), onChange: () => setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, soldOut: !entry.soldOut } : entry))) }) }), jsx("td", { children: jsxs("div", { className: "management-row-actions", children: [jsx("button", { className: "management-secondary", onClick: () => editItem(item), type: "button", children: t("common.modify") }), jsx("button", { className: "management-danger", onClick: () => {
+                                            .join("、") }), jsx("td", { children: money(item.price) }), jsx("td", { children: jsx("span", { className: `list-status ${item.soldOut ? "inactive" : "active"}`, children: item.soldOut ? t("menuManagement.soldOut") : t("menuManagement.available") }) }), jsx("td", { children: jsx(Toggle, { checked: item.soldOut, label: t("menuManagement.toggleSoldOut", { name: item.name }), onChange: () => toggleSoldOut(item.id) }) }), jsx("td", { children: jsxs("div", { className: "management-row-actions", children: [jsx("button", { className: "management-secondary", onClick: () => editItem(item), type: "button", children: t("common.modify") }), jsx("button", { className: "management-danger", onClick: () => {
                                                         if (!window.confirm(t("common.confirmDelete", { name: item.name })))
                                                             return;
                                                         setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, deleted: true } : entry)));
@@ -18939,35 +19080,6 @@ function PrinterSettings() {
         window.setTimeout(() => setMessage(""), 2400);
     }
     return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("printerSettings.description"), title: t("printerSettings.title") }), message && jsx("div", { className: "save-message", children: message }), jsxs("section", { className: "settings-panel", children: [jsxs("label", { children: [jsx("span", { children: t("printerSettings.printer") }), jsxs("select", { onChange: (event) => updatePrinter({ ...settings, printer: event.target.value }), value: settings.printer, children: [jsx("option", { children: t("printerSettings.kitchenPrinter") }), jsx("option", { children: t("printerSettings.cashierPrinter") })] })] }), jsxs("label", { children: [jsx("span", { children: t("printerSettings.copies") }), jsxs("select", { onChange: (event) => updatePrinter({ ...settings, copies: event.target.value }), value: settings.copies, children: [jsx("option", { children: "1" }), jsx("option", { children: "2" }), jsx("option", { children: "3" })] })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.autoPrint") }), jsx("p", { children: t("printerSettings.autoPrintDesc") })] }), jsx(Toggle, { checked: settings.autoPrint, label: t("printerSettings.autoPrint"), onChange: () => updatePrinter({ ...settings, autoPrint: !settings.autoPrint }) })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.sound") }), jsx("p", { children: t("printerSettings.soundDesc") })] }), jsx(Toggle, { checked: settings.sound, label: t("printerSettings.sound"), onChange: () => updatePrinter({ ...settings, sound: !settings.sound }) })] }), jsxs("footer", { children: [jsx("button", { className: "management-secondary", onClick: () => save(t("printerSettings.testQueued")), type: "button", children: t("printerSettings.printTest") }), jsx("button", { className: "management-primary", onClick: () => save(t("printerSettings.saved")), type: "button", children: t("printerSettings.save") })] })] })] }));
-}
-
-function getStartOfDay(date) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-function getStartOfWeek(date) {
-    const start = getStartOfDay(date);
-    const day = start.getDay() || 7;
-    start.setDate(start.getDate() - day + 1);
-    return start;
-}
-function getPeriodRevenue(orders, items) {
-    const now = new Date();
-    const starts = {
-        day: getStartOfDay(now),
-        week: getStartOfWeek(now),
-        month: new Date(now.getFullYear(), now.getMonth(), 1),
-        year: new Date(now.getFullYear(), 0, 1),
-    };
-    const totals = { day: 0, week: 0, month: 0, year: 0 };
-    orders.forEach((order) => {
-        const createdAt = new Date(order.createdAt);
-        const total = getOrderTotal(order, items);
-        Object.entries(starts).forEach(([period, start]) => {
-            if (createdAt >= start)
-                totals[period] += total;
-        });
-    });
-    return totals;
 }
 
 function getSalesRanking(orders, menuItems) {
@@ -19003,6 +19115,8 @@ function RestaurantSettings() {
         ...restaurant,
         language: languageToDisplayName(language),
     });
+    const [pinDraft, setPinDraft] = useState("");
+    const [pinError, setPinError] = useState("");
     const [saved, setSaved] = useState(false);
     useEffect(() => {
         setSettings({
@@ -19012,7 +19126,15 @@ function RestaurantSettings() {
     }, [language, restaurant]);
     function save(event) {
         event.preventDefault();
-        updateRestaurant(settings);
+        if (pinDraft && !/^\d{6}$/.test(pinDraft)) {
+            setPinError(t("restaurantSettings.pinValidation"));
+            return;
+        }
+        const nextSettings = pinDraft ? { ...settings, pin: pinDraft } : settings;
+        updateRestaurant(nextSettings);
+        setSettings(nextSettings);
+        setPinDraft("");
+        setPinError("");
         setLanguage(displayNameToLanguageCode(settings.language));
         setSaved(true);
         window.setTimeout(() => setSaved(false), 2400);
@@ -19027,7 +19149,10 @@ function RestaurantSettings() {
                                     const nextLanguage = displayNameToLanguageCode(event.target.value);
                                     setLanguage(nextLanguage);
                                     setSettings({ ...settings, language: languageToDisplayName(nextLanguage) });
-                                }, value: settings.language, children: [jsx("option", { children: languageToDisplayName("zh-Hant") }), jsx("option", { children: languageToDisplayName("en") })] })] }), jsxs("section", { className: "meal-period-settings", children: [jsxs("header", { children: [jsx("h2", { children: t("restaurantSettings.mealPeriods") }), jsx("p", { children: t("restaurantSettings.mealPeriodsDescription") })] }), settings.mealPeriods.map((period) => (jsxs("div", { className: "meal-period-row", children: [jsx("strong", { children: period.name }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.start") }), jsx("input", { "aria-label": t("restaurantSettings.startTime", { name: period.name }), onChange: (event) => updateMealPeriod(period.id, { start: event.target.value }), required: true, type: "time", value: period.start })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.end") }), jsx("input", { "aria-label": t("restaurantSettings.endTime", { name: period.name }), onChange: (event) => updateMealPeriod(period.id, { end: event.target.value }), required: true, type: "time", value: period.end })] })] }, period.id)))] }), jsx("footer", { children: jsx("button", { className: "management-primary", type: "submit", children: t("restaurantSettings.save") }) })] })] }));
+                                }, value: settings.language, children: [jsx("option", { children: languageToDisplayName("zh-Hant") }), jsx("option", { children: languageToDisplayName("en") })] })] }), jsxs("section", { className: "meal-period-settings", children: [jsxs("header", { children: [jsx("h2", { children: t("restaurantSettings.mealPeriods") }), jsx("p", { children: t("restaurantSettings.mealPeriodsDescription") })] }), settings.mealPeriods.map((period) => (jsxs("div", { className: "meal-period-row", children: [jsx("strong", { children: period.name }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.start") }), jsx("input", { "aria-label": t("restaurantSettings.startTime", { name: period.name }), onChange: (event) => updateMealPeriod(period.id, { start: event.target.value }), required: true, type: "time", value: period.start })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.end") }), jsx("input", { "aria-label": t("restaurantSettings.endTime", { name: period.name }), onChange: (event) => updateMealPeriod(period.id, { end: event.target.value }), required: true, type: "time", value: period.end })] })] }, period.id)))] }), jsxs("section", { className: "meal-period-settings", children: [jsxs("header", { children: [jsx("h2", { children: t("restaurantSettings.changePin") }), jsx("p", { children: t("restaurantSettings.changePinDesc") })] }), jsxs("div", { className: "pin-change-row", children: [jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.newPin") }), jsx("input", { "aria-label": t("restaurantSettings.newPin"), inputMode: "numeric", maxLength: 6, onChange: (event) => {
+                                                    setPinDraft(event.target.value.replace(/\D/g, "").slice(0, 6));
+                                                    setPinError("");
+                                                }, placeholder: t("restaurantSettings.newPinPlaceholder"), type: "password", value: pinDraft })] }), pinError && jsx("span", { className: "pin-error", children: pinError })] })] }), jsx("footer", { children: jsx("button", { className: "management-primary", type: "submit", children: t("restaurantSettings.save") }) })] })] }));
 }
 
 const seededStaff = [
@@ -19154,7 +19279,7 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
             return jsx(PrinterSettings, {});
         return jsx(RestaurantSettings, {});
     }
-    return (jsxs("main", { className: "admin-shell", children: [jsx(Sidebar, { activeSection: activeSection, onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName }), mobileMenuOpen && (jsx(MobileAdminNav, { activeSection: activeSection, onClose: () => setMobileMenuOpen(false), onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName })), jsxs("section", { className: "admin-workspace", children: [jsxs("header", { className: "admin-topbar", children: [jsxs("button", { className: "mobile-nav-trigger", onClick: () => setMobileMenuOpen(true), type: "button", children: [jsx(Icon, { name: "menu", size: 18 }), t("adminApp.managementMenu")] }), jsxs("div", { children: [jsx("span", { children: formatAdminDate(now) }), jsx("strong", { children: activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed") })] }), jsxs("div", { children: [jsxs("button", { "aria-label": t("adminApp.notification"), className: "topbar-icon", type: "button", children: [jsx(Icon, { name: "bell", size: 18 }), pendingOrders.some((order) => order.status === "pending") && jsx("small", {})] }), jsx("button", { className: "guest-shortcut", onClick: () => setView("guest"), type: "button", children: t("adminApp.guestShortcut") })] })] }), activeSection !== "orders" ? renderAdminSection() : (jsxs("div", { className: "admin-layout", children: [jsxs("section", { className: "orders-panel", children: [jsxs("header", { className: "orders-header", children: [jsxs("div", { children: [jsx("p", { children: t("adminApp.orders.label") }), jsxs("h1", { children: [t("adminApp.orders.heading"), jsx("span", { children: pendingOrders.length })] })] }), jsx("div", { className: "admin-actions", children: false })] }), jsxs("div", { className: "orders-tabs", children: [jsxs("button", { className: filter === "pending" ? "active" : "", onClick: () => setFilter("pending"), type: "button", children: [t("adminApp.orders.activeTab"), jsx("span", { children: pendingOrders.length })] }), jsxs("button", { className: filter === "settled" ? "active" : "", onClick: () => setFilter("settled"), type: "button", children: [t("adminApp.orders.completedTab"), jsx("span", { children: completedOrders.length })] })] }), jsxs("div", { className: "queue-note", children: [jsx("span", { children: t("adminApp.orders.flowTitle") }), jsx("p", { children: t("adminApp.orders.flowDescription") })] }), jsx("div", { className: "orders-grid", children: visibleOrders.length ? (visibleOrders.map((order) => (jsx(OrderCard, { menuItems: menuItems, onPrint: handlePrint, onSettle: handleSettle, order: order }, order.id)))) : (jsxs("div", { className: "empty-state", children: [jsx(Icon, { name: "orders", size: 30 }), jsx("h3", { children: t("common.empty.noOrders") }), jsx("p", { children: t("common.empty.noOrdersDesc") })] })) })] }), jsx(PopularDishes, { menuItems: menuItems, onOpenReports: () => setActiveSection("reports"), orders: orders })] }))] })] }));
+    return (jsx(PinGuard, { children: jsxs("main", { className: "admin-shell", children: [jsx(Sidebar, { activeSection: activeSection, onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName }), mobileMenuOpen && (jsx(MobileAdminNav, { activeSection: activeSection, onClose: () => setMobileMenuOpen(false), onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName })), jsxs("section", { className: "admin-workspace", children: [jsxs("header", { className: "admin-topbar", children: [jsxs("button", { className: "mobile-nav-trigger", onClick: () => setMobileMenuOpen(true), type: "button", children: [jsx(Icon, { name: "menu", size: 18 }), t("adminApp.managementMenu")] }), jsxs("div", { children: [jsx("span", { children: formatAdminDate(now) }), jsx("strong", { children: activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed") })] }), jsxs("div", { children: [jsxs("button", { "aria-label": t("adminApp.notification"), className: "topbar-icon", type: "button", children: [jsx(Icon, { name: "bell", size: 18 }), pendingOrders.some((order) => order.status === "pending") && jsx("small", {})] }), jsx("button", { className: "guest-shortcut", onClick: () => setView("guest"), type: "button", children: t("adminApp.guestShortcut") })] })] }), activeSection !== "orders" ? renderAdminSection() : (jsxs("div", { className: "admin-layout", children: [jsxs("section", { className: "orders-panel", children: [jsxs("header", { className: "orders-header", children: [jsxs("div", { children: [jsx("p", { children: t("adminApp.orders.label") }), jsxs("h1", { children: [t("adminApp.orders.heading"), jsx("span", { children: pendingOrders.length })] })] }), jsx("div", { className: "admin-actions", children: false })] }), jsxs("div", { className: "orders-tabs", children: [jsxs("button", { className: filter === "pending" ? "active" : "", onClick: () => setFilter("pending"), type: "button", children: [t("adminApp.orders.activeTab"), jsx("span", { children: pendingOrders.length })] }), jsxs("button", { className: filter === "settled" ? "active" : "", onClick: () => setFilter("settled"), type: "button", children: [t("adminApp.orders.completedTab"), jsx("span", { children: completedOrders.length })] })] }), jsxs("div", { className: "queue-note", children: [jsx("span", { children: t("adminApp.orders.flowTitle") }), jsx("p", { children: t("adminApp.orders.flowDescription") })] }), jsx("div", { className: "orders-grid", children: visibleOrders.length ? (visibleOrders.map((order) => (jsx(OrderCard, { menuItems: menuItems, onPrint: handlePrint, onSettle: handleSettle, order: order }, order.id)))) : (jsxs("div", { className: "empty-state", children: [jsx(Icon, { name: "orders", size: 30 }), jsx("h3", { children: t("common.empty.noOrders") }), jsx("p", { children: t("common.empty.noOrdersDesc") })] })) })] }), jsx(PopularDishes, { menuItems: menuItems, onOpenReports: () => setActiveSection("reports"), orders: orders })] }))] })] }) }));
 }
 
 function CartBar({ cartItems, itemCount, onOpen, total }) {
@@ -19351,6 +19476,11 @@ function App() {
         return subscribeToStorage("harbour-admin-settings", () => {
             loadSettings();
         }, SETTINGS_CHANGE_EVENT);
+    }, [loadSettings]);
+    useEffect(() => {
+        return subscribeToStorage(PRINTER_STORAGE_KEY, () => {
+            loadSettings();
+        }, PRINTER_CHANGE_EVENT);
     }, [loadSettings]);
     useEffect(() => {
         return subscribeToStorage("harbour-admin-menu", () => {

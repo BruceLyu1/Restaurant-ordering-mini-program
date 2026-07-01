@@ -1496,6 +1496,99 @@ p {
   width: 35px;
 }
 
+.pin-guard {
+  align-items: center;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.pin-card {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 400px;
+  padding: 40px 32px;
+  text-align: center;
+  width: 100%;
+}
+
+.pin-card h1 {
+  color: var(--green);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.pin-card p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pin-digits {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pin-digit {
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  caret-color: var(--green);
+  font-size: 24px;
+  font-weight: 800;
+  height: 52px;
+  text-align: center;
+  transition: border-color 0.15s;
+  width: 44px;
+}
+
+.pin-digit:focus {
+  border-color: var(--green);
+  outline: none;
+}
+
+.pin-digit-error {
+  animation: pin-shake 0.3s ease;
+  border-color: var(--error, #e53e3e);
+}
+
+@keyframes pin-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-4px);
+  }
+
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.pin-error {
+  color: var(--error, #e53e3e);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pin-change-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pin-change-row input {
+  max-width: 200px;
+}
+
 /* harbour-ordering-h5 order management styles */
 
 .orders-panel {
