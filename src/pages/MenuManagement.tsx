@@ -38,6 +38,7 @@ export function MenuManagement() {
   const { t } = useTranslation();
   const items = useMenuStore((state) => state.items);
   const setItems = useMenuStore((state) => state.updateItems);
+  const toggleSoldOut = useMenuStore((state) => state.toggleSoldOut);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORIES);
   const [categoryDraft, setCategoryDraft] = useState("");
@@ -404,9 +405,7 @@ export function MenuManagement() {
                   <Toggle
                     checked={item.soldOut}
                     label={t("menuManagement.toggleSoldOut", { name: item.name })}
-                    onChange={() => setItems((current) => current.map((entry) => (
-                      entry.id === item.id ? { ...entry, soldOut: !entry.soldOut } : entry
-                    )))}
+                    onChange={() => toggleSoldOut(item.id)}
                   />
                 </td>
                 <td>

@@ -4,6 +4,7 @@ import type { MealPeriod, MenuItem, PrinterSettings, RestaurantSettings } from "
 export const SETTINGS_STORAGE_KEY = "harbour-admin-settings";
 export const SETTINGS_CHANGE_EVENT = "harbour-settings-change";
 export const PRINTER_STORAGE_KEY = "harbour-admin-printer";
+export const PRINTER_CHANGE_EVENT = "harbour-printer-change";
 
 export const DEFAULT_MEAL_PERIODS: MealPeriod[] = [
   { id: "breakfast", name: "早市", start: "07:00", end: "11:00" },
@@ -17,6 +18,7 @@ export const DEFAULT_RESTAURANT_SETTINGS: RestaurantSettings = {
   address: "香港灣仔軒尼詩道 88 號",
   language: "繁體中文",
   mealPeriods: DEFAULT_MEAL_PERIODS,
+  pin: "000000",
 };
 
 export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
@@ -41,6 +43,9 @@ export function loadRestaurantSettings(): RestaurantSettings {
     ...DEFAULT_RESTAURANT_SETTINGS,
     ...settings,
     mealPeriods: normalizeMealPeriods(settings.mealPeriods),
+    pin: typeof settings.pin === "string" && /^\d{6}$/.test(settings.pin)
+      ? settings.pin
+      : DEFAULT_RESTAURANT_SETTINGS.pin,
   };
 }
 
@@ -56,7 +61,7 @@ export function loadPrinterSettings(): PrinterSettings {
 }
 
 export function savePrinterSettings(settings: PrinterSettings): void {
-  writeStorage(PRINTER_STORAGE_KEY, settings);
+  writeStorage(PRINTER_STORAGE_KEY, settings, PRINTER_CHANGE_EVENT);
 }
 
 function timeToMinutes(time: string | undefined): number | null {

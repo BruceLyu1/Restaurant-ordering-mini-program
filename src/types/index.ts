@@ -60,6 +60,7 @@ export interface RestaurantSettings {
   address: string;
   language: string;
   mealPeriods: MealPeriod[];
+  pin: string;
 }
 
 export interface RevenueSummary {

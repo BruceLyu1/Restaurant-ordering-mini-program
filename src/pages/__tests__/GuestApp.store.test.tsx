@@ -33,6 +33,7 @@ describe("GuestApp store integration", () => {
         mealPeriods: [],
         name: "Store Brand",
         phone: "",
+        pin: "000000",
       },
     });
   });

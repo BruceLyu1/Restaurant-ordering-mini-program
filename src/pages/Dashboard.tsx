@@ -4,6 +4,7 @@ import { SectionHeader } from "../components/ui/SectionHeader";
 import { useTranslation } from "../i18n/useTranslation";
 import { money } from "../utils/money";
 import { getOrderTotal } from "../utils/order";
+import { getStartOfDay } from "../utils/revenue";
 import type { MenuItem, Order, TableInfo } from "../types";
 
 interface DashboardProps {
@@ -15,7 +16,10 @@ interface DashboardProps {
 
 export function Dashboard({ menuItems, onNavigate, orders, tables }: DashboardProps) {
   const { t } = useTranslation();
-  const todayRevenue = orders.reduce((sum, order) => sum + getOrderTotal(order, menuItems), 0);
+  const todayStart = getStartOfDay(new Date());
+  const todayRevenue = orders
+    .filter((order) => new Date(order.createdAt) >= todayStart)
+    .reduce((sum, order) => sum + getOrderTotal(order, menuItems), 0);
   const pending = orders.filter((order) => order.status !== "settled").length;
   const occupied = tables.filter((table) => table.status === "occupied").length;
   const activeMenuItems = menuItems.filter((item) => !item.deleted);

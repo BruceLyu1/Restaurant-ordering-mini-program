@@ -12,11 +12,13 @@ describe("settingsStore", () => {
     const next = {
       ...useSettingsStore.getState().restaurant,
       name: "Store Brand",
+      pin: "123456",
     };
 
     useSettingsStore.getState().updateRestaurant(next);
 
     expect(useSettingsStore.getState().restaurant.name).toBe("Store Brand");
+    expect(useSettingsStore.getState().restaurant.pin).toBe("123456");
     expect(JSON.parse(window.localStorage.getItem(SETTINGS_STORAGE_KEY) || "{}").name).toBe("Store Brand");
   });
 

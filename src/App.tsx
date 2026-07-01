@@ -4,7 +4,12 @@ import { AdminApp } from "./pages/AdminApp";
 import { GuestApp } from "./pages/GuestApp";
 import { MENU_CHANGE_EVENT } from "./services/menuService";
 import { ORDER_CHANGE_EVENT } from "./services/orderService";
-import { getCurrentMealPeriod, SETTINGS_CHANGE_EVENT } from "./services/settingsService";
+import {
+  getCurrentMealPeriod,
+  PRINTER_CHANGE_EVENT,
+  PRINTER_STORAGE_KEY,
+  SETTINGS_CHANGE_EVENT,
+} from "./services/settingsService";
 import { STAFF_CHANGE_EVENT } from "./services/staffService";
 import { subscribeToStorage } from "./services/storage";
 import { TABLE_CHANGE_EVENT } from "./services/tableService";
@@ -64,6 +69,12 @@ function App() {
     return subscribeToStorage("harbour-admin-settings", () => {
       loadSettings();
     }, SETTINGS_CHANGE_EVENT);
+  }, [loadSettings]);
+
+  useEffect(() => {
+    return subscribeToStorage(PRINTER_STORAGE_KEY, () => {
+      loadSettings();
+    }, PRINTER_CHANGE_EVENT);
   }, [loadSettings]);
 
   useEffect(() => {
