@@ -10,6 +10,7 @@ import { useSettingsStore } from "../../stores/settingsStore";
 describe("AdminApp store integration", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.setItem("harbour-admin-unlocked", "1");
     window.localStorage.setItem("harbour-language", "zh-Hant");
     useMenuStore.setState({ items: [] });
     useOrderStore.setState({
@@ -30,6 +31,7 @@ describe("AdminApp store integration", () => {
         mealPeriods: [],
         name: "Store Admin",
         phone: "",
+        pin: "000000",
       },
     });
   });

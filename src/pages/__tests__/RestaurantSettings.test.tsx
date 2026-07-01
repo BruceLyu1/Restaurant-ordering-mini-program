@@ -31,4 +31,23 @@ describe("RestaurantSettings", () => {
     expect(useSettingsStore.getState().restaurant.phone).toBe("2888 9999");
     expect(screen.getByText("Restaurant details saved")).toBeTruthy();
   });
+
+  it("saves a valid admin PIN with restaurant settings", () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText("New PIN"), { target: { value: "123456" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save restaurant details" }));
+
+    expect(useSettingsStore.getState().restaurant.pin).toBe("123456");
+  });
+
+  it("does not save an invalid admin PIN", () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText("New PIN"), { target: { value: "12345" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save restaurant details" }));
+
+    expect(useSettingsStore.getState().restaurant.pin).toBe("000000");
+    expect(screen.getByText("Enter a 6-digit PIN or leave it blank.")).toBeTruthy();
+  });
 });

@@ -16,6 +16,8 @@ export function RestaurantSettings() {
     ...restaurant,
     language: languageToDisplayName(language),
   });
+  const [pinDraft, setPinDraft] = useState("");
+  const [pinError, setPinError] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -27,7 +29,16 @@ export function RestaurantSettings() {
 
   function save(event: React.FormEvent): void {
     event.preventDefault();
-    updateRestaurant(settings);
+    if (pinDraft && !/^\d{6}$/.test(pinDraft)) {
+      setPinError(t("restaurantSettings.pinValidation"));
+      return;
+    }
+
+    const nextSettings = pinDraft ? { ...settings, pin: pinDraft } : settings;
+    updateRestaurant(nextSettings);
+    setSettings(nextSettings);
+    setPinDraft("");
+    setPinError("");
     setLanguage(displayNameToLanguageCode(settings.language));
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2400);
@@ -94,6 +105,30 @@ export function RestaurantSettings() {
               </label>
             </div>
           ))}
+        </section>
+        <section className="meal-period-settings">
+          <header>
+            <h2>{t("restaurantSettings.changePin")}</h2>
+            <p>{t("restaurantSettings.changePinDesc")}</p>
+          </header>
+          <div className="pin-change-row">
+            <label>
+              <span>{t("restaurantSettings.newPin")}</span>
+              <input
+                aria-label={t("restaurantSettings.newPin")}
+                inputMode="numeric"
+                maxLength={6}
+                onChange={(event) => {
+                  setPinDraft(event.target.value.replace(/\D/g, "").slice(0, 6));
+                  setPinError("");
+                }}
+                placeholder={t("restaurantSettings.newPinPlaceholder")}
+                type="password"
+                value={pinDraft}
+              />
+            </label>
+            {pinError && <span className="pin-error">{pinError}</span>}
+          </div>
         </section>
         <footer><button className="management-primary" type="submit">{t("restaurantSettings.save")}</button></footer>
       </form>

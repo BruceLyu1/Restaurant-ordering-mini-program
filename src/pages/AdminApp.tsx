@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { MobileAdminNav } from "../components/admin/MobileAdminNav";
 import { OrderCard } from "../components/admin/OrderCard";
+import { PinGuard } from "../components/admin/PinGuard";
 import { PopularDishes } from "../components/admin/PopularDishes";
 import { Sidebar } from "../components/admin/Sidebar";
 import { Icon } from "../components/ui/Icon";
@@ -67,6 +68,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   }
 
   return (
+    <PinGuard>
     <main className="admin-shell">
       <Sidebar activeSection={activeSection} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
       {mobileMenuOpen && (
@@ -150,5 +152,6 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
         )}
       </section>
     </main>
+    </PinGuard>
   );
 }
