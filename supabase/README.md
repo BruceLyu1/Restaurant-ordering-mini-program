@@ -23,11 +23,12 @@ Never put a service role key in Vite environment variables.
 ## Migration Order
 
 1. Apply `migrations/20260702000000_initial_restaurant_schema.sql` to a Supabase project.
-2. Apply `seed.sql` once to create the demo restaurant, tables, staff, menu items, and settings.
-3. Migrate read-only services first: restaurant settings, printer settings, tables, and menu.
-4. Migrate order creation and status updates after read paths are stable.
-5. Add Realtime subscriptions for orders first, then menu/table/settings changes.
-6. Add Supabase Auth and tighten RLS before a public multi-restaurant pilot.
+2. Apply `migrations/20260702001000_grant_client_api_privileges.sql` to allow the Data API roles through to the RLS policies.
+3. Apply `seed.sql` once to create the demo restaurant, tables, staff, menu items, and settings.
+4. Migrate read-only services first: restaurant settings, printer settings, tables, and menu.
+5. Migrate order creation and status updates after read paths are stable.
+6. Add Realtime subscriptions for orders first, then menu/table/settings changes.
+7. Add Supabase Auth and tighten RLS before a public multi-restaurant pilot.
 
 ## Rollback
 

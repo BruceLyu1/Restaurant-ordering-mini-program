@@ -1,5 +1,6 @@
 import { readStorage, writeStorage } from "./storage";
 import type { MealPeriod, MenuItem, PrinterSettings, RestaurantSettings } from "../types";
+import { getDataSourceMode } from "./dataSource";
 
 export const SETTINGS_STORAGE_KEY = "harbour-admin-settings";
 export const SETTINGS_CHANGE_EVENT = "harbour-settings-change";
@@ -49,6 +50,17 @@ export function loadRestaurantSettings(): RestaurantSettings {
   };
 }
 
+export async function loadRestaurantSettingsAsync(): Promise<RestaurantSettings> {
+  if (getDataSourceMode() !== "supabase") return loadRestaurantSettings();
+
+  try {
+    const { loadSupabaseRestaurantSettings } = await import("./supabaseReadService");
+    return await loadSupabaseRestaurantSettings();
+  } catch {
+    return loadRestaurantSettings();
+  }
+}
+
 export function saveRestaurantSettings(settings: RestaurantSettings): void {
   writeStorage(SETTINGS_STORAGE_KEY, settings, SETTINGS_CHANGE_EVENT);
 }
@@ -58,6 +70,17 @@ export function loadPrinterSettings(): PrinterSettings {
     ...DEFAULT_PRINTER_SETTINGS,
     ...readStorage(PRINTER_STORAGE_KEY, DEFAULT_PRINTER_SETTINGS),
   };
+}
+
+export async function loadPrinterSettingsAsync(): Promise<PrinterSettings> {
+  if (getDataSourceMode() !== "supabase") return loadPrinterSettings();
+
+  try {
+    const { loadSupabasePrinterSettings } = await import("./supabaseReadService");
+    return await loadSupabasePrinterSettings();
+  } catch {
+    return loadPrinterSettings();
+  }
 }
 
 export function savePrinterSettings(settings: PrinterSettings): void {

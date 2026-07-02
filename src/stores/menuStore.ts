@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Dispatch, SetStateAction } from "react";
 import type { MenuItem } from "../types";
 import {
+  loadMenuItemsAsync,
   loadMenuItems,
   saveMenuItems,
   toggleSoldOut as toggleSoldOutService,
@@ -9,7 +10,7 @@ import {
 
 interface MenuStore {
   items: MenuItem[];
-  load: () => void;
+  load: () => Promise<void>;
   toggleSoldOut: (id: string) => void;
   updateItems: Dispatch<SetStateAction<MenuItem[]>>;
 }
@@ -17,8 +18,9 @@ interface MenuStore {
 export const useMenuStore = create<MenuStore>((set) => ({
   items: loadMenuItems(),
 
-  load: () => {
+  load: async () => {
     set({ items: loadMenuItems() });
+    set({ items: await loadMenuItemsAsync() });
   },
 
   toggleSoldOut: (id) => {

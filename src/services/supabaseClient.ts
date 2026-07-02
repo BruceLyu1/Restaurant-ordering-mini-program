@@ -10,13 +10,21 @@ interface SupabaseEnv {
   VITE_SUPABASE_URL?: string;
 }
 
+function normalizeSupabaseUrl(value: string): string {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value;
+  }
+}
+
 export function getSupabaseConfig(env: SupabaseEnv = import.meta.env): SupabaseRuntimeConfig | null {
   const url = env.VITE_SUPABASE_URL?.trim();
   const publishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
 
   if (!url || !publishableKey) return null;
 
-  return { publishableKey, url };
+  return { publishableKey, url: normalizeSupabaseUrl(url) };
 }
 
 export function isSupabaseConfigured(env: SupabaseEnv = import.meta.env): boolean {

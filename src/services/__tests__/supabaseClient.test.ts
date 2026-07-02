@@ -30,6 +30,16 @@ describe("supabase client configuration", () => {
     });
   });
 
+  it("normalizes copied Data API URLs to the project root URL", () => {
+    expect(getSupabaseConfig({
+      VITE_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
+      VITE_SUPABASE_URL: "https://example.supabase.co/rest/v1/",
+    })).toEqual({
+      publishableKey: "publishable-key",
+      url: "https://example.supabase.co",
+    });
+  });
+
   it("reports whether Supabase is configured", () => {
     expect(isSupabaseConfigured({})).toBe(false);
     expect(isSupabaseConfigured({

@@ -1,5 +1,6 @@
 import { getDefaultMenuItems, MENU_STORAGE_KEY, seedMenuItems } from "../data/menu";
 import type { MenuItem } from "../types";
+import { getDataSourceMode } from "./dataSource";
 import { readStorage, writeStorage } from "./storage";
 
 export const MENU_CHANGE_EVENT = "harbour-menu-change";
@@ -52,6 +53,17 @@ export function loadMenuItems(): MenuItem[] {
   }
 
   return mergedItems;
+}
+
+export async function loadMenuItemsAsync(): Promise<MenuItem[]> {
+  if (getDataSourceMode() !== "supabase") return loadMenuItems();
+
+  try {
+    const { loadSupabaseMenuItems } = await import("./supabaseReadService");
+    return await loadSupabaseMenuItems();
+  } catch {
+    return loadMenuItems();
+  }
 }
 
 export function saveMenuItems(items: MenuItem[]): void {

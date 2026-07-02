@@ -43,6 +43,12 @@ function App() {
   );
 
   useEffect(() => {
+    void loadMenu();
+    void loadSettings();
+    void loadTables();
+  }, [loadMenu, loadSettings, loadTables]);
+
+  useEffect(() => {
     loadOrders(menuItems);
   }, [loadOrders, menuItems]);
 
