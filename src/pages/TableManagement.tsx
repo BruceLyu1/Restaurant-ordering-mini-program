@@ -26,6 +26,17 @@ export function TableManagement({ guestBaseUrl, tables }: TableManagementProps) 
     return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(tableUrl)}`;
   }
 
+  function copySelectedTableUrl(): void {
+    if (!navigator.clipboard?.writeText) {
+      window.alert(t("common.copyFailed"));
+      return;
+    }
+
+    void navigator.clipboard.writeText(selectedTableUrl).catch(() => {
+      window.alert(t("common.copyFailed"));
+    });
+  }
+
   const selectedTableUrl = selected ? getTableGuestUrl(selected.number) : "";
   const selectedQrUrl = selected ? getQrCodeUrl(selected.number) : "";
 
@@ -68,7 +79,7 @@ export function TableManagement({ guestBaseUrl, tables }: TableManagementProps) 
             <div className="qr-modal-actions">
               <button
                 className="management-secondary"
-                onClick={() => navigator.clipboard?.writeText(selectedTableUrl)}
+                onClick={copySelectedTableUrl}
                 type="button"
               >
                 {t("common.copyLink")}

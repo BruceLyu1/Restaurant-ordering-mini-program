@@ -6,7 +6,7 @@ interface IconProps {
   size?: number;
 }
 
-export function Icon({ name, size = 20 }: IconProps) {
+export const Icon = React.memo(function Icon({ name, size = 20 }: IconProps) {
   const paths: Record<string, React.ReactNode> = {
     menu: <path d="M4 6h16M4 12h16M4 18h16" />,
     cart: (
@@ -102,4 +102,4 @@ export function Icon({ name, size = 20 }: IconProps) {
       {paths[name]}
     </svg>
   );
-}
+});

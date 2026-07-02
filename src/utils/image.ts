@@ -36,7 +36,12 @@ export function compressDishPhoto(file: File): Promise<string> {
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(image.width * scale);
         canvas.height = Math.round(image.height * scale);
-        canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new ImageError(IMAGE_ERROR_CODES.DECODE_FAILED));
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
         resolve(canvas.toDataURL("image/jpeg", 0.78));
       };
       image.src = reader.result as string;

@@ -63,11 +63,6 @@
   margin-top: 15px;
 }
 
-.table-status-button {
-  background: #eef4ef;
-  color: var(--green);
-}
-
 .admin-modal-backdrop {
   align-items: center;
   background: rgba(18, 31, 24, 0.44);

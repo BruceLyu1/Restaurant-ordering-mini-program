@@ -7,7 +7,7 @@ interface DishImageProps {
   size?: "normal" | "small" | "tiny";
 }
 
-export function DishImage({ item, size = "normal" }: DishImageProps) {
+export const DishImage = React.memo(function DishImage({ item, size = "normal" }: DishImageProps) {
   const hasPhoto = Boolean(item.imageUrl);
   return (
     <span
@@ -23,4 +23,4 @@ export function DishImage({ item, size = "normal" }: DishImageProps) {
       {!hasPhoto && item.name.slice(0, 1)}
     </span>
   );
-}
+});

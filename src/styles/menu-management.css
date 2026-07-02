@@ -36,13 +36,6 @@
   display: none;
 }
 
-.dish-photo-sprite {
-  background-image: url("/menu-dishes.png");
-  background-repeat: no-repeat;
-  background-size: 200% 300%;
-  border-style: solid;
-}
-
 .dish-photo-error {
   color: var(--orange);
   font-size: 12px;

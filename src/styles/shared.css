@@ -183,8 +183,7 @@
 }
 
 .management-primary,
-.management-secondary,
-.table-status-button {
+.management-secondary {
   border-radius: 6px;
   font-size: 12px;
   font-weight: 800;

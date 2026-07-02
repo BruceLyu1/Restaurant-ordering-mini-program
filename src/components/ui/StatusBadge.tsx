@@ -6,7 +6,7 @@ interface StatusBadgeProps {
   status: Order["status"];
 }
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+export const StatusBadge = React.memo(function StatusBadge({ status }: StatusBadgeProps) {
   const { t } = useTranslation();
   return <span className={`status-badge ${status}`}>{t(`common.status.${status}`)}</span>;
-}
+});

@@ -2,7 +2,7 @@ import type { MenuItem } from "../types";
 
 export const MENU_STORAGE_KEY = "harbour-admin-menu";
 
-export function dishPhotoPath(id: string): string {
+function dishPhotoPath(id: string): string {
   return `${import.meta.env.BASE_URL}dish-photos/${id}.jpg`;
 }
 
