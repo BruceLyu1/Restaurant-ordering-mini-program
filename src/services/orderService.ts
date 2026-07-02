@@ -2,12 +2,13 @@
 import { ORDER_STORAGE_KEY, seedOrders } from "../data/orders";
 import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings } from "../types";
 import { getMenuItem } from "../utils/order";
+import { getDataSourceMode } from "./dataSource";
 import { isItemAvailableForMealPeriod } from "./settingsService";
 import { readStorage, writeStorage } from "./storage";
 
 export const ORDER_CHANGE_EVENT = "harbour-orders-change";
 
-interface PlaceOrderInput {
+export interface PlaceOrderInput {
   activeMealPeriod: MealPeriod | null;
   items: OrderLine[];
   menuItems: MenuItem[];
@@ -37,6 +38,13 @@ function normalizeOrder(order: Order, menuItems: MenuItem[]): Order {
   };
 }
 
+function canPlaceOrder({ activeMealPeriod, items, menuItems }: PlaceOrderInput): boolean {
+  return !items.some((line) => {
+    const item = getMenuItem(line.id, menuItems);
+    return !item || item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod);
+  });
+}
+
 export function loadOrders(menuItems: MenuItem[]): Order[] {
   const orders = readStorage<Order[]>(ORDER_STORAGE_KEY, seedOrders);
   if (!Array.isArray(orders)) return seedOrders;
@@ -49,15 +57,23 @@ export function loadOrders(menuItems: MenuItem[]): Order[] {
   return Array.from(ordersById.values()).map((order) => normalizeOrder(order, menuItems));
 }
 
+export async function loadOrdersAsync(menuItems: MenuItem[]): Promise<Order[]> {
+  if (getDataSourceMode() !== "supabase") return loadOrders(menuItems);
+
+  try {
+    const { loadSupabaseOrders } = await import("./supabaseOrderService");
+    return await loadSupabaseOrders();
+  } catch {
+    return loadOrders(menuItems);
+  }
+}
+
 export function saveOrders(orders: Order[]): void {
   writeStorage(ORDER_STORAGE_KEY, orders, ORDER_CHANGE_EVENT);
 }
 
 export function placeOrder({ activeMealPeriod, items, menuItems, printerSettings, table }: PlaceOrderInput): Order | null {
-  if (items.some((line) => {
-    const item = getMenuItem(line.id, menuItems);
-    return !item || item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod);
-  })) return null;
+  if (!canPlaceOrder({ activeMealPeriod, items, menuItems, printerSettings, table })) return null;
 
   const latestOrders = loadOrders(menuItems);
   const maxSequence = Math.max(...latestOrders.map((order) => order.sequence), 1000);
@@ -73,8 +89,34 @@ export function placeOrder({ activeMealPeriod, items, menuItems, printerSettings
   return order;
 }
 
+export async function placeOrderAsync(params: PlaceOrderInput): Promise<Order | null> {
+  if (!canPlaceOrder(params)) return null;
+  if (getDataSourceMode() !== "supabase") return placeOrder(params);
+
+  try {
+    const { placeSupabaseOrder } = await import("./supabaseOrderService");
+    return await placeSupabaseOrder(params);
+  } catch {
+    return placeOrder(params);
+  }
+}
+
 export function updateOrderStatus(id: string, status: Order["status"], menuItems: MenuItem[]): void {
   saveOrders(loadOrders(menuItems).map((order) => (order.id === id ? { ...order, status } : order)));
+}
+
+export async function updateOrderStatusAsync(id: string, status: Order["status"], menuItems: MenuItem[]): Promise<void> {
+  if (getDataSourceMode() !== "supabase") {
+    updateOrderStatus(id, status, menuItems);
+    return;
+  }
+
+  try {
+    const { updateSupabaseOrderStatus } = await import("./supabaseOrderService");
+    await updateSupabaseOrderStatus(id, status);
+  } catch {
+    updateOrderStatus(id, status, menuItems);
+  }
 }
 
 export function listActiveOrders(orders: Order[]): Order[] {

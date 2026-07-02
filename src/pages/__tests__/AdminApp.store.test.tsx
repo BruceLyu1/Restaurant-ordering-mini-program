@@ -10,6 +10,7 @@ import { useSettingsStore } from "../../stores/settingsStore";
 
 describe("AdminApp store integration", () => {
   beforeEach(() => {
+    vi.stubEnv("VITE_DATA_SOURCE", "local");
     window.localStorage.clear();
     window.sessionStorage.setItem("harbour-admin-unlocked", "1");
     window.localStorage.setItem("harbour-language", "zh-Hant");
@@ -77,5 +78,22 @@ describe("AdminApp store integration", () => {
     expect(useOrderStore.getState().orders.map((order) => order.id)).toEqual(seedOrders.map((order) => order.id));
 
     confirmSpy.mockRestore();
+  });
+
+  it("sends print status changes through the order store", async () => {
+    const updateStatus = vi.fn(async () => undefined);
+    useOrderStore.setState({ updateStatus });
+
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "列印" }).at(-1)!);
+
+    await vi.waitFor(() => {
+      expect(updateStatus).toHaveBeenCalledWith("HO-2001", "printed", []);
+    });
   });
 });

@@ -80,6 +80,7 @@ export const translations: Record<Language, TranslationTree> = {
       stockRemoved: "部分菜品已停止供應，已從購物車移除。",
       stockUnavailable: "這款菜品已售罄，暫時不能加入購物車。",
       stockSubmitFailed: "部分菜品已售罄，請重新確認購物車。",
+      submittingOrder: "送出中",
       confirmation: {
         continueOrdering: "繼續加菜",
         description: "訂單 {id} 已送到餐廳，廚房會按次序準備。",
@@ -398,6 +399,7 @@ export const translations: Record<Language, TranslationTree> = {
       stockRemoved: "Some unavailable dishes were removed from the cart.",
       stockUnavailable: "This dish is sold out and cannot be added.",
       stockSubmitFailed: "Some dishes are sold out. Please check your cart again.",
+      submittingOrder: "Submitting",
       confirmation: {
         continueOrdering: "Add more items",
         description: "Order {id} was sent to the restaurant. The kitchen will prepare it in order.",

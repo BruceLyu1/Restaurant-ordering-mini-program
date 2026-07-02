@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GuestApp } from "../GuestApp";
 import { LanguageProvider } from "../../i18n/LanguageContext";
@@ -24,6 +24,7 @@ function createMenuItem(index: number, category: string): MenuItem {
 
 describe("GuestApp store integration", () => {
   beforeEach(() => {
+    vi.stubEnv("VITE_DATA_SOURCE", "local");
     window.localStorage.clear();
     window.localStorage.setItem("harbour-language", "zh-Hant");
     useMenuStore.setState({
@@ -80,5 +81,53 @@ describe("GuestApp store integration", () => {
     categoryNames.forEach((category) => {
       expect(screen.getByRole("button", { name: category })).toBeTruthy();
     });
+  });
+
+  it("disables the cart submit button while an order is being placed", async () => {
+    useOrderStore.setState({
+      orders: [],
+      placeOrder: vi.fn(() => new Promise(() => undefined)) as never,
+    });
+
+    render(
+      <LanguageProvider>
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByLabelText("加入Store Rice"));
+    fireEvent.click(screen.getByRole("button", { name: /確認下單/ }));
+    fireEvent.click(screen.getAllByRole("button", { name: "確認下單" }).at(-1)!);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "送出中" })).toHaveProperty("disabled", true);
+    });
+  });
+
+  it("shows confirmation after an async order succeeds", async () => {
+    useOrderStore.setState({
+      orders: [],
+      placeOrder: vi.fn(async () => ({
+        createdAt: "2026-07-02T07:00:00.000Z",
+        id: "HO-1001",
+        items: [{ id: "store-rice", name: "Store Rice", quantity: 1, unitPrice: 68 }],
+        sequence: 1001,
+        status: "pending",
+        table: "12",
+      })) as never,
+    });
+
+    render(
+      <LanguageProvider>
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByLabelText("加入Store Rice"));
+    fireEvent.click(screen.getByRole("button", { name: /確認下單/ }));
+    fireEvent.click(screen.getAllByRole("button", { name: "確認下單" }).at(-1)!);
+
+    expect(await screen.findByText("落單成功")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /確認下單/ })).toBeNull();
   });
 });

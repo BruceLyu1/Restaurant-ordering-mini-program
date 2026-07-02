@@ -2,9 +2,12 @@ import { create } from "zustand";
 import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings } from "../types";
 import {
   loadOrders,
+  loadOrdersAsync,
   placeOrder as placeOrderService,
+  placeOrderAsync as placeOrderServiceAsync,
   resetDemoOrders,
   updateOrderStatus,
+  updateOrderStatusAsync,
 } from "../services/orderService";
 
 interface PlaceOrderInput {
@@ -17,21 +20,22 @@ interface PlaceOrderInput {
 
 interface OrderStore {
   orders: Order[];
-  load: (menuItems: MenuItem[]) => void;
-  placeOrder: (params: PlaceOrderInput) => Order | null;
+  load: (menuItems: MenuItem[]) => Promise<void>;
+  placeOrder: (params: PlaceOrderInput) => Promise<Order | null>;
   resetDemo: (menuItems: MenuItem[]) => void;
-  updateStatus: (id: string, status: Order["status"], menuItems: MenuItem[]) => void;
+  updateStatus: (id: string, status: Order["status"], menuItems: MenuItem[]) => Promise<void>;
 }
 
 export const useOrderStore = create<OrderStore>((set) => ({
   orders: [],
 
-  load: (menuItems) => {
+  load: async (menuItems) => {
     set({ orders: loadOrders(menuItems) });
+    set({ orders: await loadOrdersAsync(menuItems) });
   },
 
-  placeOrder: (params) => {
-    const order = placeOrderService(params);
+  placeOrder: async (params) => {
+    const order = await placeOrderServiceAsync(params);
     if (order) {
       set((state) => (
         state.orders.some((entry) => entry.id === order.id)
@@ -47,8 +51,8 @@ export const useOrderStore = create<OrderStore>((set) => ({
     set({ orders: loadOrders(menuItems) });
   },
 
-  updateStatus: (id, status, menuItems) => {
-    updateOrderStatus(id, status, menuItems);
+  updateStatus: async (id, status, menuItems) => {
+    await updateOrderStatusAsync(id, status, menuItems);
     set((state) => ({
       orders: state.orders.map((order) => (
         order.id === id ? { ...order, status } : order

@@ -7,6 +7,7 @@ import { Sidebar } from "../components/admin/Sidebar";
 import { Icon } from "../components/ui/Icon";
 import { useFormatAdminDate } from "../i18n/useFormatAdminDate";
 import { useTranslation } from "../i18n/useTranslation";
+import { getDataSourceMode } from "../services/dataSource";
 import { listActiveOrders, listSettledOrders } from "../services/orderService";
 import { useMenuStore } from "../stores/menuStore";
 import { useOrderStore } from "../stores/orderStore";
@@ -42,20 +43,22 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   const [filter, setFilter] = useState<"pending" | "settled">("pending");
   const [activeSection, setActiveSection] = useState("orders");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isSupabaseMode = getDataSourceMode() === "supabase";
   const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
   const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
 
   function handlePrint(id: string): void {
-    useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
+    void useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
   }
 
   function handleReset(): void {
+    if (isSupabaseMode) return;
     if (!window.confirm(t("adminApp.actions.resetDemoConfirm"))) return;
     useOrderStore.getState().resetDemo(useMenuStore.getState().items);
   }
 
   function handleSettle(id: string): void {
-    useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
+    void useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
   }
 
   function renderAdminSection() {
@@ -105,12 +108,14 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
                     {t("adminApp.orders.heading")}<span>{pendingOrders.length}</span>
                   </h1>
                 </div>
-                <div className="admin-actions">
-                  <button className="reset-button" onClick={handleReset} type="button">
-                    <Icon name="rotate" size={15} />
-                    {t("adminApp.actions.resetDemo")}
-                  </button>
-                </div>
+                {!isSupabaseMode && (
+                  <div className="admin-actions">
+                    <button className="reset-button" onClick={handleReset} type="button">
+                      <Icon name="rotate" size={15} />
+                      {t("adminApp.actions.resetDemo")}
+                    </button>
+                  </div>
+                )}
               </header>
               <div className="orders-tabs">
                 <button

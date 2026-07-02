@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ORDER_CHANGE_EVENT } from "../../services/orderService";
 import { ORDER_STORAGE_KEY, seedOrders } from "../../data/orders";
 import type { MealPeriod, MenuItem, PrinterSettings } from "../../types";
@@ -27,19 +27,22 @@ const printerSettings: PrinterSettings = {
 
 describe("orderStore", () => {
   beforeEach(() => {
+    vi.stubEnv("VITE_DATA_SOURCE", "local");
     window.localStorage.clear();
     window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify([]));
     useOrderStore.setState({ orders: [] });
   });
 
-  it("places an order through orderService and refreshes store state", () => {
-    const order = useOrderStore.getState().placeOrder({
+  it("places an order through orderService and refreshes store state", async () => {
+    const result = useOrderStore.getState().placeOrder({
       activeMealPeriod,
       items: [{ id: "store-rice", name: "Store Rice", notes: "Less rice", quantity: 2, unitPrice: 68 }],
       menuItems,
       printerSettings,
       table: "12",
     });
+    expect(result).toBeInstanceOf(Promise);
+    const order = await result;
 
     expect(order?.status).toBe("pending");
     expect(order?.items[0].notes).toBe("Less rice");
@@ -47,14 +50,14 @@ describe("orderStore", () => {
     expect(JSON.parse(window.localStorage.getItem(ORDER_STORAGE_KEY) || "[]")).toHaveLength(1);
   });
 
-  it("does not duplicate an order when storage sync reloads during placement", () => {
+  it("does not duplicate an order when storage sync reloads during placement", async () => {
     function syncOrders(): void {
       useOrderStore.getState().load(menuItems);
     }
     window.addEventListener(ORDER_CHANGE_EVENT, syncOrders);
 
     try {
-      const order = useOrderStore.getState().placeOrder({
+      const order = await useOrderStore.getState().placeOrder({
         activeMealPeriod,
         items: [{ id: "store-rice", name: "Store Rice", quantity: 1, unitPrice: 68 }],
         menuItems,
@@ -68,8 +71,8 @@ describe("orderStore", () => {
     }
   });
 
-  it("updates order status and resets demo orders without reading another store", () => {
-    const order = useOrderStore.getState().placeOrder({
+  it("updates order status and resets demo orders without reading another store", async () => {
+    const order = await useOrderStore.getState().placeOrder({
       activeMealPeriod,
       items: [{ id: "store-rice", name: "Store Rice", quantity: 1, unitPrice: 68 }],
       menuItems,
@@ -77,7 +80,7 @@ describe("orderStore", () => {
       table: "12",
     });
 
-    useOrderStore.getState().updateStatus(order!.id, "settled", menuItems);
+    await useOrderStore.getState().updateStatus(order!.id, "settled", menuItems);
     expect(useOrderStore.getState().orders[0].status).toBe("settled");
 
     useOrderStore.getState().resetDemo(menuItems);

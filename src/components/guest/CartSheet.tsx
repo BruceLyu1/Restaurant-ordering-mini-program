@@ -7,15 +7,16 @@ import type { CartItem } from "./CartBar";
 
 interface CartSheetProps {
   cartItems: CartItem[];
+  isSubmitting?: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
   tableNumber: string;
   total: number;
   updateItem: (id: string, delta: number) => void;
   updateItemNote?: (id: string, notes: string) => void;
 }
 
-export function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, updateItem, updateItemNote }: CartSheetProps) {
+export function CartSheet({ cartItems, isSubmitting = false, onClose, onSubmit, tableNumber, total, updateItem, updateItemNote }: CartSheetProps) {
   const { t } = useTranslation();
 
   return (
@@ -64,8 +65,8 @@ export function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, up
             <span>{t("common.table.total")}</span>
             <strong>{money(total)}</strong>
           </div>
-          <button className="primary-button" onClick={onSubmit} type="button">
-            {t("guestApp.confirmOrder")}
+          <button className="primary-button" disabled={isSubmitting} onClick={onSubmit} type="button">
+            {isSubmitting ? t("guestApp.submittingOrder") : t("guestApp.confirmOrder")}
           </button>
         </footer>
       </section>

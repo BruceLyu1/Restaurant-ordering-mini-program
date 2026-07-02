@@ -33,6 +33,7 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
   const [cart, setCart] = useState<Record<string, number>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [isCartOpen, setCartOpen] = useState(false);
+  const [isSubmittingOrder, setSubmittingOrder] = useState(false);
   const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<Order | null>(null);
   const [stockNotice, setStockNotice] = useState("");
@@ -139,29 +140,34 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
     });
   }
 
-  function submitOrder(): void {
-    if (!cartItems.length) return;
-    const order = useOrderStore.getState().placeOrder({
-      activeMealPeriod,
-      items: cartItems.map(({ id, name, notes, price, quantity }) => ({
-        id,
-        name,
-        notes: notes?.trim() || undefined,
-        quantity,
-        unitPrice: price,
-      })),
-      menuItems: useMenuStore.getState().items,
-      printerSettings: useSettingsStore.getState().printer,
-      table: tableNumber,
-    });
-    if (!order) {
-      setStockNotice(t("guestApp.stockSubmitFailed"));
-      return;
+  async function submitOrder(): Promise<void> {
+    if (!cartItems.length || isSubmittingOrder) return;
+    setSubmittingOrder(true);
+    try {
+      const order = await useOrderStore.getState().placeOrder({
+        activeMealPeriod,
+        items: cartItems.map(({ id, name, notes, price, quantity }) => ({
+          id,
+          name,
+          notes: notes?.trim() || undefined,
+          quantity,
+          unitPrice: price,
+        })),
+        menuItems: useMenuStore.getState().items,
+        printerSettings: useSettingsStore.getState().printer,
+        table: tableNumber,
+      });
+      if (!order) {
+        setStockNotice(t("guestApp.stockSubmitFailed"));
+        return;
+      }
+      setConfirmation(order);
+      setCart({});
+      setItemNotes({});
+      setCartOpen(false);
+    } finally {
+      setSubmittingOrder(false);
     }
-    setConfirmation(order);
-    setCart({});
-    setItemNotes({});
-    setCartOpen(false);
   }
 
   return (
@@ -264,6 +270,7 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
       {isCartOpen && (
         <CartSheet
           cartItems={cartItems}
+          isSubmitting={isSubmittingOrder}
           onClose={() => setCartOpen(false)}
           onSubmit={submitOrder}
           tableNumber={tableNumber}

@@ -49,12 +49,12 @@ function App() {
   }, [loadMenu, loadSettings, loadTables]);
 
   useEffect(() => {
-    loadOrders(menuItems);
+    void loadOrders(menuItems);
   }, [loadOrders, menuItems]);
 
   useEffect(() => {
     return subscribeToStorage("harbour-ordering-demo-orders", () => {
-      loadOrders(useMenuStore.getState().items);
+      void loadOrders(useMenuStore.getState().items);
     }, ORDER_CHANGE_EVENT);
   }, [loadOrders]);
 
