@@ -3,6 +3,7 @@ import type { MealPeriod, MenuItem, PrinterSettings } from "../../types";
 import {
   loadSupabaseOrders,
   placeSupabaseOrder,
+  subscribeSupabaseOrderChanges,
   updateSupabaseOrderStatus,
 } from "../supabaseOrderService";
 
@@ -28,6 +29,22 @@ function createQuery(rows: unknown[], error: Error | null = null) {
     ),
   };
   return query;
+}
+
+function createRealtimeClient() {
+  const handlers: Array<() => void> = [];
+  const channel = {
+    on: vi.fn((_event: string, _filter: Record<string, string>, callback: () => void) => {
+      handlers.push(callback);
+      return channel;
+    }),
+    subscribe: vi.fn(() => channel),
+  };
+  const client = {
+    channel: vi.fn(() => channel),
+    removeChannel: vi.fn(),
+  };
+  return { channel, client, handlers };
 }
 
 describe("supabaseOrderService", () => {
@@ -117,5 +134,68 @@ describe("supabaseOrderService", () => {
     }, { rpc: vi.fn() })).rejects.toThrow("Cannot place an empty order");
 
     await expect(loadSupabaseOrders(null)).rejects.toThrow("Supabase is not configured");
+  });
+
+  it("subscribes to order and order line realtime changes", () => {
+    const { channel, client } = createRealtimeClient();
+
+    const cleanup = subscribeSupabaseOrderChanges(vi.fn(), client);
+
+    expect(client.channel).toHaveBeenCalledWith("harbour-orders-realtime");
+    expect(channel.on).toHaveBeenCalledWith(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "orders" },
+      expect.any(Function),
+    );
+    expect(channel.on).toHaveBeenCalledWith(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "order_lines" },
+      expect.any(Function),
+    );
+    expect(channel.subscribe).toHaveBeenCalled();
+
+    cleanup();
+  });
+
+  it("debounces multiple realtime events into one refresh", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client, handlers } = createRealtimeClient();
+      const onChange = vi.fn();
+
+      subscribeSupabaseOrderChanges(onChange, client);
+      handlers.forEach((handler) => handler());
+
+      expect(onChange).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("removes the realtime channel and cancels pending refresh on cleanup", async () => {
+    vi.useFakeTimers();
+    try {
+      const { channel, client, handlers } = createRealtimeClient();
+      const onChange = vi.fn();
+
+      const cleanup = subscribeSupabaseOrderChanges(onChange, client);
+      handlers[0]();
+      cleanup();
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(client.removeChannel).toHaveBeenCalledWith(channel);
+      expect(onChange).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("returns a noop cleanup when Supabase realtime is unavailable", () => {
+    const cleanup = subscribeSupabaseOrderChanges(vi.fn(), null);
+
+    expect(() => cleanup()).not.toThrow();
   });
 });

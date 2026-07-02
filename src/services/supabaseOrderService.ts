@@ -17,8 +17,19 @@ interface SupabaseRpcResult {
 }
 
 interface SupabaseLike {
+  channel?: (name: string) => SupabaseRealtimeChannel;
   from?: (table: string) => any;
+  removeChannel?: (channel: SupabaseRealtimeChannel) => unknown;
   rpc?: (fn: string, args: Record<string, unknown>) => Promise<SupabaseRpcResult>;
+}
+
+interface SupabaseRealtimeChannel {
+  on: (
+    event: "postgres_changes",
+    filter: { event: string; schema: string; table: string },
+    callback: () => void,
+  ) => SupabaseRealtimeChannel;
+  subscribe: () => unknown;
 }
 
 interface RemoteOrderRow {
@@ -146,4 +157,38 @@ export async function updateSupabaseOrderStatus(
     target_restaurant_slug: RESTAURANT_SLUG,
   });
   if (error) throw error;
+}
+
+export function subscribeSupabaseOrderChanges(
+  onChange: () => void | Promise<void>,
+  client: SupabaseLike | null = supabase as SupabaseLike | null,
+): () => void {
+  if (!client?.channel) return () => undefined;
+
+  let active = true;
+  let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  const scheduleRefresh = () => {
+    if (!active || refreshTimer) return;
+
+    refreshTimer = setTimeout(() => {
+      refreshTimer = null;
+      if (!active) return;
+      void onChange();
+    }, 100);
+  };
+
+  const channel = client
+    .channel("harbour-orders-realtime")
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, scheduleRefresh)
+    .on("postgres_changes", { event: "*", schema: "public", table: "order_lines" }, scheduleRefresh);
+  channel.subscribe();
+
+  return () => {
+    active = false;
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+      refreshTimer = null;
+    }
+    client.removeChannel?.(channel);
+  };
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ViewToggle } from "./components/ui/ViewToggle";
 import { AdminApp } from "./pages/AdminApp";
 import { GuestApp } from "./pages/GuestApp";
+import { getDataSourceMode } from "./services/dataSource";
 import { MENU_CHANGE_EVENT } from "./services/menuService";
 import { ORDER_CHANGE_EVENT } from "./services/orderService";
 import {
@@ -56,6 +57,24 @@ function App() {
     return subscribeToStorage("harbour-ordering-demo-orders", () => {
       void loadOrders(useMenuStore.getState().items);
     }, ORDER_CHANGE_EVENT);
+  }, [loadOrders]);
+
+  useEffect(() => {
+    if (getDataSourceMode() !== "supabase") return undefined;
+
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    void import("./services/supabaseOrderService").then(({ subscribeSupabaseOrderChanges }) => {
+      if (cancelled) return;
+      cleanup = subscribeSupabaseOrderChanges(() => {
+        void loadOrders(useMenuStore.getState().items);
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, [loadOrders]);
 
   useEffect(() => {
