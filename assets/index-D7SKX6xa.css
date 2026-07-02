@@ -237,8 +237,7 @@ p {
 }
 
 .management-primary,
-.management-secondary,
-.table-status-button {
+.management-secondary {
   border-radius: 6px;
   font-size: 12px;
   font-weight: 800;
@@ -1966,11 +1965,6 @@ p {
   margin-top: 15px;
 }
 
-.table-status-button {
-  background: #eef4ef;
-  color: var(--green);
-}
-
 .admin-modal-backdrop {
   align-items: center;
   background: rgba(18, 31, 24, 0.44);
@@ -2179,13 +2173,6 @@ p {
 
 .dish-photo-upload input {
   display: none;
-}
-
-.dish-photo-sprite {
-  background-image: url("../menu-dishes.png");
-  background-repeat: no-repeat;
-  background-size: 200% 300%;
-  border-style: solid;
 }
 
 .dish-photo-error {

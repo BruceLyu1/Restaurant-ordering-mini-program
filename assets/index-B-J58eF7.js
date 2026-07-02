@@ -17415,6 +17415,7 @@ const translations = {
             add: "新增",
             cancel: "取消",
             close: "關閉",
+            copyFailed: "複製失敗，請手動複製連結",
             copyLink: "複製連結",
             delete: "刪除",
             edit: "修改",
@@ -17529,7 +17530,7 @@ const translations = {
                 pending: "待處理訂單",
                 pendingNote: "按下單時間排序處理",
                 revenue: "今日營業額",
-                revenueNote: "已包含所有演示訂單",
+                revenueNote: "按今天訂單統計",
             },
             tableStatus: "桌位狀況",
             title: "營運總覽",
@@ -17732,6 +17733,7 @@ const translations = {
             add: "Add",
             cancel: "Cancel",
             close: "Close",
+            copyFailed: "Copy failed, please copy the link manually",
             copyLink: "Copy link",
             delete: "Delete",
             edit: "Edit",
@@ -17846,7 +17848,7 @@ const translations = {
                 pending: "Active orders",
                 pendingNote: "Handled by order time",
                 revenue: "Today's revenue",
-                revenueNote: "Includes all demo orders",
+                revenueNote: "Based on today's orders",
             },
             tableStatus: "Table status",
             title: "Dashboard",
@@ -18142,7 +18144,7 @@ const navItems = [
     ["settings", "settings"],
 ];
 
-function Icon({ name, size = 20 }) {
+const Icon = commonjsExports$4.memo(function Icon({ name, size = 20 }) {
     const paths = {
         menu: jsx("path", { d: "M4 6h16M4 12h16M4 18h16" }),
         cart: (jsxs(Fragment, { children: [jsx("path", { d: "M3 4h2l2.4 10.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L21 8H7" }), jsx("circle", { cx: "10", cy: "20", r: "1" }), jsx("circle", { cx: "18", cy: "20", r: "1" })] })),
@@ -18164,7 +18166,7 @@ function Icon({ name, size = 20 }) {
         rotate: (jsxs(Fragment, { children: [jsx("path", { d: "M3 12a9 9 0 1 0 3-6.7" }), jsx("path", { d: "M3 4v6h6" })] })),
     };
     return (jsx("svg", { "aria-hidden": "true", className: "icon", fill: "none", height: size, stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "1.8", viewBox: "0 0 24 24", width: size, children: paths[name] }));
-}
+});
 
 function MobileAdminNav({ activeSection, onClose, onNavigate, orderBadgeCount, restaurantName }) {
     const { t } = useTranslation();
@@ -18174,10 +18176,10 @@ function MobileAdminNav({ activeSection, onClose, onNavigate, orderBadgeCount, r
                         }, type: "button", children: [jsx(Icon, { name: icon, size: 18 }), jsx("span", { children: t(`navigation.${section}`) }), section === "orders" && orderBadgeCount > 0 && jsx("small", { children: orderBadgeCount })] }, section))) })] }) }));
 }
 
-function StatusBadge({ status }) {
+const StatusBadge = commonjsExports$4.memo(function StatusBadge({ status }) {
     const { t } = useTranslation();
     return jsx("span", { className: `status-badge ${status}`, children: t(`common.status.${status}`) });
-}
+});
 
 function isSameLocalDate(dateString, date = new Date()) {
     const value = new Date(dateString);
@@ -18354,14 +18356,14 @@ function PinGuard({ children }) {
                         }, type: "text", value: digit }, index))) }), error && jsx("span", { className: "pin-error", children: error }), jsx("button", { className: "management-secondary", onClick: reset, type: "button", children: t("adminApp.pin.reset") })] }) }));
 }
 
-function DishImage({ item, size = "normal" }) {
+const DishImage = commonjsExports$4.memo(function DishImage({ item, size = "normal" }) {
     const hasPhoto = Boolean(item.imageUrl);
     return (jsx("span", { "aria-label": item.name, className: `dish-image ${size} ${hasPhoto ? "has-photo" : ""}`, role: "img", style: hasPhoto ? {
             backgroundImage: `url(${JSON.stringify(item.imageUrl)})`,
             backgroundPosition: "center",
             backgroundSize: "cover",
         } : undefined, children: !hasPhoto && item.name.slice(0, 1) }));
-}
+});
 
 function PopularDishes({ menuItems, onOpenReports, orders }) {
     const { t } = useTranslation();
@@ -18857,7 +18859,12 @@ function compressDishPhoto(file) {
                 const canvas = document.createElement("canvas");
                 canvas.width = Math.round(image.width * scale);
                 canvas.height = Math.round(image.height * scale);
-                canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+                const context = canvas.getContext("2d");
+                if (!context) {
+                    reject(new ImageError(IMAGE_ERROR_CODES.DECODE_FAILED));
+                    return;
+                }
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
                 resolve(canvas.toDataURL("image/jpeg", 0.78));
             };
             image.src = reader.result;
@@ -19244,9 +19251,18 @@ function TableManagement({ guestBaseUrl, tables }) {
         const tableUrl = getTableGuestUrl(tableNumber);
         return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(tableUrl)}`;
     }
+    function copySelectedTableUrl() {
+        if (!navigator.clipboard?.writeText) {
+            window.alert(t("common.copyFailed"));
+            return;
+        }
+        void navigator.clipboard.writeText(selectedTableUrl).catch(() => {
+            window.alert(t("common.copyFailed"));
+        });
+    }
     const selectedTableUrl = selected ? getTableGuestUrl(selected.number) : "";
     const selectedQrUrl = selected ? getQrCodeUrl(selected.number) : "";
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("tableManagement.description"), title: t("tableManagement.title") }), jsx("div", { className: "table-management-grid", children: tables.map((table) => (jsxs("article", { className: `table-card ${table.status}`, children: [jsxs("div", { children: [jsx("span", { children: table.number }), jsxs("div", { children: [jsx("h2", { children: t("common.table.tableLabel", { number: table.number }) }), jsx("p", { children: table.status === "occupied" ? t("tableManagement.occupiedDesc") : t("tableManagement.availableDesc") })] })] }), jsx("footer", { children: jsx("button", { className: "management-secondary", onClick: () => setSelected(table), type: "button", children: t("tableManagement.viewQr") }) })] }, table.number))) }), selected && (jsx("div", { className: "admin-modal-backdrop", children: jsxs("section", { className: "qr-modal", children: [jsx("button", { "aria-label": t("tableManagement.closeQr"), className: "modal-close", onClick: () => setSelected(null), type: "button", children: "x" }), jsx("img", { alt: t("tableManagement.qrAlt", { number: selected.number }), className: "table-qr-image", src: selectedQrUrl }), jsx("h2", { children: t("tableManagement.qrTitle", { number: selected.number }) }), jsx("p", { children: t("tableManagement.qrDescription", { number: selected.number }) }), jsx("a", { className: "qr-link", href: selectedTableUrl, rel: "noreferrer", target: "_blank", children: selectedTableUrl }), jsxs("div", { className: "qr-modal-actions", children: [jsx("button", { className: "management-secondary", onClick: () => navigator.clipboard?.writeText(selectedTableUrl), type: "button", children: t("common.copyLink") }), jsx("button", { className: "management-primary", onClick: () => window.print(), type: "button", children: t("common.printQr") })] })] }) }))] }));
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("tableManagement.description"), title: t("tableManagement.title") }), jsx("div", { className: "table-management-grid", children: tables.map((table) => (jsxs("article", { className: `table-card ${table.status}`, children: [jsxs("div", { children: [jsx("span", { children: table.number }), jsxs("div", { children: [jsx("h2", { children: t("common.table.tableLabel", { number: table.number }) }), jsx("p", { children: table.status === "occupied" ? t("tableManagement.occupiedDesc") : t("tableManagement.availableDesc") })] })] }), jsx("footer", { children: jsx("button", { className: "management-secondary", onClick: () => setSelected(table), type: "button", children: t("tableManagement.viewQr") }) })] }, table.number))) }), selected && (jsx("div", { className: "admin-modal-backdrop", children: jsxs("section", { className: "qr-modal", children: [jsx("button", { "aria-label": t("tableManagement.closeQr"), className: "modal-close", onClick: () => setSelected(null), type: "button", children: "x" }), jsx("img", { alt: t("tableManagement.qrAlt", { number: selected.number }), className: "table-qr-image", src: selectedQrUrl }), jsx("h2", { children: t("tableManagement.qrTitle", { number: selected.number }) }), jsx("p", { children: t("tableManagement.qrDescription", { number: selected.number }) }), jsx("a", { className: "qr-link", href: selectedTableUrl, rel: "noreferrer", target: "_blank", children: selectedTableUrl }), jsxs("div", { className: "qr-modal-actions", children: [jsx("button", { className: "management-secondary", onClick: copySelectedTableUrl, type: "button", children: t("common.copyLink") }), jsx("button", { className: "management-primary", onClick: () => window.print(), type: "button", children: t("common.printQr") })] })] }) }))] }));
 }
 
 function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
