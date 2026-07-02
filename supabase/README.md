@@ -23,7 +23,7 @@ Never put a service role key in Vite environment variables.
 ## Migration Order
 
 1. Apply `migrations/20260702000000_initial_restaurant_schema.sql` to a Supabase project.
-2. Seed one restaurant, tables, menu items, and settings from the existing demo data.
+2. Apply `seed.sql` once to create the demo restaurant, tables, staff, menu items, and settings.
 3. Migrate read-only services first: restaurant settings, printer settings, tables, and menu.
 4. Migrate order creation and status updates after read paths are stable.
 5. Add Realtime subscriptions for orders first, then menu/table/settings changes.
