@@ -1,7 +1,8 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminApp } from "../AdminApp";
+import { seedOrders } from "../../data/orders";
 import { LanguageProvider } from "../../i18n/LanguageContext";
 import { useMenuStore } from "../../stores/menuStore";
 import { useOrderStore } from "../../stores/orderStore";
@@ -45,5 +46,36 @@ describe("AdminApp store integration", () => {
 
     expect(screen.getAllByText("Store Admin").length).toBeGreaterThan(0);
     expect(screen.getAllByText("1").length).toBeGreaterThan(0);
+  });
+
+  it("asks for confirmation before resetting demo orders", () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "重設演示" }));
+
+    expect(confirmSpy).toHaveBeenCalledWith("重設演示資料？目前瀏覽器中的訂單會還原為預設資料。");
+    expect(useOrderStore.getState().orders).toHaveLength(1);
+
+    confirmSpy.mockRestore();
+  });
+
+  it("resets demo orders after confirmation", () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "重設演示" }));
+
+    expect(useOrderStore.getState().orders.map((order) => order.id)).toEqual(seedOrders.map((order) => order.id));
+
+    confirmSpy.mockRestore();
   });
 });

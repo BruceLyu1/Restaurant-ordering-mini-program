@@ -50,6 +50,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   }
 
   function handleReset(): void {
+    if (!window.confirm(t("adminApp.actions.resetDemoConfirm"))) return;
     useOrderStore.getState().resetDemo(useMenuStore.getState().items);
   }
 
@@ -105,12 +106,10 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
                   </h1>
                 </div>
                 <div className="admin-actions">
-                  {import.meta.env.DEV && (
-                    <button className="reset-button" onClick={handleReset} type="button">
-                      <Icon name="rotate" size={15} />
-                      {t("adminApp.actions.resetDemo")}
-                    </button>
-                  )}
+                  <button className="reset-button" onClick={handleReset} type="button">
+                    <Icon name="rotate" size={15} />
+                    {t("adminApp.actions.resetDemo")}
+                  </button>
                 </div>
               </header>
               <div className="orders-tabs">

@@ -97,7 +97,10 @@ export const translations: Record<Language, TranslationTree> = {
     adminApp: {
       account: "管理帳戶",
       closeManagementMenu: "關閉管理菜單",
-      actions: { resetDemo: "重設演示" },
+      actions: {
+        resetDemo: "重設演示",
+        resetDemoConfirm: "重設演示資料？目前瀏覽器中的訂單會還原為預設資料。",
+      },
       guestShortcut: "返回顧客端",
       managementMenu: "管理菜單",
       mealPeriodClosed: "非營業時段",
@@ -411,7 +414,10 @@ export const translations: Record<Language, TranslationTree> = {
     adminApp: {
       account: "Admin account",
       closeManagementMenu: "Close management menu",
-      actions: { resetDemo: "Reset demo" },
+      actions: {
+        resetDemo: "Reset demo",
+        resetDemoConfirm: "Reset demo data? Orders in this browser will be restored to the default demo data.",
+      },
       guestShortcut: "Back to guest",
       managementMenu: "Management menu",
       mealPeriodClosed: "Closed",
