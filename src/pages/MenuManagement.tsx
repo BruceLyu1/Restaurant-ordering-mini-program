@@ -4,6 +4,7 @@ import { Toggle } from "../components/ui/Toggle";
 import { useTranslation } from "../i18n/useTranslation";
 import { DEFAULT_MEAL_PERIODS } from "../services/settingsService";
 import { useMenuStore } from "../stores/menuStore";
+import { uploadDishPhotoAsync } from "../services/menuService";
 import { normalizeCategoryName } from "../utils/category";
 import { compressDishPhoto, ImageError } from "../utils/image";
 import { money } from "../utils/money";
@@ -56,6 +57,8 @@ export function MenuManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState("");
   const [periodError, setPeriodError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const visible = activeItems.filter((item) => (
     item.name.includes(query.trim()) &&
@@ -74,7 +77,9 @@ export function MenuManagement() {
     });
 
     if (changed) {
-      setItems(normalizedItems);
+      void setItems(normalizedItems).catch(() => {
+        setCategoryNotice(t("menuManagement.saveFailed"));
+      });
       setCategoryNotice(t("menuManagement.categoryMergeNotice"));
     }
   }, [items, setItems, t]);
@@ -95,6 +100,7 @@ export function MenuManagement() {
     setEditingId(null);
     setPhotoError("");
     setPeriodError("");
+    setSaveError("");
     setShowForm(false);
   }
 
@@ -104,6 +110,7 @@ export function MenuManagement() {
     setEditingId(null);
     setPhotoError("");
     setPeriodError("");
+    setSaveError("");
     setShowForm(true);
   }
 
@@ -121,6 +128,7 @@ export function MenuManagement() {
     setEditingId(item.id);
     setPhotoError("");
     setPeriodError("");
+    setSaveError("");
     setShowForm(true);
   }
 
@@ -130,9 +138,10 @@ export function MenuManagement() {
     setCategoryNotice("");
   }
 
-  function renameCategory(): void {
+  async function renameCategory(): Promise<void> {
     const from = categoryTarget;
     const to = normalizeCategoryName(categoryDraft);
+    setSaveError("");
     if (!from || !to) {
       setCategoryNotice(t("menuManagement.validationCategory"));
       return;
@@ -143,19 +152,27 @@ export function MenuManagement() {
     }
 
     const affectedCount = activeItems.filter((item) => normalizeCategoryName(item.category || "") === from).length;
-    setItems((current) => current.map((item) => (
-      normalizeCategoryName(item.category || "") === from ? { ...item, category: to } : item
-    )));
-    setCategoryFilter(to);
-    setCategoryTarget(to);
-    setCategoryDraft(to);
-    setCategoryNotice(from === to
-      ? t("menuManagement.categoryRenameNoChange")
-      : t("menuManagement.categoryRenamed", { count: affectedCount, from, to }));
+    setSaving(true);
+    try {
+      await setItems((current) => current.map((item) => (
+        normalizeCategoryName(item.category || "") === from ? { ...item, category: to } : item
+      )));
+      setCategoryFilter(to);
+      setCategoryTarget(to);
+      setCategoryDraft(to);
+      setCategoryNotice(from === to
+        ? t("menuManagement.categoryRenameNoChange")
+        : t("menuManagement.categoryRenamed", { count: affectedCount, from, to }));
+    } catch {
+      setSaveError(t("menuManagement.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function deleteCategory(): void {
+  async function deleteCategory(): Promise<void> {
     const category = categoryTarget;
+    setSaveError("");
     if (!category) {
       setCategoryNotice(t("menuManagement.chooseCategoryFirst"));
       return;
@@ -164,13 +181,20 @@ export function MenuManagement() {
     const affectedCount = activeItems.filter((item) => normalizeCategoryName(item.category || "") === category).length;
     if (!window.confirm(t("menuManagement.deleteCategoryConfirm", { category, count: affectedCount }))) return;
 
-    setItems((current) => current.map((item) => (
-      normalizeCategoryName(item.category || "") === category ? { ...item, deleted: true } : item
-    )));
-    setCategoryFilter(ALL_CATEGORIES);
-    setCategoryTarget("");
-    setCategoryDraft("");
-    setCategoryNotice(t("menuManagement.categoryDeleted", { category, count: affectedCount }));
+    setSaving(true);
+    try {
+      await setItems((current) => current.map((item) => (
+        normalizeCategoryName(item.category || "") === category ? { ...item, deleted: true } : item
+      )));
+      setCategoryFilter(ALL_CATEGORIES);
+      setCategoryTarget("");
+      setCategoryDraft("");
+      setCategoryNotice(t("menuManagement.categoryDeleted", { category, count: affectedCount }));
+    } catch {
+      setSaveError(t("menuManagement.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function selectPhoto(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
@@ -186,8 +210,9 @@ export function MenuManagement() {
     }
   }
 
-  function saveItem(event: React.FormEvent): void {
+  async function saveItem(event: React.FormEvent): Promise<void> {
     event.preventDefault();
+    setSaveError("");
     const category = normalizeCategoryName(draft.category === CUSTOM_CATEGORY ? draft.customCategory : draft.category);
     if (!category || category === ALL_CATEGORIES) {
       setCategoryError(t("menuManagement.validationCategory"));
@@ -199,43 +224,79 @@ export function MenuManagement() {
     }
     if (!draft.name.trim() || !Number(draft.price)) return;
 
-    if (editingId) {
-      setItems((current) => current.map((item) => (
-        item.id === editingId
-          ? {
-              ...item,
-              category,
-              description: draft.description.trim(),
-              imageUrl: draft.imageUrl,
-              mealPeriods: draft.mealPeriods,
-              name: draft.name.trim(),
-              price: Number(draft.price),
-            }
-          : item
-      )));
-    } else {
-      setItems((current) => [
-        ...current,
-        {
-          category,
-          deleted: false,
-          description: draft.description.trim(),
-          id: `custom-${Date.now()}`,
-          imageUrl: draft.imageUrl,
-          mealPeriods: draft.mealPeriods,
-          name: draft.name.trim(),
-          price: Number(draft.price),
-          soldOut: false,
-        },
-      ]);
+    setSaving(true);
+    try {
+      const imageUrl = draft.imageUrl.startsWith("data:image/")
+        ? await uploadDishPhotoAsync(draft.imageUrl)
+        : draft.imageUrl;
+
+      if (editingId) {
+        await setItems((current) => current.map((item) => (
+          item.id === editingId
+            ? {
+                ...item,
+                category,
+                description: draft.description.trim(),
+                imageUrl,
+                mealPeriods: draft.mealPeriods,
+                name: draft.name.trim(),
+                price: Number(draft.price),
+              }
+            : item
+        )));
+      } else {
+        await setItems((current) => [
+          ...current,
+          {
+            category,
+            deleted: false,
+            description: draft.description.trim(),
+            id: `custom-${Date.now()}`,
+            imageUrl,
+            mealPeriods: draft.mealPeriods,
+            name: draft.name.trim(),
+            price: Number(draft.price),
+            soldOut: false,
+          },
+        ]);
+      }
+      resetForm();
+    } catch {
+      setSaveError(t("menuManagement.saveFailed"));
+    } finally {
+      setSaving(false);
     }
-    resetForm();
+  }
+
+  async function handleToggleSoldOut(id: string): Promise<void> {
+    setSaveError("");
+    try {
+      await toggleSoldOut(id);
+    } catch {
+      setSaveError(t("menuManagement.saveFailed"));
+    }
+  }
+
+  async function handleDeleteItem(item: MenuItem): Promise<void> {
+    setSaveError("");
+    if (!window.confirm(t("common.confirmDelete", { name: item.name }))) return;
+
+    setSaving(true);
+    try {
+      await setItems((current) => current.map((entry) => (
+        entry.id === item.id ? { ...entry, deleted: true } : entry
+      )));
+    } catch {
+      setSaveError(t("menuManagement.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <section className="management-page">
       <SectionHeader
-        action={<button className="management-primary" onClick={createItem} type="button">{t("menuManagement.addDish")}</button>}
+        action={<button className="management-primary" disabled={saving} onClick={createItem} type="button">{t("menuManagement.addDish")}</button>}
         description={t("menuManagement.sectionDescription")}
         title={t("menuManagement.sectionTitle")}
       />
@@ -315,11 +376,12 @@ export function MenuManagement() {
               </label>
             ))}
           </fieldset>
-          <button className="management-primary" type="submit">{editingId ? t("menuManagement.saveEdit") : t("menuManagement.saveDish")}</button>
-          <button className="management-secondary" onClick={resetForm} type="button">{t("common.cancel")}</button>
+          <button className="management-primary" disabled={saving} type="submit">{editingId ? t("menuManagement.saveEdit") : t("menuManagement.saveDish")}</button>
+          <button className="management-secondary" disabled={saving} onClick={resetForm} type="button">{t("common.cancel")}</button>
           {categoryError && <span className="dish-photo-error">{categoryError}</span>}
           {periodError && <span className="dish-photo-error">{periodError}</span>}
           {photoError && <span className="dish-photo-error">{photoError}</span>}
+          {saveError && <span className="dish-photo-error">{saveError}</span>}
         </form>
       )}
       <div className="category-manager">
@@ -341,9 +403,10 @@ export function MenuManagement() {
           placeholder={t("menuManagement.categoryNewName")}
           value={categoryDraft}
         />
-        <button className="management-primary" onClick={renameCategory} type="button">{t("menuManagement.saveCategory")}</button>
-        <button className="management-danger" onClick={deleteCategory} type="button">{t("menuManagement.deleteCategory")}</button>
+        <button className="management-primary" disabled={saving} onClick={() => void renameCategory()} type="button">{t("menuManagement.saveCategory")}</button>
+        <button className="management-danger" disabled={saving} onClick={() => void deleteCategory()} type="button">{t("menuManagement.deleteCategory")}</button>
         {categoryNotice && <span className="category-manager-notice">{categoryNotice}</span>}
+        {saveError && !showForm && <span className="category-manager-notice">{saveError}</span>}
       </div>
       <div className="management-toolbar">
         <input
@@ -405,20 +468,16 @@ export function MenuManagement() {
                   <Toggle
                     checked={item.soldOut}
                     label={t("menuManagement.toggleSoldOut", { name: item.name })}
-                    onChange={() => toggleSoldOut(item.id)}
+                    onChange={() => void handleToggleSoldOut(item.id)}
                   />
                 </td>
                 <td>
                   <div className="management-row-actions">
-                    <button className="management-secondary" onClick={() => editItem(item)} type="button">{t("common.modify")}</button>
+                    <button className="management-secondary" disabled={saving} onClick={() => editItem(item)} type="button">{t("common.modify")}</button>
                     <button
                       className="management-danger"
-                      onClick={() => {
-                        if (!window.confirm(t("common.confirmDelete", { name: item.name }))) return;
-                        setItems((current) => current.map((entry) => (
-                          entry.id === item.id ? { ...entry, deleted: true } : entry
-                        )));
-                      }}
+                      disabled={saving}
+                      onClick={() => void handleDeleteItem(item)}
                       type="button"
                     >
                       {t("common.delete")}

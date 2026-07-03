@@ -1,10 +1,10 @@
 # 海港小馆扫码点餐 H5
 
-更新日期：2026-07-02
+更新日期：2026-07-03
 
 这是一个面向香港中小餐厅的扫码点餐 H5 应用。顾客扫码后可以在手机上浏览菜单、加入购物车、填写单品备注并下单；餐厅后台可以接收订单、打印/补印、结账、维护菜单、管理桌位和员工，并查看营业报表。
 
-当前版本仍是前端演示系统，数据保存在浏览器本地 `localStorage`。项目已经完成前端模块化重构、TypeScript 迁移、Zustand 状态层、轻量 i18n、后台 PIN 码防误入、核心测试补强、移动端体验修复和真实餐厅试点前的若干质量优化，为下一步接入真实数据库做准备。
+当前版本默认仍可作为前端演示系统运行，数据保存在浏览器本地 `localStorage`；同时已经加入 Supabase 试点模式，可通过环境变量切换到远端菜单、订单、菜品图片和 Realtime 同步。项目已经完成前端模块化重构、TypeScript 迁移、Zustand 状态层、轻量 i18n、后台 PIN 码防误入、核心测试补强、移动端体验修复和真实餐厅试点前的若干质量优化。
 
 ## 在线演示
 
@@ -13,6 +13,18 @@
 - 餐厅后台：[https://brucelyu1.github.io/harbour-ordering-h5/?view=admin](https://brucelyu1.github.io/harbour-ordering-h5/?view=admin)
 
 说明：当前线上演示和本地开发一样使用浏览器本地存储，不同设备之间暂时不会同步数据。后台默认 PIN 为 `000000`，用于防止顾客误入管理端；接入数据库和真实鉴权后才会支持多设备实时协作和权限控制。
+
+## Supabase 试点模式
+
+项目已经预留 `local` / `supabase` 数据源切换。默认不配置环境变量时继续使用 `localStorage` 演示；本地 `.env.local` 配置以下变量后，会启用 Supabase 试点链路：
+
+```env
+VITE_DATA_SOURCE=supabase
+VITE_SUPABASE_URL=你的 Supabase Project URL
+VITE_SUPABASE_PUBLISHABLE_KEY=你的 publishable key
+```
+
+当前 Supabase 模式已经支持菜单远端读取与写入、菜品图片上传到 `dish-photos` Storage、顾客下单写入 `orders` / `order_lines`、后台读取订单、打印/结账状态同步，以及订单和菜单 Realtime 刷新。菜单售罄/恢复供应支持快速连续操作，并避免 Realtime 旧快照造成按钮抖动。
 
 ## 当前功能
 

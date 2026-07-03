@@ -109,6 +109,24 @@ function App() {
   }, [loadMenu]);
 
   useEffect(() => {
+    if (getDataSourceMode() !== "supabase") return undefined;
+
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    void import("./services/supabaseMenuService").then(({ subscribeSupabaseMenuChanges }) => {
+      if (cancelled) return;
+      cleanup = subscribeSupabaseMenuChanges(() => {
+        void loadMenu();
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
+  }, [loadMenu]);
+
+  useEffect(() => {
     return subscribeToStorage("harbour-admin-staff", () => {
       loadStaff();
     }, STAFF_CHANGE_EVENT);

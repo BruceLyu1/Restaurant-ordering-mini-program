@@ -71,6 +71,19 @@ describe("orderStore", () => {
     }
   });
 
+  it("does not publish local orders before supabase load resolves", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    vi.stubEnv("VITE_SUPABASE_URL", "");
+    vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "");
+    window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(seedOrders));
+
+    const result = useOrderStore.getState().load(menuItems);
+
+    expect(useOrderStore.getState().orders).toEqual([]);
+    await result;
+    expect(useOrderStore.getState().orders).toHaveLength(seedOrders.length);
+  });
+
   it("updates order status and resets demo orders without reading another store", async () => {
     const order = await useOrderStore.getState().placeOrder({
       activeMealPeriod,

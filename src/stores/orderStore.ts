@@ -9,6 +9,7 @@ import {
   updateOrderStatus,
   updateOrderStatusAsync,
 } from "../services/orderService";
+import { getDataSourceMode } from "../services/dataSource";
 
 interface PlaceOrderInput {
   activeMealPeriod: MealPeriod | null;
@@ -30,8 +31,10 @@ export const useOrderStore = create<OrderStore>((set) => ({
   orders: [],
 
   load: async (menuItems) => {
-    set({ orders: loadOrders(menuItems) });
-    set({ orders: await loadOrdersAsync(menuItems) });
+    const orders = getDataSourceMode() === "supabase"
+      ? await loadOrdersAsync(menuItems)
+      : loadOrders(menuItems);
+    set({ orders });
   },
 
   placeOrder: async (params) => {

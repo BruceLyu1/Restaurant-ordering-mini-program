@@ -70,6 +70,23 @@ export function saveMenuItems(items: MenuItem[]): void {
   writeStorage(MENU_STORAGE_KEY, items, MENU_CHANGE_EVENT);
 }
 
+export async function saveMenuItemsAsync(items: MenuItem[]): Promise<void> {
+  if (getDataSourceMode() !== "supabase") {
+    saveMenuItems(items);
+    return;
+  }
+
+  const { saveSupabaseMenuItems } = await import("./supabaseMenuService");
+  await saveSupabaseMenuItems(items);
+}
+
+export async function uploadDishPhotoAsync(dataUrl: string): Promise<string> {
+  if (getDataSourceMode() !== "supabase") return dataUrl;
+
+  const { uploadSupabaseDishPhoto } = await import("./supabaseMenuService");
+  return uploadSupabaseDishPhoto(dataUrl);
+}
+
 export function createMenuItem(items: MenuItem[], item: MenuItem): MenuItem[] {
   return [...items, item];
 }

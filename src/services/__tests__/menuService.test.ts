@@ -1,10 +1,28 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MENU_STORAGE_KEY } from "../../data/menu";
-import { createMenuItem, deleteMenuItem, loadMenuItems, saveMenuItems, toggleSoldOut, updateMenuItem } from "../menuService";
+import { saveSupabaseMenuItems, uploadSupabaseDishPhoto } from "../supabaseMenuService";
+import {
+  createMenuItem,
+  deleteMenuItem,
+  loadMenuItems,
+  saveMenuItems,
+  saveMenuItemsAsync,
+  toggleSoldOut,
+  updateMenuItem,
+  uploadDishPhotoAsync,
+} from "../menuService";
+
+vi.mock("../supabaseMenuService", () => ({
+  saveSupabaseMenuItems: vi.fn().mockResolvedValue(undefined),
+  uploadSupabaseDishPhoto: vi.fn().mockResolvedValue("https://cdn.test/dish.jpg"),
+}));
 
 describe("menuService", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    vi.stubEnv("VITE_DATA_SOURCE", "local");
   });
 
   it("loads seed menu items when storage is empty", () => {
@@ -49,5 +67,48 @@ describe("menuService", () => {
 
     saveMenuItems(items);
     expect(JSON.parse(window.localStorage.getItem(MENU_STORAGE_KEY) || "[]")[0].id).toBe(custom.id);
+  });
+
+  it("saves menu items locally in local data source mode", async () => {
+    const item = {
+      id: "local-test",
+      name: "Local Dish",
+      category: "Rice",
+      description: "Local",
+      price: 42,
+      soldOut: false,
+      deleted: false,
+    };
+
+    await saveMenuItemsAsync([item]);
+
+    expect(JSON.parse(window.localStorage.getItem(MENU_STORAGE_KEY) || "[]")[0].id).toBe(item.id);
+    expect(saveSupabaseMenuItems).not.toHaveBeenCalled();
+  });
+
+  it("delegates menu saves and photo uploads to Supabase in supabase mode", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    const item = {
+      id: "remote-test",
+      name: "Remote Dish",
+      category: "Rice",
+      description: "Remote",
+      price: 42,
+      soldOut: false,
+      deleted: false,
+    };
+
+    await saveMenuItemsAsync([item]);
+    await expect(uploadDishPhotoAsync("data:image/jpeg;base64,aGVsbG8=")).resolves.toBe("https://cdn.test/dish.jpg");
+
+    expect(saveSupabaseMenuItems).toHaveBeenCalledWith([item]);
+    expect(uploadSupabaseDishPhoto).toHaveBeenCalledWith("data:image/jpeg;base64,aGVsbG8=");
+  });
+
+  it("returns the original data URL for local photo uploads", async () => {
+    const dataUrl = "data:image/jpeg;base64,aGVsbG8=";
+
+    await expect(uploadDishPhotoAsync(dataUrl)).resolves.toBe(dataUrl);
+    expect(uploadSupabaseDishPhoto).not.toHaveBeenCalled();
   });
 });
