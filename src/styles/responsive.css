@@ -87,6 +87,10 @@
     grid-template-columns: 1fr;
   }
 
+  .table-management-form {
+    grid-template-columns: 1fr;
+  }
+
   .metrics-row {
     gap: 8px;
   }

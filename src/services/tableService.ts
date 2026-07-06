@@ -25,3 +25,13 @@ export async function loadTablesAsync(): Promise<TableInfo[]> {
 export function saveTables(tables: TableInfo[]): void {
   writeStorage(TABLE_STORAGE_KEY, tables, TABLE_CHANGE_EVENT);
 }
+
+export async function saveTablesAsync(tables: TableInfo[]): Promise<void> {
+  if (getDataSourceMode() !== "supabase") {
+    saveTables(tables);
+    return;
+  }
+
+  const { saveSupabaseTables } = await import("./supabaseTableService");
+  await saveSupabaseTables(tables);
+}

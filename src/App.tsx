@@ -138,6 +138,24 @@ function App() {
     }, TABLE_CHANGE_EVENT);
   }, [loadTables]);
 
+  useEffect(() => {
+    if (getDataSourceMode() !== "supabase") return undefined;
+
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    void import("./services/supabaseTableService").then(({ subscribeSupabaseTableChanges }) => {
+      if (cancelled) return;
+      cleanup = subscribeSupabaseTableChanges(() => {
+        void loadTables();
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
+  }, [loadTables]);
+
   return (
     <>
       <ViewToggle setView={setView} view={view} />
