@@ -722,6 +722,10 @@ p {
   justify-content: center;
 }
 
+.dish-image img {
+  display: none;
+}
+
 .dish-image.small {
   height: 54px;
   width: 60px;
@@ -993,8 +997,7 @@ p {
   padding-top: 14px;
 }
 
-.cart-footer div,
-.confirmation-meta {
+.cart-footer div {
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -1933,7 +1936,7 @@ p {
 .table-card-form input {
   border: 1px solid var(--line);
   border-radius: 8px;
-  color: var(--ink);
+  color: var(--text);
   font: inherit;
   min-height: 38px;
   padding: 8px 10px;
