@@ -31,7 +31,7 @@ export function Sidebar({ activeSection, onNavigate, orderBadgeCount, restaurant
         ))}
       </nav>
       <div className="sidebar-bottom">
-        <button type="button">
+        <button onClick={() => onNavigate("settings")} type="button">
           <Icon name="user" size={18} />
           <span>{t("adminApp.account")}</span>
         </button>

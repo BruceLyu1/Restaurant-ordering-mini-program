@@ -22,4 +22,9 @@ describe("order utils", () => {
     expect(getOrderCount(order)).toBe(3);
     expect(getOrderTotal(order, menuItems)).toBe(164);
   });
+
+  it("returns zero for missing order lines", () => {
+    expect(getOrderCount({} as never)).toBe(0);
+    expect(getOrderTotal({} as never, menuItems)).toBe(0);
+  });
 });

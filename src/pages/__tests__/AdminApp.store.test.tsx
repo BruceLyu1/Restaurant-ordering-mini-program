@@ -96,4 +96,40 @@ describe("AdminApp store integration", () => {
       expect(updateStatus).toHaveBeenCalledWith("HO-2001", "printed", []);
     });
   });
+
+  it("shows an error when print status update fails", async () => {
+    window.localStorage.setItem("harbour-language", "en");
+    const updateStatus = vi.fn(async () => {
+      throw new Error("remote failed");
+    });
+    useOrderStore.setState({ updateStatus });
+
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Print/ }).at(-1)!);
+
+    expect(await screen.findByText("Print failed, please check printer")).toBeTruthy();
+  });
+
+  it("shows an error when settlement status update fails", async () => {
+    window.localStorage.setItem("harbour-language", "en");
+    const updateStatus = vi.fn(async () => {
+      throw new Error("remote failed");
+    });
+    useOrderStore.setState({ updateStatus });
+
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Settle/ }).at(-1)!);
+
+    expect(await screen.findByText("Settlement failed, please retry")).toBeTruthy();
+  });
 });

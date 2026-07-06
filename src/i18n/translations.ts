@@ -80,6 +80,7 @@ export const translations: Record<Language, TranslationTree> = {
       stockRemoved: "部分菜品已停止供應，已從購物車移除。",
       stockUnavailable: "這款菜品已售罄，暫時不能加入購物車。",
       stockSubmitFailed: "部分菜品已售罄，請重新確認購物車。",
+      orderSubmitFailed: "提交訂單失敗，請重試",
       submittingOrder: "送出中",
       confirmation: {
         continueOrdering: "繼續加菜",
@@ -107,7 +108,9 @@ export const translations: Record<Language, TranslationTree> = {
       managementMenu: "管理菜單",
       mealPeriodClosed: "非營業時段",
       mealPeriodOpen: "{name}營業中",
+      printFailed: "打印失敗，請檢查打印機",
       notification: "通知",
+      settleFailed: "結帳失敗，請重試",
       orders: {
         activeTab: "待處理及已列印",
         completedTab: "已結帳",
@@ -152,6 +155,7 @@ export const translations: Record<Language, TranslationTree> = {
     },
     imageError: {
       DECODE_FAILED: "圖片格式無法使用，請選擇 JPG、PNG 或 WebP。",
+      DRAW_FAILED: "圖片處理失敗，請重新選擇。",
       NOT_IMAGE: "請選擇圖片檔案。",
       READ_FAILED: "圖片讀取失敗，請重新選擇。",
       TOO_LARGE: "圖片請勿超過 8MB。",
@@ -409,6 +413,7 @@ export const translations: Record<Language, TranslationTree> = {
       stockRemoved: "Some unavailable dishes were removed from the cart.",
       stockUnavailable: "This dish is sold out and cannot be added.",
       stockSubmitFailed: "Some dishes are sold out. Please check your cart again.",
+      orderSubmitFailed: "Order submission failed, please try again",
       submittingOrder: "Submitting",
       confirmation: {
         continueOrdering: "Add more items",
@@ -436,7 +441,9 @@ export const translations: Record<Language, TranslationTree> = {
       managementMenu: "Management menu",
       mealPeriodClosed: "Closed",
       mealPeriodOpen: "{name} open",
+      printFailed: "Print failed, please check printer",
       notification: "Notifications",
+      settleFailed: "Settlement failed, please retry",
       orders: {
         activeTab: "Pending and printed",
         completedTab: "Settled",
@@ -481,6 +488,7 @@ export const translations: Record<Language, TranslationTree> = {
     },
     imageError: {
       DECODE_FAILED: "The image format cannot be used. Please choose JPG, PNG, or WebP.",
+      DRAW_FAILED: "Image processing failed. Please choose again.",
       NOT_IMAGE: "Please choose an image file.",
       READ_FAILED: "Failed to read the image. Please choose again.",
       TOO_LARGE: "Images must be 8 MB or smaller.",

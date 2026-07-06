@@ -75,6 +75,10 @@
   justify-content: center;
 }
 
+.dish-image img {
+  display: none;
+}
+
 .dish-image.small {
   height: 54px;
   width: 60px;

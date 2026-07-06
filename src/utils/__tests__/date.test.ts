@@ -10,4 +10,9 @@ describe("date utils", () => {
   it("formats times as HH:mm", () => {
     expect(formatTime("2026-06-24T09:05:00+08:00")).toContain("09:05");
   });
+
+  it("handles invalid dates defensively", () => {
+    expect(isSameLocalDate("not-a-date", new Date("2026-06-24T00:00:00+08:00"))).toBe(false);
+    expect(formatTime("not-a-date")).toBe("--:--");
+  });
 });

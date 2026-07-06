@@ -95,6 +95,25 @@ describe("compressDishPhoto", () => {
     await expect(compressDishPhoto(file)).rejects.toMatchObject({ code: IMAGE_ERROR_CODES.DECODE_FAILED });
   });
 
+  it("rejects with DRAW_FAILED when canvas drawing fails", async () => {
+    stubSuccessfulFileReader();
+    stubImageLoad();
+    vi.spyOn(document, "createElement").mockReturnValue({
+      getContext: () => ({
+        drawImage: () => {
+          throw new Error("draw failed");
+        },
+      }),
+      height: 0,
+      toDataURL: () => "data:image/jpeg;base64,",
+      width: 0,
+    } as unknown as HTMLCanvasElement);
+
+    const file = new File(["png"], "dish.png", { type: "image/png" });
+
+    await expect(compressDishPhoto(file)).rejects.toMatchObject({ code: IMAGE_ERROR_CODES.DRAW_FAILED });
+  });
+
   it("resolves with a base64 jpeg data URL for valid images", async () => {
     stubSuccessfulFileReader();
     stubImageLoad();

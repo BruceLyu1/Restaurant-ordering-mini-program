@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DishImage } from "../DishImage";
 
@@ -16,5 +16,21 @@ describe("DishImage", () => {
     }} />);
 
     expect(screen.getByRole("img", { name: "蜜汁叉燒飯" }).classList.contains("dish-image")).toBe(true);
+  });
+
+  it("shows the dish initial when the image URL fails to load", () => {
+    render(<DishImage item={{
+      category: "Rice",
+      description: "Char siu and rice",
+      id: "char-siu",
+      imageUrl: "/missing.jpg",
+      name: "Char Siu Rice",
+      price: 68,
+      soldOut: false,
+    }} />);
+
+    fireEvent.error(screen.getByAltText("Char Siu Rice"));
+
+    expect(screen.getByRole("img", { name: "Char Siu Rice" }).textContent).toBe("C");
   });
 });

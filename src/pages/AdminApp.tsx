@@ -42,13 +42,20 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   const restaurantName = useSettingsStore((state) => state.restaurant.name);
   const [filter, setFilter] = useState<"pending" | "settled">("pending");
   const [activeSection, setActiveSection] = useState("orders");
+  const [actionError, setActionError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isSupabaseMode = getDataSourceMode() === "supabase";
   const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
   const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
 
-  function handlePrint(id: string): void {
-    void useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
+  async function handlePrint(id: string): Promise<void> {
+    setActionError("");
+    try {
+      await useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
+    } catch (error) {
+      console.error("Print order failed", error);
+      setActionError(t("adminApp.printFailed"));
+    }
   }
 
   function handleReset(): void {
@@ -57,8 +64,14 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
     useOrderStore.getState().resetDemo(useMenuStore.getState().items);
   }
 
-  function handleSettle(id: string): void {
-    void useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
+  async function handleSettle(id: string): Promise<void> {
+    setActionError("");
+    try {
+      await useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
+    } catch (error) {
+      console.error("Settle order failed", error);
+      setActionError(t("adminApp.settleFailed"));
+    }
   }
 
   function renderAdminSection() {
@@ -133,6 +146,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
                   {t("adminApp.orders.completedTab")}<span>{completedOrders.length}</span>
                 </button>
               </div>
+              {actionError && <p className="management-error">{actionError}</p>}
               <div className="queue-note">
                 <span>{t("adminApp.orders.flowTitle")}</span>
                 <p>{t("adminApp.orders.flowDescription")}</p>

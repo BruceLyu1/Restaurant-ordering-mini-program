@@ -22,6 +22,10 @@ import { useTableStore } from "./stores/tableStore";
 import { getGuestBaseUrl, getTableNumberFromUrl } from "./utils/table";
 import type { MealPeriod } from "./types";
 
+function reportAsyncError(label: string, error: unknown): void {
+  console.error(label, error);
+}
+
 function App() {
   const [view, setView] = useState<"guest" | "admin">(
     new URLSearchParams(window.location.search).get("view") === "admin"
@@ -44,18 +48,18 @@ function App() {
   );
 
   useEffect(() => {
-    void loadMenu();
-    void loadSettings();
-    void loadTables();
+    void loadMenu().catch((error) => reportAsyncError("Load menu failed", error));
+    void loadSettings().catch((error) => reportAsyncError("Load settings failed", error));
+    void loadTables().catch((error) => reportAsyncError("Load tables failed", error));
   }, [loadMenu, loadSettings, loadTables]);
 
   useEffect(() => {
-    void loadOrders(menuItems);
+    void loadOrders(menuItems).catch((error) => reportAsyncError("Load orders failed", error));
   }, [loadOrders, menuItems]);
 
   useEffect(() => {
     return subscribeToStorage("harbour-ordering-demo-orders", () => {
-      void loadOrders(useMenuStore.getState().items);
+      void loadOrders(useMenuStore.getState().items).catch((error) => reportAsyncError("Reload orders failed", error));
     }, ORDER_CHANGE_EVENT);
   }, [loadOrders]);
 
@@ -67,9 +71,9 @@ function App() {
     void import("./services/supabaseOrderService").then(({ subscribeSupabaseOrderChanges }) => {
       if (cancelled) return;
       cleanup = subscribeSupabaseOrderChanges(() => {
-        void loadOrders(useMenuStore.getState().items);
+        void loadOrders(useMenuStore.getState().items).catch((error) => reportAsyncError("Realtime orders reload failed", error));
       });
-    });
+    }).catch((error) => reportAsyncError("Load Supabase order subscription failed", error));
 
     return () => {
       cancelled = true;
@@ -92,19 +96,19 @@ function App() {
 
   useEffect(() => {
     return subscribeToStorage("harbour-admin-settings", () => {
-      loadSettings();
+      void loadSettings().catch((error) => reportAsyncError("Reload settings failed", error));
     }, SETTINGS_CHANGE_EVENT);
   }, [loadSettings]);
 
   useEffect(() => {
     return subscribeToStorage(PRINTER_STORAGE_KEY, () => {
-      loadSettings();
+      void loadSettings().catch((error) => reportAsyncError("Reload printer settings failed", error));
     }, PRINTER_CHANGE_EVENT);
   }, [loadSettings]);
 
   useEffect(() => {
     return subscribeToStorage("harbour-admin-menu", () => {
-      loadMenu();
+      void loadMenu().catch((error) => reportAsyncError("Reload menu failed", error));
     }, MENU_CHANGE_EVENT);
   }, [loadMenu]);
 
@@ -116,9 +120,9 @@ function App() {
     void import("./services/supabaseMenuService").then(({ subscribeSupabaseMenuChanges }) => {
       if (cancelled) return;
       cleanup = subscribeSupabaseMenuChanges(() => {
-        void loadMenu();
+        void loadMenu().catch((error) => reportAsyncError("Realtime menu reload failed", error));
       });
-    });
+    }).catch((error) => reportAsyncError("Load Supabase menu subscription failed", error));
 
     return () => {
       cancelled = true;
@@ -128,13 +132,13 @@ function App() {
 
   useEffect(() => {
     return subscribeToStorage("harbour-admin-staff", () => {
-      loadStaff();
+      void Promise.resolve(loadStaff()).catch((error) => reportAsyncError("Reload staff failed", error));
     }, STAFF_CHANGE_EVENT);
   }, [loadStaff]);
 
   useEffect(() => {
     return subscribeToStorage("harbour-admin-tables", () => {
-      loadTables();
+      void loadTables().catch((error) => reportAsyncError("Reload tables failed", error));
     }, TABLE_CHANGE_EVENT);
   }, [loadTables]);
 
@@ -146,9 +150,9 @@ function App() {
     void import("./services/supabaseTableService").then(({ subscribeSupabaseTableChanges }) => {
       if (cancelled) return;
       cleanup = subscribeSupabaseTableChanges(() => {
-        void loadTables();
+        void loadTables().catch((error) => reportAsyncError("Realtime tables reload failed", error));
       });
-    });
+    }).catch((error) => reportAsyncError("Load Supabase table subscription failed", error));
 
     return () => {
       cancelled = true;

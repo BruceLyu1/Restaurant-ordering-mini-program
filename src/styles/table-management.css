@@ -30,7 +30,7 @@
 .table-card-form input {
   border: 1px solid var(--line);
   border-radius: 8px;
-  color: var(--ink);
+  color: var(--text);
   font: inherit;
   min-height: 38px;
   padding: 8px 10px;

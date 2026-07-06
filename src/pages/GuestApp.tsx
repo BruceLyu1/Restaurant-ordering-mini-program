@@ -28,7 +28,7 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
   const { language, setLanguage, t } = useTranslation();
   const menuItems = useMenuStore((state) => state.items);
   const orders = useOrderStore((state) => state.orders);
-  const restaurantName = useSettingsStore((state) => state.restaurant.name);
+  const restaurantName = useSettingsStore((state) => state.restaurant?.name ?? "");
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
@@ -165,6 +165,9 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
       setCart({});
       setItemNotes({});
       setCartOpen(false);
+    } catch (error) {
+      console.error("Order submission failed", error);
+      setStockNotice(t("guestApp.orderSubmitFailed"));
     } finally {
       setSubmittingOrder(false);
     }

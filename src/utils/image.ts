@@ -1,5 +1,6 @@
 export const IMAGE_ERROR_CODES = {
   DECODE_FAILED: "DECODE_FAILED",
+  DRAW_FAILED: "DRAW_FAILED",
   NOT_IMAGE: "NOT_IMAGE",
   READ_FAILED: "READ_FAILED",
   TOO_LARGE: "TOO_LARGE",
@@ -41,8 +42,12 @@ export function compressDishPhoto(file: File): Promise<string> {
           reject(new ImageError(IMAGE_ERROR_CODES.DECODE_FAILED));
           return;
         }
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.78));
+        try {
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.78));
+        } catch {
+          reject(new ImageError(IMAGE_ERROR_CODES.DRAW_FAILED));
+        }
       };
       image.src = reader.result as string;
     };

@@ -130,4 +130,27 @@ describe("GuestApp store integration", () => {
     expect(await screen.findByText("落單成功")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /確認下單/ })).toBeNull();
   });
+
+  it("shows a submit failure notice and keeps the cart when order creation rejects", async () => {
+    window.localStorage.setItem("harbour-language", "en");
+    useOrderStore.setState({
+      orders: [],
+      placeOrder: vi.fn(async () => {
+        throw new Error("remote failed");
+      }) as never,
+    });
+
+    render(
+      <LanguageProvider>
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByLabelText("Add Store Rice"));
+    fireEvent.click(screen.getByRole("button", { name: /Place order/ }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Place order" }).at(-1)!);
+
+    expect(await screen.findByText("Order submission failed, please try again")).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /Place order/ }).length).toBeGreaterThan(0);
+  });
 });
