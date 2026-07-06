@@ -1,3 +1,4 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./supabaseReadService-DdKkojtQ.js","./supabaseClient-DHMtQ5c0.js","./supabaseOrderService-Py6suClD.js","./supabaseMenuService-mzFwoyJY.js","./supabaseTableService-DkkhtM2S.js"])))=>i.map(i=>d[i]);
 true               && (function polyfill() {
     const relList = document.createElement("link").relList;
     if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -17288,6 +17289,76 @@ exports.version = "19.2.7";
 const commonjsExports = module$1.exports;
 const createRoot = commonjsExports.createRoot;
 
+const scriptRel = 'modulepreload';
+const assetsURL = function (dep, importerUrl) { return new URL(dep, importerUrl).href; };
+const seen = {};
+const __vitePreload = function preload(baseModule, deps, importerUrl) {
+    let promise = Promise.resolve();
+    if (true               && deps && deps.length > 0) {
+        let allSettled2 = function (promises) {
+            return Promise.all(promises.map((p) => Promise.resolve(p).then((value) => ({ status: "fulfilled", value }), (reason) => ({ status: "rejected", reason }))));
+        };
+        const links = document.getElementsByTagName("link");
+        const cspNonceMeta = document.querySelector("meta[property=csp-nonce]");
+        const cspNonce = cspNonceMeta?.nonce || cspNonceMeta?.getAttribute("nonce");
+        promise = allSettled2(deps.map((dep) => {
+            dep = assetsURL(dep, importerUrl);
+            if (dep in seen)
+                return;
+            seen[dep] = true;
+            const isCss = dep.endsWith(".css");
+            const cssSelector = isCss ? '[rel="stylesheet"]' : "";
+            const isBaseRelative = !!importerUrl;
+            if (isBaseRelative) {
+                for (let i = links.length - 1; i >= 0; i--) {
+                    const link2 = links[i];
+                    if (link2.href === dep && (!isCss || link2.rel === "stylesheet")) {
+                        return;
+                    }
+                }
+            }
+            else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
+                return;
+            }
+            const link = document.createElement("link");
+            link.rel = isCss ? "stylesheet" : scriptRel;
+            if (!isCss) {
+                link.as = "script";
+            }
+            link.crossOrigin = "";
+            link.href = dep;
+            if (cspNonce) {
+                link.setAttribute("nonce", cspNonce);
+            }
+            document.head.appendChild(link);
+            if (isCss) {
+                return new Promise((res, rej) => {
+                    link.addEventListener("load", res);
+                    link.addEventListener("error", () => rej(new Error(`Unable to preload CSS for ${dep}`)));
+                });
+            }
+        }));
+    }
+    function handlePreloadError(err) {
+        const e = new Event("vite:preloadError", {
+            cancelable: true
+        });
+        e.payload = err;
+        window.dispatchEvent(e);
+        if (!e.defaultPrevented) {
+            throw err;
+        }
+    }
+    return promise.then((res) => {
+        for (const item of res || []) {
+            if (item.status !== "rejected")
+                continue;
+            handlePreloadError(item.reason);
+        }
+        return baseModule().catch(handlePreloadError);
+    });
+};
+
 function readStorage(key, fallback) {
     const stored = window.localStorage.getItem(key);
     if (!stored)
@@ -17319,6 +17390,14 @@ function subscribeToStorage(key, callback, eventName) {
         if (eventName)
             window.removeEventListener(eventName, callback);
     };
+}
+
+const __vite_import_meta_env__ = {"BASE_URL": "./", "DEV": false, "MODE": "production", "PROD": true, "SSR": false, "VITE_DATA_SOURCE": "supabase", "VITE_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_tcny5kDIqKNmIOr2wCF3AA_Pq7DACTA", "VITE_SUPABASE_URL": "https://lgdgsbjvlwjhijbwwjor.supabase.co/rest/v1/"};
+function normalizeDataSourceMode(value) {
+  return value === "supabase" ? "supabase" : "local";
+}
+function getDataSourceMode(env = __vite_import_meta_env__) {
+  return normalizeDataSourceMode(env.VITE_DATA_SOURCE);
 }
 
 const SETTINGS_STORAGE_KEY = "harbour-admin-settings";
@@ -17362,6 +17441,17 @@ function loadRestaurantSettings() {
             : DEFAULT_RESTAURANT_SETTINGS.pin,
     };
 }
+async function loadRestaurantSettingsAsync() {
+    if (getDataSourceMode() !== "supabase")
+        return loadRestaurantSettings();
+    try {
+        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-DdKkojtQ.js');return { loadSupabaseRestaurantSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        return await loadSupabaseRestaurantSettings();
+    }
+    catch {
+        return loadRestaurantSettings();
+    }
+}
 function saveRestaurantSettings(settings) {
     writeStorage(SETTINGS_STORAGE_KEY, settings, SETTINGS_CHANGE_EVENT);
 }
@@ -17370,6 +17460,17 @@ function loadPrinterSettings() {
         ...DEFAULT_PRINTER_SETTINGS,
         ...readStorage(PRINTER_STORAGE_KEY, DEFAULT_PRINTER_SETTINGS),
     };
+}
+async function loadPrinterSettingsAsync() {
+    if (getDataSourceMode() !== "supabase")
+        return loadPrinterSettings();
+    try {
+        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-DdKkojtQ.js');return { loadSupabasePrinterSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        return await loadSupabasePrinterSettings();
+    }
+    catch {
+        return loadPrinterSettings();
+    }
 }
 function savePrinterSettings(settings) {
     writeStorage(PRINTER_STORAGE_KEY, settings, PRINTER_CHANGE_EVENT);
@@ -17471,6 +17572,7 @@ const translations = {
             stockRemoved: "部分菜品已停止供應，已從購物車移除。",
             stockUnavailable: "這款菜品已售罄，暫時不能加入購物車。",
             stockSubmitFailed: "部分菜品已售罄，請重新確認購物車。",
+            submittingOrder: "送出中",
             confirmation: {
                 continueOrdering: "繼續加菜",
                 description: "訂單 {id} 已送到餐廳，廚房會按次序準備。",
@@ -17579,6 +17681,7 @@ const translations = {
             price: "價格",
             replacePhoto: "更換照片",
             saveDish: "儲存菜品",
+            saveFailed: "儲存菜單失敗，請稍後再試。",
             saveCategory: "儲存分類",
             saveEdit: "儲存修改",
             searchPlaceholder: "搜尋菜品",
@@ -17694,13 +17797,22 @@ const translations = {
             toggle: "切換{name}帳戶狀態",
         },
         tableManagement: {
+            addTable: "新增桌位",
             availableDesc: "空桌：暫無未結帳訂單",
             closeQr: "關閉桌碼",
+            deactivateTable: "停用桌位",
             description: "每張桌子都有獨立桌碼，顧客掃碼後會自動識別桌號。",
+            invalidTable: "請輸入有效且不重複的桌號與座位數",
             occupiedDesc: "用餐中：已有未結帳訂單",
             qrAlt: "{number}號桌二維碼",
             qrDescription: "列印後放在餐桌上，顧客掃碼會進入 {number}號桌的點餐頁。",
             qrTitle: "{number}號桌桌碼",
+            saveFailed: "桌位保存失敗，請稍後再試",
+            saveTable: "保存桌位",
+            seats: "座位數",
+            seatsFor: "{number}號桌座位數",
+            tableNumber: "桌號",
+            tableNumberFor: "{number}號桌桌號",
             title: "桌位管理",
             viewQr: "查看桌碼",
         },
@@ -17789,6 +17901,7 @@ const translations = {
             stockRemoved: "Some unavailable dishes were removed from the cart.",
             stockUnavailable: "This dish is sold out and cannot be added.",
             stockSubmitFailed: "Some dishes are sold out. Please check your cart again.",
+            submittingOrder: "Submitting",
             confirmation: {
                 continueOrdering: "Add more items",
                 description: "Order {id} was sent to the restaurant. The kitchen will prepare it in order.",
@@ -17897,6 +18010,7 @@ const translations = {
             price: "Price",
             replacePhoto: "Replace photo",
             saveDish: "Save dish",
+            saveFailed: "Menu save failed. Please try again.",
             saveCategory: "Save category",
             saveEdit: "Save changes",
             searchPlaceholder: "Search dishes",
@@ -18012,13 +18126,22 @@ const translations = {
             toggle: "Toggle account status for {name}",
         },
         tableManagement: {
+            addTable: "Add table",
             availableDesc: "Available: no unsettled orders",
             closeQr: "Close table QR",
+            deactivateTable: "Deactivate table",
             description: "Each table has a unique QR code so guests are assigned to the right table after scanning.",
+            invalidTable: "Enter a valid, unique table number and seat count",
             occupiedDesc: "Occupied: unsettled orders exist",
             qrAlt: "QR code for table {number}",
             qrDescription: "Print this and place it on the table. Guests who scan it will open the ordering page for table {number}.",
             qrTitle: "Table {number} QR code",
+            saveFailed: "Table save failed, please try again",
+            saveTable: "Save table",
+            seats: "Seats",
+            seatsFor: "Seats for table {number}",
+            tableNumber: "Table number",
+            tableNumberFor: "Table number for table {number}",
             title: "Table management",
             viewQr: "View QR code",
         },
@@ -18261,11 +18384,16 @@ const create = ((createState) => createState ? createImpl(createState) : createI
 const useSettingsStore = create((set) => ({
     printer: loadPrinterSettings(),
     restaurant: loadRestaurantSettings(),
-    load: () => {
+    load: async () => {
         set({
             printer: loadPrinterSettings(),
             restaurant: loadRestaurantSettings(),
         });
+        const [printer, restaurant] = await Promise.all([
+            loadPrinterSettingsAsync(),
+            loadRestaurantSettingsAsync(),
+        ]);
+        set({ printer, restaurant });
     },
     updatePrinter: (settings) => {
         savePrinterSettings(settings);
@@ -18468,6 +18596,12 @@ function normalizeOrder(order, menuItems) {
         }),
     };
 }
+function canPlaceOrder({ activeMealPeriod, items, menuItems }) {
+    return !items.some((line) => {
+        const item = getMenuItem(line.id, menuItems);
+        return !item || item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod);
+    });
+}
 function loadOrders(menuItems) {
     const orders = readStorage(ORDER_STORAGE_KEY, seedOrders);
     if (!Array.isArray(orders))
@@ -18478,14 +18612,22 @@ function loadOrders(menuItems) {
     });
     return Array.from(ordersById.values()).map((order) => normalizeOrder(order, menuItems));
 }
+async function loadOrdersAsync(menuItems) {
+    if (getDataSourceMode() !== "supabase")
+        return loadOrders(menuItems);
+    try {
+        const { loadSupabaseOrders } = await __vitePreload(async () => { const { loadSupabaseOrders } = await import('./supabaseOrderService-Py6suClD.js');return { loadSupabaseOrders }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+        return await loadSupabaseOrders();
+    }
+    catch {
+        return loadOrders(menuItems);
+    }
+}
 function saveOrders(orders) {
     writeStorage(ORDER_STORAGE_KEY, orders, ORDER_CHANGE_EVENT);
 }
 function placeOrder({ activeMealPeriod, items, menuItems, printerSettings, table }) {
-    if (items.some((line) => {
-        const item = getMenuItem(line.id, menuItems);
-        return !item || item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod);
-    }))
+    if (!canPlaceOrder({ activeMealPeriod, items, menuItems}))
         return null;
     const latestOrders = loadOrders(menuItems);
     const maxSequence = Math.max(...latestOrders.map((order) => order.sequence), 1000);
@@ -18500,8 +18642,34 @@ function placeOrder({ activeMealPeriod, items, menuItems, printerSettings, table
     saveOrders([...latestOrders, order]);
     return order;
 }
+async function placeOrderAsync(params) {
+    if (!canPlaceOrder(params))
+        return null;
+    if (getDataSourceMode() !== "supabase")
+        return placeOrder(params);
+    try {
+        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-Py6suClD.js');return { placeSupabaseOrder }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+        return await placeSupabaseOrder(params);
+    }
+    catch {
+        return placeOrder(params);
+    }
+}
 function updateOrderStatus(id, status, menuItems) {
     saveOrders(loadOrders(menuItems).map((order) => (order.id === id ? { ...order, status } : order)));
+}
+async function updateOrderStatusAsync(id, status, menuItems) {
+    if (getDataSourceMode() !== "supabase") {
+        updateOrderStatus(id, status, menuItems);
+        return;
+    }
+    try {
+        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-Py6suClD.js');return { updateSupabaseOrderStatus }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+        await updateSupabaseOrderStatus(id, status);
+    }
+    catch {
+        updateOrderStatus(id, status, menuItems);
+    }
 }
 function listActiveOrders(orders) {
     return orders
@@ -18649,41 +18817,144 @@ function loadMenuItems() {
     }
     return mergedItems;
 }
+async function loadMenuItemsAsync() {
+    if (getDataSourceMode() !== "supabase")
+        return loadMenuItems();
+    try {
+        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-DdKkojtQ.js');return { loadSupabaseMenuItems }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        return await loadSupabaseMenuItems();
+    }
+    catch {
+        return loadMenuItems();
+    }
+}
 function saveMenuItems(items) {
     writeStorage(MENU_STORAGE_KEY, items, MENU_CHANGE_EVENT);
+}
+async function saveMenuItemsAsync(items) {
+    if (getDataSourceMode() !== "supabase") {
+        saveMenuItems(items);
+        return;
+    }
+    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-mzFwoyJY.js');return { saveSupabaseMenuItems }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
+    await saveSupabaseMenuItems(items);
+}
+async function uploadDishPhotoAsync(dataUrl) {
+    if (getDataSourceMode() !== "supabase")
+        return dataUrl;
+    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-mzFwoyJY.js');return { uploadSupabaseDishPhoto }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
+    return uploadSupabaseDishPhoto(dataUrl);
 }
 function toggleSoldOut(items, id) {
     return items.map((item) => (item.id === id ? { ...item, soldOut: !item.soldOut } : item));
 }
 
-const useMenuStore = create((set) => ({
-    items: loadMenuItems(),
-    load: () => {
+let menuSaveQueue = Promise.resolve();
+let pendingMenuSaves = 0;
+let queuedSupabaseLoad = false;
+let soldOutVersion = 0;
+const pendingSoldOutById = new Map();
+function applyPendingSoldOut(items) {
+    return items.map((item) => {
+        const pending = pendingSoldOutById.get(item.id);
+        if (!pending)
+            return item;
+        if (item.soldOut === pending.soldOut) {
+            pendingSoldOutById.delete(item.id);
+            return item;
+        }
+        return { ...item, soldOut: pending.soldOut };
+    });
+}
+function rollbackSoldOut(id, version, soldOut, get, set) {
+    const pending = pendingSoldOutById.get(id);
+    if (pending?.version !== version)
+        return;
+    pendingSoldOutById.delete(id);
+    set({
+        items: get().items.map((item) => (item.id === id && item.soldOut === pending.soldOut
+            ? { ...item, soldOut }
+            : item)),
+    });
+}
+const useMenuStore = create((set, get) => ({
+    items: getDataSourceMode() === "supabase" ? [] : loadMenuItems(),
+    load: async () => {
+        if (getDataSourceMode() === "supabase") {
+            if (pendingMenuSaves > 0) {
+                queuedSupabaseLoad = true;
+                return;
+            }
+            set({ items: applyPendingSoldOut(await loadMenuItemsAsync()) });
+            return;
+        }
         set({ items: loadMenuItems() });
     },
-    toggleSoldOut: (id) => {
-        set((state) => {
-            const updated = toggleSoldOut(state.items, id);
-            saveMenuItems(updated);
-            return { items: updated };
-        });
+    toggleSoldOut: async (id) => {
+        const previous = get().items;
+        const updated = toggleSoldOut(previous, id);
+        const nextItem = updated.find((item) => item.id === id);
+        const previousItem = previous.find((item) => item.id === id);
+        const shouldProtectSoldOut = getDataSourceMode() === "supabase";
+        const version = soldOutVersion + 1;
+        soldOutVersion = version;
+        if (shouldProtectSoldOut && nextItem) {
+            pendingSoldOutById.set(id, { soldOut: nextItem.soldOut, version });
+        }
+        set({ items: updated });
+        try {
+            await queueMenuSave(updated, set);
+        }
+        catch (error) {
+            if (shouldProtectSoldOut && previousItem) {
+                rollbackSoldOut(id, version, previousItem.soldOut, get, set);
+            }
+            else if (get().items === updated) {
+                set({ items: previous });
+            }
+            throw error;
+        }
     },
-    updateItems: (nextItems) => {
-        set((state) => {
-            const resolved = typeof nextItems === "function" ? nextItems(state.items) : nextItems;
-            saveMenuItems(resolved);
-            return { items: resolved };
-        });
+    updateItems: async (nextItems) => {
+        const previous = get().items;
+        const resolved = typeof nextItems === "function" ? nextItems(previous) : nextItems;
+        set({ items: resolved });
+        try {
+            await queueMenuSave(resolved, set);
+        }
+        catch (error) {
+            if (get().items === resolved)
+                set({ items: previous });
+            throw error;
+        }
     },
 }));
+async function queueMenuSave(items, set) {
+    pendingMenuSaves += 1;
+    const saveTask = menuSaveQueue.then(() => saveMenuItemsAsync(items));
+    menuSaveQueue = saveTask.catch(() => undefined);
+    try {
+        await saveTask;
+    }
+    finally {
+        pendingMenuSaves -= 1;
+        if (pendingMenuSaves === 0 && queuedSupabaseLoad) {
+            queuedSupabaseLoad = false;
+            set({ items: applyPendingSoldOut(await loadMenuItemsAsync()) });
+        }
+    }
+}
 
 const useOrderStore = create((set) => ({
     orders: [],
-    load: (menuItems) => {
-        set({ orders: loadOrders(menuItems) });
+    load: async (menuItems) => {
+        const orders = getDataSourceMode() === "supabase"
+            ? await loadOrdersAsync(menuItems)
+            : loadOrders(menuItems);
+        set({ orders });
     },
-    placeOrder: (params) => {
-        const order = placeOrder(params);
+    placeOrder: async (params) => {
+        const order = await placeOrderAsync(params);
         if (order) {
             set((state) => (state.orders.some((entry) => entry.id === order.id)
                 ? { orders: state.orders }
@@ -18695,8 +18966,8 @@ const useOrderStore = create((set) => ({
         resetDemoOrders();
         set({ orders: loadOrders(menuItems) });
     },
-    updateStatus: (id, status, menuItems) => {
-        updateOrderStatus(id, status, menuItems);
+    updateStatus: async (id, status, menuItems) => {
+        await updateOrderStatusAsync(id, status, menuItems);
         set((state) => ({
             orders: state.orders.map((order) => (order.id === id ? { ...order, status } : order)),
         }));
@@ -18724,11 +18995,50 @@ function loadTables() {
     const tables = readStorage(TABLE_STORAGE_KEY, seededTables);
     return Array.isArray(tables) ? tables : seededTables;
 }
+async function loadTablesAsync() {
+    if (getDataSourceMode() !== "supabase")
+        return loadTables();
+    try {
+        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-DdKkojtQ.js');return { loadSupabaseTables }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        return await loadSupabaseTables();
+    }
+    catch {
+        return loadTables();
+    }
+}
+function saveTables(tables) {
+    writeStorage(TABLE_STORAGE_KEY, tables, TABLE_CHANGE_EVENT);
+}
+async function saveTablesAsync(tables) {
+    if (getDataSourceMode() !== "supabase") {
+        saveTables(tables);
+        return;
+    }
+    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DkkhtM2S.js');return { saveSupabaseTables }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
+    await saveSupabaseTables(tables);
+}
 
-const useTableStore = create((set) => ({
-    tables: loadTables(),
-    load: () => {
-        set({ tables: loadTables() });
+const useTableStore = create((set, get) => ({
+    tables: getDataSourceMode() === "supabase" ? [] : loadTables(),
+    load: async () => {
+        if (getDataSourceMode() !== "supabase") {
+            set({ tables: loadTables() });
+            return;
+        }
+        set({ tables: await loadTablesAsync() });
+    },
+    updateTables: async (nextTables) => {
+        const previous = get().tables;
+        const resolved = typeof nextTables === "function" ? nextTables(previous) : nextTables;
+        set({ tables: resolved });
+        try {
+            await saveTablesAsync(resolved);
+        }
+        catch (error) {
+            if (get().tables === resolved)
+                set({ tables: previous });
+            throw error;
+        }
     },
 }));
 
@@ -18807,8 +19117,8 @@ function Dashboard({ menuItems, onNavigate, orders, tables }) {
     return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("dashboard.description"), title: t("dashboard.title") }), jsxs("div", { className: "metrics-row", children: [jsx(Metric, { label: t("dashboard.metrics.revenue"), note: t("dashboard.metrics.revenueNote"), value: money(todayRevenue) }), jsx(Metric, { label: t("dashboard.metrics.pending"), note: t("dashboard.metrics.pendingNote"), value: t("dashboard.values.orders", { count: pending }) }), jsx(Metric, { label: t("dashboard.metrics.occupied"), note: t("dashboard.metrics.occupiedNote", { count: tables.length }), value: t("dashboard.values.tables", { count: occupied }) }), jsx(Metric, { label: t("dashboard.metrics.menuItems"), note: t("dashboard.metrics.menuItemsNote"), value: t("dashboard.values.dishes", { count: activeMenuItems.length }) })] }), jsxs("div", { className: "management-split", children: [jsxs("section", { className: "management-panel", children: [jsxs("header", { children: [jsx("h2", { children: t("dashboard.latestOrders") }), jsx("button", { onClick: () => onNavigate("orders"), type: "button", children: t("common.viewAll") })] }), jsx("div", { className: "simple-list", children: orders.slice(-4).reverse().map((order) => (jsxs("article", { children: [jsxs("div", { children: [jsx("strong", { children: t("common.table.tableLabel", { number: order.table }) }), jsxs("span", { children: ["#", order.sequence, " \u00B7 ", t("dashboard.values.dishes", { count: order.items.length })] })] }), jsx("b", { children: money(getOrderTotal(order, menuItems)) })] }, order.id))) })] }), jsxs("section", { className: "management-panel", children: [jsxs("header", { children: [jsx("h2", { children: t("dashboard.tableStatus") }), jsx("button", { onClick: () => onNavigate("tables"), type: "button", children: t("dashboard.manageTables") })] }), jsx("div", { className: "table-mini-grid", children: tables.map((table) => (jsx("span", { className: table.status, children: table.number }, table.number))) })] })] })] }));
 }
 
-function Toggle({ checked, onChange, label }) {
-    return (jsx("button", { "aria-label": label, "aria-pressed": checked, className: `toggle ${checked ? "enabled" : ""}`, onClick: onChange, type: "button", children: jsx("span", {}) }));
+function Toggle({ checked, disabled = false, onChange, label }) {
+    return (jsx("button", { "aria-label": label, "aria-pressed": checked, className: `toggle ${checked ? "enabled" : ""}`, disabled: disabled, onClick: onChange, type: "button", children: jsx("span", {}) }));
 }
 
 const CATEGORY_ALIASES = {
@@ -18905,6 +19215,8 @@ function MenuManagement() {
     const [editingId, setEditingId] = useState(null);
     const [photoError, setPhotoError] = useState("");
     const [periodError, setPeriodError] = useState("");
+    const [saveError, setSaveError] = useState("");
+    const [saving, setSaving] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const visible = activeItems.filter((item) => (item.name.includes(query.trim()) &&
         (categoryFilter === ALL_CATEGORIES || normalizeCategoryName(item.category || "") === categoryFilter)));
@@ -18919,7 +19231,9 @@ function MenuManagement() {
             return item;
         });
         if (changed) {
-            setItems(normalizedItems);
+            void setItems(normalizedItems).catch(() => {
+                setCategoryNotice(t("menuManagement.saveFailed"));
+            });
             setCategoryNotice(t("menuManagement.categoryMergeNotice"));
         }
     }, [items, setItems, t]);
@@ -18938,6 +19252,7 @@ function MenuManagement() {
         setEditingId(null);
         setPhotoError("");
         setPeriodError("");
+        setSaveError("");
         setShowForm(false);
     }
     function createItem() {
@@ -18946,6 +19261,7 @@ function MenuManagement() {
         setEditingId(null);
         setPhotoError("");
         setPeriodError("");
+        setSaveError("");
         setShowForm(true);
     }
     function editItem(item) {
@@ -18962,6 +19278,7 @@ function MenuManagement() {
         setEditingId(item.id);
         setPhotoError("");
         setPeriodError("");
+        setSaveError("");
         setShowForm(true);
     }
     function selectCategoryForEdit(category) {
@@ -18969,9 +19286,10 @@ function MenuManagement() {
         setCategoryDraft(category);
         setCategoryNotice("");
     }
-    function renameCategory() {
+    async function renameCategory() {
         const from = categoryTarget;
         const to = normalizeCategoryName(categoryDraft);
+        setSaveError("");
         if (!from || !to) {
             setCategoryNotice(t("menuManagement.validationCategory"));
             return;
@@ -18981,16 +19299,26 @@ function MenuManagement() {
             return;
         }
         const affectedCount = activeItems.filter((item) => normalizeCategoryName(item.category || "") === from).length;
-        setItems((current) => current.map((item) => (normalizeCategoryName(item.category || "") === from ? { ...item, category: to } : item)));
-        setCategoryFilter(to);
-        setCategoryTarget(to);
-        setCategoryDraft(to);
-        setCategoryNotice(from === to
-            ? t("menuManagement.categoryRenameNoChange")
-            : t("menuManagement.categoryRenamed", { count: affectedCount, from, to }));
+        setSaving(true);
+        try {
+            await setItems((current) => current.map((item) => (normalizeCategoryName(item.category || "") === from ? { ...item, category: to } : item)));
+            setCategoryFilter(to);
+            setCategoryTarget(to);
+            setCategoryDraft(to);
+            setCategoryNotice(from === to
+                ? t("menuManagement.categoryRenameNoChange")
+                : t("menuManagement.categoryRenamed", { count: affectedCount, from, to }));
+        }
+        catch {
+            setSaveError(t("menuManagement.saveFailed"));
+        }
+        finally {
+            setSaving(false);
+        }
     }
-    function deleteCategory() {
+    async function deleteCategory() {
         const category = categoryTarget;
+        setSaveError("");
         if (!category) {
             setCategoryNotice(t("menuManagement.chooseCategoryFirst"));
             return;
@@ -18998,11 +19326,20 @@ function MenuManagement() {
         const affectedCount = activeItems.filter((item) => normalizeCategoryName(item.category || "") === category).length;
         if (!window.confirm(t("menuManagement.deleteCategoryConfirm", { category, count: affectedCount })))
             return;
-        setItems((current) => current.map((item) => (normalizeCategoryName(item.category || "") === category ? { ...item, deleted: true } : item)));
-        setCategoryFilter(ALL_CATEGORIES);
-        setCategoryTarget("");
-        setCategoryDraft("");
-        setCategoryNotice(t("menuManagement.categoryDeleted", { category, count: affectedCount }));
+        setSaving(true);
+        try {
+            await setItems((current) => current.map((item) => (normalizeCategoryName(item.category || "") === category ? { ...item, deleted: true } : item)));
+            setCategoryFilter(ALL_CATEGORIES);
+            setCategoryTarget("");
+            setCategoryDraft("");
+            setCategoryNotice(t("menuManagement.categoryDeleted", { category, count: affectedCount }));
+        }
+        catch {
+            setSaveError(t("menuManagement.saveFailed"));
+        }
+        finally {
+            setSaving(false);
+        }
     }
     async function selectPhoto(event) {
         const file = event.target.files?.[0];
@@ -19017,8 +19354,9 @@ function MenuManagement() {
             setPhotoError(error instanceof ImageError ? t(`imageError.${error.code}`) : t("menuManagement.photoError"));
         }
     }
-    function saveItem(event) {
+    async function saveItem(event) {
         event.preventDefault();
+        setSaveError("");
         const category = normalizeCategoryName(draft.category === CUSTOM_CATEGORY ? draft.customCategory : draft.category);
         if (!category || category === ALL_CATEGORIES) {
             setCategoryError(t("menuManagement.validationCategory"));
@@ -19030,38 +19368,74 @@ function MenuManagement() {
         }
         if (!draft.name.trim() || !Number(draft.price))
             return;
-        if (editingId) {
-            setItems((current) => current.map((item) => (item.id === editingId
-                ? {
-                    ...item,
-                    category,
-                    description: draft.description.trim(),
-                    imageUrl: draft.imageUrl,
-                    mealPeriods: draft.mealPeriods,
-                    name: draft.name.trim(),
-                    price: Number(draft.price),
-                }
-                : item)));
+        setSaving(true);
+        try {
+            const imageUrl = draft.imageUrl.startsWith("data:image/")
+                ? await uploadDishPhotoAsync(draft.imageUrl)
+                : draft.imageUrl;
+            if (editingId) {
+                await setItems((current) => current.map((item) => (item.id === editingId
+                    ? {
+                        ...item,
+                        category,
+                        description: draft.description.trim(),
+                        imageUrl,
+                        mealPeriods: draft.mealPeriods,
+                        name: draft.name.trim(),
+                        price: Number(draft.price),
+                    }
+                    : item)));
+            }
+            else {
+                await setItems((current) => [
+                    ...current,
+                    {
+                        category,
+                        deleted: false,
+                        description: draft.description.trim(),
+                        id: `custom-${Date.now()}`,
+                        imageUrl,
+                        mealPeriods: draft.mealPeriods,
+                        name: draft.name.trim(),
+                        price: Number(draft.price),
+                        soldOut: false,
+                    },
+                ]);
+            }
+            resetForm();
         }
-        else {
-            setItems((current) => [
-                ...current,
-                {
-                    category,
-                    deleted: false,
-                    description: draft.description.trim(),
-                    id: `custom-${Date.now()}`,
-                    imageUrl: draft.imageUrl,
-                    mealPeriods: draft.mealPeriods,
-                    name: draft.name.trim(),
-                    price: Number(draft.price),
-                    soldOut: false,
-                },
-            ]);
+        catch {
+            setSaveError(t("menuManagement.saveFailed"));
         }
-        resetForm();
+        finally {
+            setSaving(false);
+        }
     }
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", onClick: createItem, type: "button", children: t("menuManagement.addDish") }), description: t("menuManagement.sectionDescription"), title: t("menuManagement.sectionTitle") }), showForm && (jsxs("form", { className: "inline-form", onSubmit: saveItem, children: [jsx("strong", { className: "inline-form-title", children: editingId ? t("menuManagement.editDish") : t("menuManagement.addDish") }), jsxs("div", { className: "dish-photo-field", children: [draft.imageUrl ? (jsx("img", { alt: t("menuManagement.photoPreviewAlt"), className: "dish-photo-preview", src: draft.imageUrl })) : (jsx("span", { className: "dish-photo-empty", children: t("menuManagement.photo") })), jsxs("label", { className: "dish-photo-upload", children: [editingId ? t("menuManagement.replacePhoto") : t("menuManagement.uploadPhoto"), jsx("input", { accept: "image/*", "aria-label": t("menuManagement.uploadDishPhoto"), onChange: selectPhoto, type: "file" })] })] }), jsx("input", { "aria-label": t("menuManagement.dishName"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("menuManagement.dishName"), value: draft.name }), jsx("input", { "aria-label": t("menuManagement.price"), min: "1", onChange: (event) => setDraft({ ...draft, price: event.target.value }), placeholder: t("menuManagement.price"), type: "number", value: draft.price }), jsx("textarea", { "aria-label": t("menuManagement.description"), onChange: (event) => setDraft({ ...draft, description: event.target.value }), placeholder: t("menuManagement.descriptionPlaceholder"), rows: 2, value: draft.description }), jsxs("select", { "aria-label": t("menuManagement.category"), onChange: (event) => {
+    async function handleToggleSoldOut(id) {
+        setSaveError("");
+        try {
+            await toggleSoldOut(id);
+        }
+        catch {
+            setSaveError(t("menuManagement.saveFailed"));
+        }
+    }
+    async function handleDeleteItem(item) {
+        setSaveError("");
+        if (!window.confirm(t("common.confirmDelete", { name: item.name })))
+            return;
+        setSaving(true);
+        try {
+            await setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, deleted: true } : entry)));
+        }
+        catch {
+            setSaveError(t("menuManagement.saveFailed"));
+        }
+        finally {
+            setSaving(false);
+        }
+    }
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", disabled: saving, onClick: createItem, type: "button", children: t("menuManagement.addDish") }), description: t("menuManagement.sectionDescription"), title: t("menuManagement.sectionTitle") }), showForm && (jsxs("form", { className: "inline-form", onSubmit: saveItem, children: [jsx("strong", { className: "inline-form-title", children: editingId ? t("menuManagement.editDish") : t("menuManagement.addDish") }), jsxs("div", { className: "dish-photo-field", children: [draft.imageUrl ? (jsx("img", { alt: t("menuManagement.photoPreviewAlt"), className: "dish-photo-preview", src: draft.imageUrl })) : (jsx("span", { className: "dish-photo-empty", children: t("menuManagement.photo") })), jsxs("label", { className: "dish-photo-upload", children: [editingId ? t("menuManagement.replacePhoto") : t("menuManagement.uploadPhoto"), jsx("input", { accept: "image/*", "aria-label": t("menuManagement.uploadDishPhoto"), onChange: selectPhoto, type: "file" })] })] }), jsx("input", { "aria-label": t("menuManagement.dishName"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("menuManagement.dishName"), value: draft.name }), jsx("input", { "aria-label": t("menuManagement.price"), min: "1", onChange: (event) => setDraft({ ...draft, price: event.target.value }), placeholder: t("menuManagement.price"), type: "number", value: draft.price }), jsx("textarea", { "aria-label": t("menuManagement.description"), onChange: (event) => setDraft({ ...draft, description: event.target.value }), placeholder: t("menuManagement.descriptionPlaceholder"), rows: 2, value: draft.description }), jsxs("select", { "aria-label": t("menuManagement.category"), onChange: (event) => {
                             setDraft({ ...draft, category: event.target.value });
                             setCategoryError("");
                         }, value: draft.category, children: [categories.map((category) => jsx("option", { value: category, children: category }, category)), jsx("option", { value: CUSTOM_CATEGORY, children: t("menuManagement.customCategoryOption") })] }), draft.category === CUSTOM_CATEGORY && (jsx("input", { "aria-label": t("menuManagement.customCategory"), onChange: (event) => {
@@ -19073,14 +19447,10 @@ function MenuManagement() {
                                                 : draft.mealPeriods.filter((id) => id !== period.id);
                                             setDraft({ ...draft, mealPeriods });
                                             setPeriodError("");
-                                        }, type: "checkbox" }), jsx("span", { children: period.name })] }, period.id)))] }), jsx("button", { className: "management-primary", type: "submit", children: editingId ? t("menuManagement.saveEdit") : t("menuManagement.saveDish") }), jsx("button", { className: "management-secondary", onClick: resetForm, type: "button", children: t("common.cancel") }), categoryError && jsx("span", { className: "dish-photo-error", children: categoryError }), periodError && jsx("span", { className: "dish-photo-error", children: periodError }), photoError && jsx("span", { className: "dish-photo-error", children: photoError })] })), jsxs("div", { className: "category-manager", children: [jsxs("div", { children: [jsx("strong", { children: t("menuManagement.categoryManagementTitle") }), jsx("span", { children: t("menuManagement.categoryManagementDescription") })] }), jsxs("select", { "aria-label": t("menuManagement.chooseCategory"), onChange: (event) => selectCategoryForEdit(event.target.value), value: categoryTarget, children: [jsx("option", { value: "", children: t("menuManagement.chooseCategory") }), categories.map((category) => jsx("option", { value: category, children: category }, category))] }), jsx("input", { "aria-label": t("menuManagement.categoryNewName"), onChange: (event) => setCategoryDraft(event.target.value), placeholder: t("menuManagement.categoryNewName"), value: categoryDraft }), jsx("button", { className: "management-primary", onClick: renameCategory, type: "button", children: t("menuManagement.saveCategory") }), jsx("button", { className: "management-danger", onClick: deleteCategory, type: "button", children: t("menuManagement.deleteCategory") }), categoryNotice && jsx("span", { className: "category-manager-notice", children: categoryNotice })] }), jsxs("div", { className: "management-toolbar", children: [jsx("input", { "aria-label": t("menuManagement.searchPlaceholder"), onChange: (event) => setQuery(event.target.value), placeholder: t("menuManagement.searchPlaceholder"), value: query }), jsxs("select", { "aria-label": t("menuManagement.filterByCategory"), onChange: (event) => setCategoryFilter(event.target.value), value: categoryFilter, children: [jsx("option", { value: ALL_CATEGORIES, children: t("menuManagement.categoryAll") }), categories.map((category) => jsx("option", { value: category, children: category }, category))] }), jsxs("span", { children: [t("menuManagement.totalDishes", { count: visible.length }), categoryFilter !== ALL_CATEGORIES ? ` · ${categoryFilter}` : ""] })] }), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("menuManagement.table.dish") }), jsx("th", { children: t("menuManagement.table.category") }), jsx("th", { children: t("menuManagement.table.periods") }), jsx("th", { children: t("menuManagement.table.price") }), jsx("th", { children: t("menuManagement.table.status") }), jsx("th", { children: t("menuManagement.table.soldOut") }), jsx("th", { children: t("menuManagement.table.actions") })] }) }), jsx("tbody", { children: visible.map((item) => (jsxs("tr", { children: [jsx("td", { children: jsxs("div", { className: "dish-admin-cell", children: [item.imageUrl ? (jsx("img", { alt: t("menuManagement.dishPhotoAlt", { name: item.name }), className: "dish-admin-photo", src: item.imageUrl })) : (jsx("span", { className: "dish-placeholder", children: item.name.slice(0, 1) })), jsxs("div", { children: [jsx("strong", { children: item.name }), item.description && jsx("small", { children: item.description })] })] }) }), jsx("td", { children: item.category }), jsx("td", { children: (Array.isArray(item.mealPeriods) ? item.mealPeriods : allMealPeriodIds)
+                                        }, type: "checkbox" }), jsx("span", { children: period.name })] }, period.id)))] }), jsx("button", { className: "management-primary", disabled: saving, type: "submit", children: editingId ? t("menuManagement.saveEdit") : t("menuManagement.saveDish") }), jsx("button", { className: "management-secondary", disabled: saving, onClick: resetForm, type: "button", children: t("common.cancel") }), categoryError && jsx("span", { className: "dish-photo-error", children: categoryError }), periodError && jsx("span", { className: "dish-photo-error", children: periodError }), photoError && jsx("span", { className: "dish-photo-error", children: photoError }), saveError && jsx("span", { className: "dish-photo-error", children: saveError })] })), jsxs("div", { className: "category-manager", children: [jsxs("div", { children: [jsx("strong", { children: t("menuManagement.categoryManagementTitle") }), jsx("span", { children: t("menuManagement.categoryManagementDescription") })] }), jsxs("select", { "aria-label": t("menuManagement.chooseCategory"), onChange: (event) => selectCategoryForEdit(event.target.value), value: categoryTarget, children: [jsx("option", { value: "", children: t("menuManagement.chooseCategory") }), categories.map((category) => jsx("option", { value: category, children: category }, category))] }), jsx("input", { "aria-label": t("menuManagement.categoryNewName"), onChange: (event) => setCategoryDraft(event.target.value), placeholder: t("menuManagement.categoryNewName"), value: categoryDraft }), jsx("button", { className: "management-primary", disabled: saving, onClick: () => void renameCategory(), type: "button", children: t("menuManagement.saveCategory") }), jsx("button", { className: "management-danger", disabled: saving, onClick: () => void deleteCategory(), type: "button", children: t("menuManagement.deleteCategory") }), categoryNotice && jsx("span", { className: "category-manager-notice", children: categoryNotice }), saveError && !showForm && jsx("span", { className: "category-manager-notice", children: saveError })] }), jsxs("div", { className: "management-toolbar", children: [jsx("input", { "aria-label": t("menuManagement.searchPlaceholder"), onChange: (event) => setQuery(event.target.value), placeholder: t("menuManagement.searchPlaceholder"), value: query }), jsxs("select", { "aria-label": t("menuManagement.filterByCategory"), onChange: (event) => setCategoryFilter(event.target.value), value: categoryFilter, children: [jsx("option", { value: ALL_CATEGORIES, children: t("menuManagement.categoryAll") }), categories.map((category) => jsx("option", { value: category, children: category }, category))] }), jsxs("span", { children: [t("menuManagement.totalDishes", { count: visible.length }), categoryFilter !== ALL_CATEGORIES ? ` · ${categoryFilter}` : ""] })] }), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("menuManagement.table.dish") }), jsx("th", { children: t("menuManagement.table.category") }), jsx("th", { children: t("menuManagement.table.periods") }), jsx("th", { children: t("menuManagement.table.price") }), jsx("th", { children: t("menuManagement.table.status") }), jsx("th", { children: t("menuManagement.table.soldOut") }), jsx("th", { children: t("menuManagement.table.actions") })] }) }), jsx("tbody", { children: visible.map((item) => (jsxs("tr", { children: [jsx("td", { children: jsxs("div", { className: "dish-admin-cell", children: [item.imageUrl ? (jsx("img", { alt: t("menuManagement.dishPhotoAlt", { name: item.name }), className: "dish-admin-photo", src: item.imageUrl })) : (jsx("span", { className: "dish-placeholder", children: item.name.slice(0, 1) })), jsxs("div", { children: [jsx("strong", { children: item.name }), item.description && jsx("small", { children: item.description })] })] }) }), jsx("td", { children: item.category }), jsx("td", { children: (Array.isArray(item.mealPeriods) ? item.mealPeriods : allMealPeriodIds)
                                             .map((id) => DEFAULT_MEAL_PERIODS.find((period) => period.id === id)?.name)
                                             .filter(Boolean)
-                                            .join("、") }), jsx("td", { children: money(item.price) }), jsx("td", { children: jsx("span", { className: `list-status ${item.soldOut ? "inactive" : "active"}`, children: item.soldOut ? t("menuManagement.soldOut") : t("menuManagement.available") }) }), jsx("td", { children: jsx(Toggle, { checked: item.soldOut, label: t("menuManagement.toggleSoldOut", { name: item.name }), onChange: () => toggleSoldOut(item.id) }) }), jsx("td", { children: jsxs("div", { className: "management-row-actions", children: [jsx("button", { className: "management-secondary", onClick: () => editItem(item), type: "button", children: t("common.modify") }), jsx("button", { className: "management-danger", onClick: () => {
-                                                        if (!window.confirm(t("common.confirmDelete", { name: item.name })))
-                                                            return;
-                                                        setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, deleted: true } : entry)));
-                                                    }, type: "button", children: t("common.delete") })] }) })] }, item.id))) })] }) })] }));
+                                            .join("、") }), jsx("td", { children: money(item.price) }), jsx("td", { children: jsx("span", { className: `list-status ${item.soldOut ? "inactive" : "active"}`, children: item.soldOut ? t("menuManagement.soldOut") : t("menuManagement.available") }) }), jsx("td", { children: jsx(Toggle, { checked: item.soldOut, label: t("menuManagement.toggleSoldOut", { name: item.name }), onChange: () => void handleToggleSoldOut(item.id) }) }), jsx("td", { children: jsxs("div", { className: "management-row-actions", children: [jsx("button", { className: "management-secondary", disabled: saving, onClick: () => editItem(item), type: "button", children: t("common.modify") }), jsx("button", { className: "management-danger", disabled: saving, onClick: () => void handleDeleteItem(item), type: "button", children: t("common.delete") })] }) })] }, item.id))) })] }) })] }));
 }
 
 function PrinterSettings() {
@@ -19239,6 +19609,11 @@ function StaffManagement() {
 function TableManagement({ guestBaseUrl, tables }) {
     const { t } = useTranslation();
     const [selected, setSelected] = useState(null);
+    const [newTableNumber, setNewTableNumber] = useState("");
+    const [newTableSeats, setNewTableSeats] = useState("4");
+    const [savingKey, setSavingKey] = useState(null);
+    const [error, setError] = useState("");
+    const updateTables = useTableStore((state) => state.updateTables);
     function getTableGuestUrl(tableNumber) {
         const url = new URL(guestBaseUrl || window.location.href);
         url.search = "";
@@ -19260,9 +19635,69 @@ function TableManagement({ guestBaseUrl, tables }) {
             window.alert(t("common.copyFailed"));
         });
     }
+    function parseSeats(value) {
+        const seats = Number(value);
+        return Number.isInteger(seats) && seats > 0 ? seats : 0;
+    }
+    function hasDuplicateTableNumber(nextTables, originalNumber) {
+        const seen = new Set();
+        return nextTables.some((table) => {
+            const normalized = normalizeTableNumber(table.number);
+            if (originalNumber && normalized === normalizeTableNumber(originalNumber))
+                return false;
+            if (seen.has(normalized))
+                return true;
+            seen.add(normalized);
+            return false;
+        });
+    }
+    async function saveNextTables(nextTables, key) {
+        setError("");
+        setSavingKey(key);
+        try {
+            await updateTables(nextTables);
+            return true;
+        }
+        catch {
+            setError(t("tableManagement.saveFailed"));
+            return false;
+        }
+        finally {
+            setSavingKey(null);
+        }
+    }
+    async function handleAddTable(event) {
+        event.preventDefault();
+        const number = normalizeTableNumber(newTableNumber);
+        const seats = parseSeats(newTableSeats);
+        const nextTables = [...tables, { number, seats, status: "available" }];
+        if (!number || !seats || hasDuplicateTableNumber(nextTables)) {
+            setError(t("tableManagement.invalidTable"));
+            return;
+        }
+        if (await saveNextTables(nextTables, "new")) {
+            setNewTableNumber("");
+            setNewTableSeats("4");
+        }
+    }
+    async function handleSaveTable(table, event) {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const number = normalizeTableNumber(String(formData.get("number") || ""));
+        const seats = parseSeats(formData.get("seats"));
+        const nextTables = tables.map((current) => (current.number === table.number ? { ...current, number, seats } : current));
+        if (!number || !seats || hasDuplicateTableNumber(nextTables, table.number)) {
+            setError(t("tableManagement.invalidTable"));
+            return;
+        }
+        await saveNextTables(nextTables, table.number);
+    }
+    async function handleDeactivateTable(table) {
+        await saveNextTables(tables.filter((current) => current.number !== table.number), `deactivate-${table.number}`);
+    }
     const selectedTableUrl = selected ? getTableGuestUrl(selected.number) : "";
     const selectedQrUrl = selected ? getQrCodeUrl(selected.number) : "";
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("tableManagement.description"), title: t("tableManagement.title") }), jsx("div", { className: "table-management-grid", children: tables.map((table) => (jsxs("article", { className: `table-card ${table.status}`, children: [jsxs("div", { children: [jsx("span", { children: table.number }), jsxs("div", { children: [jsx("h2", { children: t("common.table.tableLabel", { number: table.number }) }), jsx("p", { children: table.status === "occupied" ? t("tableManagement.occupiedDesc") : t("tableManagement.availableDesc") })] })] }), jsx("footer", { children: jsx("button", { className: "management-secondary", onClick: () => setSelected(table), type: "button", children: t("tableManagement.viewQr") }) })] }, table.number))) }), selected && (jsx("div", { className: "admin-modal-backdrop", children: jsxs("section", { className: "qr-modal", children: [jsx("button", { "aria-label": t("tableManagement.closeQr"), className: "modal-close", onClick: () => setSelected(null), type: "button", children: "x" }), jsx("img", { alt: t("tableManagement.qrAlt", { number: selected.number }), className: "table-qr-image", src: selectedQrUrl }), jsx("h2", { children: t("tableManagement.qrTitle", { number: selected.number }) }), jsx("p", { children: t("tableManagement.qrDescription", { number: selected.number }) }), jsx("a", { className: "qr-link", href: selectedTableUrl, rel: "noreferrer", target: "_blank", children: selectedTableUrl }), jsxs("div", { className: "qr-modal-actions", children: [jsx("button", { className: "management-secondary", onClick: copySelectedTableUrl, type: "button", children: t("common.copyLink") }), jsx("button", { className: "management-primary", onClick: () => window.print(), type: "button", children: t("common.printQr") })] })] }) }))] }));
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("tableManagement.description"), title: t("tableManagement.title") }), jsxs("form", { className: "table-management-form", onSubmit: handleAddTable, children: [jsxs("label", { children: [t("tableManagement.tableNumber"), jsx("input", { "aria-label": t("tableManagement.tableNumber"), onChange: (event) => setNewTableNumber(event.target.value), value: newTableNumber })] }), jsxs("label", { children: [t("tableManagement.seats"), jsx("input", { "aria-label": t("tableManagement.seats"), min: "1", onChange: (event) => setNewTableSeats(event.target.value), type: "number", value: newTableSeats })] }), jsx("button", { className: "management-primary", disabled: savingKey === "new", type: "submit", children: t("tableManagement.addTable") })] }), error && jsx("p", { className: "management-error", children: error }), jsx("div", { className: "table-management-grid", children: tables.map((table) => (jsxs("article", { className: `table-card ${table.status}`, children: [jsxs("div", { children: [jsx("span", { children: table.number }), jsxs("div", { children: [jsx("h2", { children: t("common.table.tableLabel", { number: table.number }) }), jsx("p", { children: table.status === "occupied" ? t("tableManagement.occupiedDesc") : t("tableManagement.availableDesc") })] })] }), jsxs("form", { className: "table-card-form", onSubmit: (event) => void handleSaveTable(table, event), children: [jsxs("label", { children: [t("tableManagement.tableNumberFor", { number: table.number }), jsx("input", { "aria-label": t("tableManagement.tableNumberFor", { number: table.number }), defaultValue: table.number, name: "number" })] }), jsxs("label", { children: [t("tableManagement.seatsFor", { number: table.number }), jsx("input", { "aria-label": t("tableManagement.seatsFor", { number: table.number }), defaultValue: table.seats, min: "1", name: "seats", type: "number" })] }), jsx("button", { "aria-label": t("tableManagement.saveTable"), className: "management-secondary", disabled: savingKey === table.number, type: "submit", children: t("tableManagement.saveTable") })] }, `${table.number}-${table.seats}`), jsxs("footer", { children: [jsx("button", { className: "management-secondary", onClick: () => setSelected(table), type: "button", children: t("tableManagement.viewQr") }), jsx("button", { "aria-label": t("tableManagement.deactivateTable"), className: "management-secondary danger", disabled: savingKey === `deactivate-${table.number}`, onClick: () => void handleDeactivateTable(table), type: "button", children: t("tableManagement.deactivateTable") })] })] }, table.number))) }), selected && (jsx("div", { className: "admin-modal-backdrop", children: jsxs("section", { className: "qr-modal", children: [jsx("button", { "aria-label": t("tableManagement.closeQr"), className: "modal-close", onClick: () => setSelected(null), type: "button", children: "x" }), jsx("img", { alt: t("tableManagement.qrAlt", { number: selected.number }), className: "table-qr-image", src: selectedQrUrl }), jsx("h2", { children: t("tableManagement.qrTitle", { number: selected.number }) }), jsx("p", { children: t("tableManagement.qrDescription", { number: selected.number }) }), jsx("a", { className: "qr-link", href: selectedTableUrl, rel: "noreferrer", target: "_blank", children: selectedTableUrl }), jsxs("div", { className: "qr-modal-actions", children: [jsx("button", { className: "management-secondary", onClick: copySelectedTableUrl, type: "button", children: t("common.copyLink") }), jsx("button", { className: "management-primary", onClick: () => window.print(), type: "button", children: t("common.printQr") })] })] }) }))] }));
 }
 
 function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
@@ -19278,18 +19713,21 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
     const [filter, setFilter] = useState("pending");
     const [activeSection, setActiveSection] = useState("orders");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const isSupabaseMode = getDataSourceMode() === "supabase";
     const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
     const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
     function handlePrint(id) {
-        useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
+        void useOrderStore.getState().updateStatus(id, "printed", useMenuStore.getState().items);
     }
     function handleReset() {
+        if (isSupabaseMode)
+            return;
         if (!window.confirm(t("adminApp.actions.resetDemoConfirm")))
             return;
         useOrderStore.getState().resetDemo(useMenuStore.getState().items);
     }
     function handleSettle(id) {
-        useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
+        void useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
     }
     function renderAdminSection() {
         if (activeSection === "dashboard")
@@ -19306,7 +19744,7 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }) {
             return jsx(PrinterSettings, {});
         return jsx(RestaurantSettings, {});
     }
-    return (jsx(PinGuard, { children: jsxs("main", { className: "admin-shell", children: [jsx(Sidebar, { activeSection: activeSection, onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName }), mobileMenuOpen && (jsx(MobileAdminNav, { activeSection: activeSection, onClose: () => setMobileMenuOpen(false), onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName })), jsxs("section", { className: "admin-workspace", children: [jsxs("header", { className: "admin-topbar", children: [jsxs("button", { className: "mobile-nav-trigger", onClick: () => setMobileMenuOpen(true), type: "button", children: [jsx(Icon, { name: "menu", size: 18 }), t("adminApp.managementMenu")] }), jsxs("div", { children: [jsx("span", { children: formatAdminDate(now) }), jsx("strong", { children: activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed") })] }), jsxs("div", { children: [jsxs("button", { "aria-label": t("adminApp.notification"), className: "topbar-icon", type: "button", children: [jsx(Icon, { name: "bell", size: 18 }), pendingOrders.some((order) => order.status === "pending") && jsx("small", {})] }), jsx("button", { className: "guest-shortcut", onClick: () => setView("guest"), type: "button", children: t("adminApp.guestShortcut") })] })] }), activeSection !== "orders" ? renderAdminSection() : (jsxs("div", { className: "admin-layout", children: [jsxs("section", { className: "orders-panel", children: [jsxs("header", { className: "orders-header", children: [jsxs("div", { children: [jsx("p", { children: t("adminApp.orders.label") }), jsxs("h1", { children: [t("adminApp.orders.heading"), jsx("span", { children: pendingOrders.length })] })] }), jsx("div", { className: "admin-actions", children: jsxs("button", { className: "reset-button", onClick: handleReset, type: "button", children: [jsx(Icon, { name: "rotate", size: 15 }), t("adminApp.actions.resetDemo")] }) })] }), jsxs("div", { className: "orders-tabs", children: [jsxs("button", { className: filter === "pending" ? "active" : "", onClick: () => setFilter("pending"), type: "button", children: [t("adminApp.orders.activeTab"), jsx("span", { children: pendingOrders.length })] }), jsxs("button", { className: filter === "settled" ? "active" : "", onClick: () => setFilter("settled"), type: "button", children: [t("adminApp.orders.completedTab"), jsx("span", { children: completedOrders.length })] })] }), jsxs("div", { className: "queue-note", children: [jsx("span", { children: t("adminApp.orders.flowTitle") }), jsx("p", { children: t("adminApp.orders.flowDescription") })] }), jsx("div", { className: "orders-grid", children: visibleOrders.length ? (visibleOrders.map((order) => (jsx(OrderCard, { menuItems: menuItems, onPrint: handlePrint, onSettle: handleSettle, order: order }, order.id)))) : (jsxs("div", { className: "empty-state", children: [jsx(Icon, { name: "orders", size: 30 }), jsx("h3", { children: t("common.empty.noOrders") }), jsx("p", { children: t("common.empty.noOrdersDesc") })] })) })] }), jsx(PopularDishes, { menuItems: menuItems, onOpenReports: () => setActiveSection("reports"), orders: orders })] }))] })] }) }));
+    return (jsx(PinGuard, { children: jsxs("main", { className: "admin-shell", children: [jsx(Sidebar, { activeSection: activeSection, onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName }), mobileMenuOpen && (jsx(MobileAdminNav, { activeSection: activeSection, onClose: () => setMobileMenuOpen(false), onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName })), jsxs("section", { className: "admin-workspace", children: [jsxs("header", { className: "admin-topbar", children: [jsxs("button", { className: "mobile-nav-trigger", onClick: () => setMobileMenuOpen(true), type: "button", children: [jsx(Icon, { name: "menu", size: 18 }), t("adminApp.managementMenu")] }), jsxs("div", { children: [jsx("span", { children: formatAdminDate(now) }), jsx("strong", { children: activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed") })] }), jsxs("div", { children: [jsxs("button", { "aria-label": t("adminApp.notification"), className: "topbar-icon", type: "button", children: [jsx(Icon, { name: "bell", size: 18 }), pendingOrders.some((order) => order.status === "pending") && jsx("small", {})] }), jsx("button", { className: "guest-shortcut", onClick: () => setView("guest"), type: "button", children: t("adminApp.guestShortcut") })] })] }), activeSection !== "orders" ? renderAdminSection() : (jsxs("div", { className: "admin-layout", children: [jsxs("section", { className: "orders-panel", children: [jsxs("header", { className: "orders-header", children: [jsxs("div", { children: [jsx("p", { children: t("adminApp.orders.label") }), jsxs("h1", { children: [t("adminApp.orders.heading"), jsx("span", { children: pendingOrders.length })] })] }), !isSupabaseMode && (jsx("div", { className: "admin-actions", children: jsxs("button", { className: "reset-button", onClick: handleReset, type: "button", children: [jsx(Icon, { name: "rotate", size: 15 }), t("adminApp.actions.resetDemo")] }) }))] }), jsxs("div", { className: "orders-tabs", children: [jsxs("button", { className: filter === "pending" ? "active" : "", onClick: () => setFilter("pending"), type: "button", children: [t("adminApp.orders.activeTab"), jsx("span", { children: pendingOrders.length })] }), jsxs("button", { className: filter === "settled" ? "active" : "", onClick: () => setFilter("settled"), type: "button", children: [t("adminApp.orders.completedTab"), jsx("span", { children: completedOrders.length })] })] }), jsxs("div", { className: "queue-note", children: [jsx("span", { children: t("adminApp.orders.flowTitle") }), jsx("p", { children: t("adminApp.orders.flowDescription") })] }), jsx("div", { className: "orders-grid", children: visibleOrders.length ? (visibleOrders.map((order) => (jsx(OrderCard, { menuItems: menuItems, onPrint: handlePrint, onSettle: handleSettle, order: order }, order.id)))) : (jsxs("div", { className: "empty-state", children: [jsx(Icon, { name: "orders", size: 30 }), jsx("h3", { children: t("common.empty.noOrders") }), jsx("p", { children: t("common.empty.noOrdersDesc") })] })) })] }), jsx(PopularDishes, { menuItems: menuItems, onOpenReports: () => setActiveSection("reports"), orders: orders })] }))] })] }) }));
 }
 
 function CartBar({ cartItems, itemCount, onOpen, total }) {
@@ -19316,9 +19754,9 @@ function CartBar({ cartItems, itemCount, onOpen, total }) {
     return (jsxs("button", { className: "cart-bar", onClick: onOpen, type: "button", children: [jsxs("span", { className: "cart-icon", children: [jsx(Icon, { name: "cart", size: 23 }), jsx("small", { children: itemCount })] }), jsxs("span", { className: "cart-bar-copy", children: [jsx("em", { children: cartItems.slice(0, 3).map((item) => `${item.name} x${item.quantity}`).join("、") }), jsx("strong", { children: money(total) })] }), jsx("span", { className: "cart-bar-action", children: t("guestApp.confirmOrder") })] }));
 }
 
-function CartSheet({ cartItems, onClose, onSubmit, tableNumber, total, updateItem, updateItemNote }) {
+function CartSheet({ cartItems, isSubmitting = false, onClose, onSubmit, tableNumber, total, updateItem, updateItemNote }) {
     const { t } = useTranslation();
-    return (jsx("div", { className: "modal-backdrop", children: jsxs("section", { className: "cart-sheet", "aria-label": t("guestApp.cart"), children: [jsx("div", { className: "sheet-handle" }), jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("guestApp.cart") }), jsx("p", { children: t("common.table.tablePrefix", { number: tableNumber, text: t("guestApp.cartHint") }) })] }), jsx("button", { className: "text-button", onClick: onClose, type: "button", children: t("common.close") })] }), jsx("div", { className: "cart-lines", children: cartItems.map((item) => (jsxs("article", { className: "cart-line", children: [jsx(DishImage, { item: item, size: "small" }), jsxs("div", { children: [jsx("h3", { children: item.name }), item.notes && jsx("small", { className: "cart-item-notes", children: item.notes }), jsx("strong", { children: money(item.price) }), jsx("input", { "aria-label": `${item.name} ${t("guestApp.notesPlaceholder")}`, className: "cart-item-notes-input", onChange: (event) => updateItemNote?.(item.id, event.target.value), placeholder: t("guestApp.notesPlaceholder"), value: item.notes || "" })] }), jsxs("div", { className: "cart-line-controls", children: [jsx("button", { onClick: () => updateItem(item.id, -1), type: "button", children: jsx(Icon, { name: item.quantity === 1 ? "trash" : "minus", size: 15 }) }), jsx("span", { children: item.quantity }), jsx("button", { onClick: () => updateItem(item.id, 1), type: "button", children: jsx(Icon, { name: "plus", size: 15 }) })] })] }, item.id))) }), jsxs("footer", { className: "cart-footer", children: [jsxs("div", { children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(total) })] }), jsx("button", { className: "primary-button", onClick: onSubmit, type: "button", children: t("guestApp.confirmOrder") })] })] }) }));
+    return (jsx("div", { className: "modal-backdrop", children: jsxs("section", { className: "cart-sheet", "aria-label": t("guestApp.cart"), children: [jsx("div", { className: "sheet-handle" }), jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("guestApp.cart") }), jsx("p", { children: t("common.table.tablePrefix", { number: tableNumber, text: t("guestApp.cartHint") }) })] }), jsx("button", { className: "text-button", onClick: onClose, type: "button", children: t("common.close") })] }), jsx("div", { className: "cart-lines", children: cartItems.map((item) => (jsxs("article", { className: "cart-line", children: [jsx(DishImage, { item: item, size: "small" }), jsxs("div", { children: [jsx("h3", { children: item.name }), item.notes && jsx("small", { className: "cart-item-notes", children: item.notes }), jsx("strong", { children: money(item.price) }), jsx("input", { "aria-label": `${item.name} ${t("guestApp.notesPlaceholder")}`, className: "cart-item-notes-input", onChange: (event) => updateItemNote?.(item.id, event.target.value), placeholder: t("guestApp.notesPlaceholder"), value: item.notes || "" })] }), jsxs("div", { className: "cart-line-controls", children: [jsx("button", { onClick: () => updateItem(item.id, -1), type: "button", children: jsx(Icon, { name: item.quantity === 1 ? "trash" : "minus", size: 15 }) }), jsx("span", { children: item.quantity }), jsx("button", { onClick: () => updateItem(item.id, 1), type: "button", children: jsx(Icon, { name: "plus", size: 15 }) })] })] }, item.id))) }), jsxs("footer", { className: "cart-footer", children: [jsxs("div", { children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(total) })] }), jsx("button", { className: "primary-button", disabled: isSubmitting, onClick: onSubmit, type: "button", children: isSubmitting ? t("guestApp.submittingOrder") : t("guestApp.confirmOrder") })] })] }) }));
 }
 
 function ConfirmationCard({ menuItems, onClose, onViewOrderHistory, order, tableNumber }) {
@@ -19346,6 +19784,7 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
     const [cart, setCart] = useState({});
     const [itemNotes, setItemNotes] = useState({});
     const [isCartOpen, setCartOpen] = useState(false);
+    const [isSubmittingOrder, setSubmittingOrder] = useState(false);
     const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
     const [confirmation, setConfirmation] = useState(null);
     const [stockNotice, setStockNotice] = useState("");
@@ -19426,30 +19865,36 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
             return { ...current, [id]: trimmedNotes };
         });
     }
-    function submitOrder() {
-        if (!cartItems.length)
+    async function submitOrder() {
+        if (!cartItems.length || isSubmittingOrder)
             return;
-        const order = useOrderStore.getState().placeOrder({
-            activeMealPeriod,
-            items: cartItems.map(({ id, name, notes, price, quantity }) => ({
-                id,
-                name,
-                notes: notes?.trim() || undefined,
-                quantity,
-                unitPrice: price,
-            })),
-            menuItems: useMenuStore.getState().items,
-            printerSettings: useSettingsStore.getState().printer,
-            table: tableNumber,
-        });
-        if (!order) {
-            setStockNotice(t("guestApp.stockSubmitFailed"));
-            return;
+        setSubmittingOrder(true);
+        try {
+            const order = await useOrderStore.getState().placeOrder({
+                activeMealPeriod,
+                items: cartItems.map(({ id, name, notes, price, quantity }) => ({
+                    id,
+                    name,
+                    notes: notes?.trim() || undefined,
+                    quantity,
+                    unitPrice: price,
+                })),
+                menuItems: useMenuStore.getState().items,
+                printerSettings: useSettingsStore.getState().printer,
+                table: tableNumber,
+            });
+            if (!order) {
+                setStockNotice(t("guestApp.stockSubmitFailed"));
+                return;
+            }
+            setConfirmation(order);
+            setCart({});
+            setItemNotes({});
+            setCartOpen(false);
         }
-        setConfirmation(order);
-        setCart({});
-        setItemNotes({});
-        setCartOpen(false);
+        finally {
+            setSubmittingOrder(false);
+        }
     }
     return (jsxs("main", { className: guestShellClassName, children: [jsxs("header", { className: "guest-header", children: [jsxs("div", { children: [jsx("span", { className: "restaurant-name", children: restaurantName }), jsx("span", { className: "table-label", children: t("common.table.tableLabel", { number: tableNumber }) })] }), jsxs("div", { className: "guest-header-actions", children: [jsx("button", { className: "language-button", onClick: () => setLanguage(language === "zh-Hant" ? "en" : "zh-Hant"), type: "button", children: t("guestApp.languageToggle") }), jsx("button", { className: "admin-shortcut", onClick: () => setView("admin"), type: "button", children: t("guestApp.adminShortcut") })] })] }), jsxs("section", { className: "guest-menu-tabs", "aria-label": t("guestApp.navigationLabel"), children: [jsx("button", { className: "active", type: "button", children: t("guestApp.menuTab") }), jsxs("button", { onClick: () => setOrderHistoryOpen(true), type: "button", children: [t("guestApp.orderDetails"), hasTableOrders && jsx("small", { children: tableOrders.length })] })] }), jsx("nav", { className: "category-tabs", "aria-label": t("guestApp.categoryLabel"), children: categories.map((category) => (jsx("button", { className: category === activeCategory ? "active" : "", onClick: (event) => {
                         setActiveCategory(category);
@@ -19459,7 +19904,7 @@ function GuestApp({ activeMealPeriod, setView, tableNumber }) {
                     : t("guestApp.serviceClosed") }), stockNotice && (jsxs("div", { className: "stock-notice", children: [jsx("span", { children: stockNotice }), jsx("button", { "aria-label": t("guestApp.closeNotice"), onClick: () => setStockNotice(""), type: "button", children: "x" })] })), jsx("section", { className: "menu-list", children: visibleMenu.map((item) => {
                     const quantity = cart[item.id] || 0;
                     return (jsxs("article", { className: `menu-item ${item.soldOut ? "sold-out" : ""}`, children: [jsx(DishImage, { item: item }), jsxs("div", { className: "menu-item-copy", children: [jsx("h2", { children: item.name }), jsx("p", { children: item.description }), jsx("strong", { children: money(item.price) }), item.soldOut && jsx("span", { className: "sold-out-label", children: t("guestApp.soldOut") })] }), jsxs("div", { className: "menu-item-control", children: [quantity > 0 && (jsxs(Fragment, { children: [jsx("button", { "aria-label": t("guestApp.decreaseItem", { name: item.name }), className: "quantity-control secondary", onClick: () => updateItem(item.id, -1), type: "button", children: jsx(Icon, { name: "minus", size: 16 }) }), jsx("span", { children: quantity })] })), jsx("button", { "aria-label": item.soldOut ? t("guestApp.itemSoldOut", { name: item.name }) : t("guestApp.addItem", { name: item.name }), className: "quantity-control", disabled: item.soldOut, onClick: () => updateItem(item.id, 1), type: "button", children: jsx(Icon, { name: "plus", size: 18 }) })] })] }, item.id));
-                }) }), jsx(CartBar, { cartItems: cartItems, itemCount: itemCount, onOpen: () => setCartOpen(true), total: total }), isCartOpen && (jsx(CartSheet, { cartItems: cartItems, onClose: () => setCartOpen(false), onSubmit: submitOrder, tableNumber: tableNumber, total: total, updateItem: updateItem, updateItemNote: updateItemNote })), confirmation && (jsx(ConfirmationCard, { menuItems: menuItems, onClose: () => setConfirmation(null), onViewOrderHistory: () => {
+                }) }), jsx(CartBar, { cartItems: cartItems, itemCount: itemCount, onOpen: () => setCartOpen(true), total: total }), isCartOpen && (jsx(CartSheet, { cartItems: cartItems, isSubmitting: isSubmittingOrder, onClose: () => setCartOpen(false), onSubmit: submitOrder, tableNumber: tableNumber, total: total, updateItem: updateItem, updateItemNote: updateItemNote })), confirmation && (jsx(ConfirmationCard, { menuItems: menuItems, onClose: () => setConfirmation(null), onViewOrderHistory: () => {
                     setConfirmation(null);
                     setOrderHistoryOpen(true);
                 }, order: confirmation, tableNumber: tableNumber })), isOrderHistoryOpen && (jsx(GuestOrderHistory, { menuItems: menuItems, onClose: () => setOrderHistoryOpen(false), orders: tableOrders, tableNumber: tableNumber }))] }));
@@ -19481,12 +19926,34 @@ function App() {
     const guestBaseUrl = useMemo(getGuestBaseUrl, []);
     const activeMealPeriod = useMemo(() => getCurrentMealPeriod(restaurantSettings, now), [now, restaurantSettings]);
     useEffect(() => {
-        loadOrders(menuItems);
+        void loadMenu();
+        void loadSettings();
+        void loadTables();
+    }, [loadMenu, loadSettings, loadTables]);
+    useEffect(() => {
+        void loadOrders(menuItems);
     }, [loadOrders, menuItems]);
     useEffect(() => {
         return subscribeToStorage("harbour-ordering-demo-orders", () => {
-            loadOrders(useMenuStore.getState().items);
+            void loadOrders(useMenuStore.getState().items);
         }, ORDER_CHANGE_EVENT);
+    }, [loadOrders]);
+    useEffect(() => {
+        if (getDataSourceMode() !== "supabase")
+            return undefined;
+        let cleanup;
+        let cancelled = false;
+        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-Py6suClD.js');return { subscribeSupabaseOrderChanges }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
+            if (cancelled)
+                return;
+            cleanup = subscribeSupabaseOrderChanges(() => {
+                void loadOrders(useMenuStore.getState().items);
+            });
+        });
+        return () => {
+            cancelled = true;
+            cleanup?.();
+        };
     }, [loadOrders]);
     useEffect(() => {
         const intervalId = window.setInterval(() => setNow(new Date()), 60 * 1000);
@@ -19515,6 +19982,23 @@ function App() {
         }, MENU_CHANGE_EVENT);
     }, [loadMenu]);
     useEffect(() => {
+        if (getDataSourceMode() !== "supabase")
+            return undefined;
+        let cleanup;
+        let cancelled = false;
+        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-mzFwoyJY.js');return { subscribeSupabaseMenuChanges }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
+            if (cancelled)
+                return;
+            cleanup = subscribeSupabaseMenuChanges(() => {
+                void loadMenu();
+            });
+        });
+        return () => {
+            cancelled = true;
+            cleanup?.();
+        };
+    }, [loadMenu]);
+    useEffect(() => {
         return subscribeToStorage("harbour-admin-staff", () => {
             loadStaff();
         }, STAFF_CHANGE_EVENT);
@@ -19523,6 +20007,23 @@ function App() {
         return subscribeToStorage("harbour-admin-tables", () => {
             loadTables();
         }, TABLE_CHANGE_EVENT);
+    }, [loadTables]);
+    useEffect(() => {
+        if (getDataSourceMode() !== "supabase")
+            return undefined;
+        let cleanup;
+        let cancelled = false;
+        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DkkhtM2S.js');return { subscribeSupabaseTableChanges }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
+            if (cancelled)
+                return;
+            cleanup = subscribeSupabaseTableChanges(() => {
+                void loadTables();
+            });
+        });
+        return () => {
+            cancelled = true;
+            cleanup?.();
+        };
     }, [loadTables]);
     return (jsxs(Fragment, { children: [jsx(ViewToggle, { setView: setView, view: view }), view === "guest" ? (jsx(GuestApp, { activeMealPeriod: activeMealPeriod, setView: setView, tableNumber: tableNumber })) : (jsx(AdminApp, { activeMealPeriod: activeMealPeriod, guestBaseUrl: guestBaseUrl, now: now, setView: setView }))] }));
 }
@@ -19555,3 +20056,5 @@ class ErrorBoundary extends Component {
 }
 
 createRoot(document.getElementById("root")).render(jsx(StrictMode, { children: jsx(LanguageProvider, { children: jsx(ErrorBoundary, { children: jsx(App, {}) }) }) }));
+
+export { DEFAULT_PRINTER_SETTINGS as D, DEFAULT_RESTAURANT_SETTINGS as a };

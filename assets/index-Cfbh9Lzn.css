@@ -1909,10 +1909,50 @@ p {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.table-management-form {
+  align-items: end;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(120px, 1fr) minmax(100px, 140px) auto;
+  margin-bottom: 14px;
+  padding: 14px;
+}
+
+.table-management-form label,
+.table-card-form label {
+  color: var(--muted);
+  display: grid;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.table-management-form input,
+.table-card-form input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  min-height: 38px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.management-error {
+  background: #fff2ed;
+  border-radius: 8px;
+  color: #c95024;
+  font-size: 13px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+}
+
 .table-card {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 8px;
   padding: 14px;
 }
 
@@ -1960,10 +2000,29 @@ p {
   margin-top: 4px;
 }
 
+.table-card-form {
+  display: grid;
+  gap: 9px;
+  grid-template-columns: 1fr 82px;
+  margin-top: 13px;
+}
+
+.table-card-form button {
+  grid-column: 1 / -1;
+}
+
 .table-card footer {
   display: flex;
   gap: 7px;
   margin-top: 15px;
+}
+
+.table-card footer button {
+  flex: 1;
+}
+
+.table-card footer .danger {
+  color: #b84d21;
 }
 
 .admin-modal-backdrop {
@@ -2269,6 +2328,10 @@ p {
 
   .management-split,
   .table-management-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-management-form {
     grid-template-columns: 1fr;
   }
 
