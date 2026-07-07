@@ -65,6 +65,16 @@ export function saveRestaurantSettings(settings: RestaurantSettings): void {
   writeStorage(SETTINGS_STORAGE_KEY, settings, SETTINGS_CHANGE_EVENT);
 }
 
+export async function saveRestaurantSettingsAsync(settings: RestaurantSettings): Promise<void> {
+  if (getDataSourceMode() !== "supabase") {
+    saveRestaurantSettings(settings);
+    return;
+  }
+
+  const { saveSupabaseRestaurantSettings } = await import("./supabaseSettingsService");
+  await saveSupabaseRestaurantSettings(settings);
+}
+
 export function loadPrinterSettings(): PrinterSettings {
   return {
     ...DEFAULT_PRINTER_SETTINGS,
@@ -85,6 +95,16 @@ export async function loadPrinterSettingsAsync(): Promise<PrinterSettings> {
 
 export function savePrinterSettings(settings: PrinterSettings): void {
   writeStorage(PRINTER_STORAGE_KEY, settings, PRINTER_CHANGE_EVENT);
+}
+
+export async function savePrinterSettingsAsync(settings: PrinterSettings): Promise<void> {
+  if (getDataSourceMode() !== "supabase") {
+    savePrinterSettings(settings);
+    return;
+  }
+
+  const { saveSupabasePrinterSettings } = await import("./supabaseSettingsService");
+  await saveSupabasePrinterSettings(settings);
 }
 
 function timeToMinutes(time: string | undefined): number | null {

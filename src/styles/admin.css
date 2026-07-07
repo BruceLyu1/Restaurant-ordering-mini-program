@@ -4,6 +4,8 @@
   background: #f7f8f5;
   display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .sidebar {
@@ -172,6 +174,8 @@
 .admin-workspace {
   flex: 1;
   min-width: 0;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .admin-topbar {

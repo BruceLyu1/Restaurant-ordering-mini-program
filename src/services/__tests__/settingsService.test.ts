@@ -7,7 +7,16 @@ import {
   PRINTER_STORAGE_KEY,
   SETTINGS_STORAGE_KEY,
   savePrinterSettings,
+  savePrinterSettingsAsync,
+  saveRestaurantSettingsAsync,
 } from "../settingsService";
+
+import { saveSupabasePrinterSettings, saveSupabaseRestaurantSettings } from "../supabaseSettingsService";
+
+vi.mock("../supabaseSettingsService", () => ({
+  saveSupabasePrinterSettings: vi.fn(async () => undefined),
+  saveSupabaseRestaurantSettings: vi.fn(async () => undefined),
+}));
 
 const settings = {
   mealPeriods: [
@@ -19,6 +28,9 @@ const settings = {
 describe("settingsService", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    vi.stubEnv("VITE_DATA_SOURCE", "local");
   });
 
   it("finds the active meal period at the start boundary", () => {
@@ -44,6 +56,61 @@ describe("settingsService", () => {
     window.removeEventListener("harbour-printer-change", listener);
     expect(JSON.parse(window.localStorage.getItem(PRINTER_STORAGE_KEY) || "{}").autoPrint).toBe(false);
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("persists printer settings through the async local path and dispatches the printer change event", async () => {
+    const listener = vi.fn();
+    window.addEventListener("harbour-printer-change", listener);
+
+    await savePrinterSettingsAsync({
+      autoPrint: false,
+      copies: "2",
+      printer: "Kitchen",
+      sound: true,
+    });
+
+    window.removeEventListener("harbour-printer-change", listener);
+    expect(JSON.parse(window.localStorage.getItem(PRINTER_STORAGE_KEY) || "{}").copies).toBe("2");
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(saveSupabasePrinterSettings).not.toHaveBeenCalled();
+  });
+
+  it("saves printer settings through Supabase in supabase mode", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    const settings = {
+      autoPrint: false,
+      copies: "3",
+      printer: "Cashier",
+      sound: false,
+    };
+
+    await savePrinterSettingsAsync(settings);
+
+    expect(saveSupabasePrinterSettings).toHaveBeenCalledWith(settings);
+    expect(window.localStorage.getItem(PRINTER_STORAGE_KEY)).toBeNull();
+  });
+
+  it("persists restaurant settings through the async local path and dispatches the settings change event", async () => {
+    const listener = vi.fn();
+    window.addEventListener("harbour-settings-change", listener);
+    const next = { ...DEFAULT_RESTAURANT_SETTINGS, name: "Local Harbour" };
+
+    await saveRestaurantSettingsAsync(next);
+
+    window.removeEventListener("harbour-settings-change", listener);
+    expect(JSON.parse(window.localStorage.getItem(SETTINGS_STORAGE_KEY) || "{}").name).toBe("Local Harbour");
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(saveSupabaseRestaurantSettings).not.toHaveBeenCalled();
+  });
+
+  it("saves restaurant settings through Supabase in supabase mode", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    const next = { ...DEFAULT_RESTAURANT_SETTINGS, name: "Remote Harbour" };
+
+    await saveRestaurantSettingsAsync(next);
+
+    expect(saveSupabaseRestaurantSettings).toHaveBeenCalledWith(next);
+    expect(window.localStorage.getItem(SETTINGS_STORAGE_KEY)).toBeNull();
   });
 
   it("adds the default PIN when loading legacy restaurant settings", () => {

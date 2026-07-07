@@ -21,6 +21,21 @@
   --shadow: 0 14px 36px rgba(38, 50, 42, 0.1);
 }
 
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 * {
   box-sizing: border-box;
 }

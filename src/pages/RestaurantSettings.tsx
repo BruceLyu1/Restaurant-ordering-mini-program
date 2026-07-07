@@ -27,7 +27,7 @@ export function RestaurantSettings() {
     });
   }, [language, restaurant]);
 
-  function save(event: React.FormEvent): void {
+  async function save(event: React.FormEvent): Promise<void> {
     event.preventDefault();
     if (pinDraft && !/^\d{6}$/.test(pinDraft)) {
       setPinError(t("restaurantSettings.pinValidation"));
@@ -35,7 +35,11 @@ export function RestaurantSettings() {
     }
 
     const nextSettings = pinDraft ? { ...settings, pin: pinDraft } : settings;
-    updateRestaurant(nextSettings);
+    try {
+      await updateRestaurant(nextSettings);
+    } catch {
+      return;
+    }
     setSettings(nextSettings);
     setPinDraft("");
     setPinError("");
@@ -45,12 +49,12 @@ export function RestaurantSettings() {
   }
 
   function updateMealPeriod(id: string, updates: { start?: string; end?: string }): void {
-    setSettings({
-      ...settings,
-      mealPeriods: settings.mealPeriods.map((entry) => (
+    setSettings((currentSettings) => ({
+      ...currentSettings,
+      mealPeriods: currentSettings.mealPeriods.map((entry) => (
         entry.id === id ? { ...entry, ...updates } : entry
       )),
-    });
+    }));
   }
 
   return (
@@ -58,16 +62,16 @@ export function RestaurantSettings() {
       <SectionHeader description={t("restaurantSettings.description")} title={t("restaurantSettings.title")} />
       {saved && <div className="save-message">{t("restaurantSettings.saved")}</div>}
       <form className="settings-panel" onSubmit={save}>
-        <label><span>{t("restaurantSettings.name")}</span><input onChange={(event) => setSettings({ ...settings, name: event.target.value })} value={settings.name} /></label>
-        <label><span>{t("restaurantSettings.phone")}</span><input onChange={(event) => setSettings({ ...settings, phone: event.target.value })} value={settings.phone} /></label>
-        <label><span>{t("restaurantSettings.address")}</span><input onChange={(event) => setSettings({ ...settings, address: event.target.value })} value={settings.address} /></label>
+        <label><span>{t("restaurantSettings.name")}</span><input onChange={(event) => setSettings((currentSettings) => ({ ...currentSettings, name: event.target.value }))} value={settings.name} /></label>
+        <label><span>{t("restaurantSettings.phone")}</span><input onChange={(event) => setSettings((currentSettings) => ({ ...currentSettings, phone: event.target.value }))} value={settings.phone} /></label>
+        <label><span>{t("restaurantSettings.address")}</span><input onChange={(event) => setSettings((currentSettings) => ({ ...currentSettings, address: event.target.value }))} value={settings.address} /></label>
         <label>
           <span>{t("restaurantSettings.language")}</span>
           <select
             onChange={(event) => {
               const nextLanguage = displayNameToLanguageCode(event.target.value);
               setLanguage(nextLanguage);
-              setSettings({ ...settings, language: languageToDisplayName(nextLanguage) });
+              setSettings((currentSettings) => ({ ...currentSettings, language: languageToDisplayName(nextLanguage) }));
             }}
             value={settings.language}
           >

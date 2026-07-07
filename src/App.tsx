@@ -107,6 +107,34 @@ function App() {
   }, [loadSettings]);
 
   useEffect(() => {
+    if (getDataSourceMode() !== "supabase") return undefined;
+
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    void import("./services/supabaseSettingsService").then(({
+      subscribeSupabasePrinterSettingsChanges,
+      subscribeSupabaseRestaurantSettingsChanges,
+    }) => {
+      if (cancelled) return;
+      const cleanupPrinterSettings = subscribeSupabasePrinterSettingsChanges(() => {
+        void loadSettings().catch((error) => reportAsyncError("Realtime printer settings reload failed", error));
+      });
+      const cleanupRestaurantSettings = subscribeSupabaseRestaurantSettingsChanges(() => {
+        void loadSettings().catch((error) => reportAsyncError("Realtime restaurant settings reload failed", error));
+      });
+      cleanup = () => {
+        cleanupPrinterSettings();
+        cleanupRestaurantSettings();
+      };
+    }).catch((error) => reportAsyncError("Load Supabase printer settings subscription failed", error));
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
+  }, [loadSettings]);
+
+  useEffect(() => {
     return subscribeToStorage("harbour-admin-menu", () => {
       void loadMenu().catch((error) => reportAsyncError("Reload menu failed", error));
     }, MENU_CHANGE_EVENT);

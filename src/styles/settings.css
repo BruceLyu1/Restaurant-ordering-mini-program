@@ -7,6 +7,14 @@
   padding: 18px;
 }
 
+.printer-settings-page .settings-panel {
+  width: min(100%, 680px);
+}
+
+.printer-settings-page .save-message {
+  width: min(100%, 680px);
+}
+
 .settings-panel label > span {
   color: var(--green-dark);
   display: block;
@@ -23,9 +31,14 @@
 .setting-row {
   align-items: center;
   border-top: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 42px;
   padding-top: 14px;
+}
+
+.printer-settings-page .setting-row {
+  grid-template-columns: minmax(0, 1fr) 42px;
 }
 
 .setting-row strong {
@@ -40,10 +53,33 @@
 }
 
 .settings-panel footer {
-  display: flex;
+  display: grid;
   gap: 8px;
-  justify-content: end;
+  grid-template-columns: 156px 156px;
+  justify-content: flex-end;
   padding-top: 4px;
+}
+
+.printer-settings-page .settings-panel footer {
+  grid-template-columns: 156px 156px;
+}
+
+.settings-panel footer button {
+  min-width: 104px;
+  width: 156px;
+}
+
+.printer-settings-page .settings-panel footer button {
+  width: 156px;
+}
+
+.printer-settings-page .toggle {
+  flex: 0 0 42px;
+  transition: none;
+}
+
+.printer-settings-page .toggle span {
+  transition: none;
 }
 
 .meal-period-settings {
@@ -95,4 +131,8 @@
   margin-bottom: 14px;
   max-width: 680px;
   padding: 11px 13px;
+}
+
+.save-message:empty {
+  visibility: hidden;
 }
