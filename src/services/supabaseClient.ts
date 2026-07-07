@@ -6,9 +6,12 @@ export interface SupabaseRuntimeConfig {
 }
 
 interface SupabaseEnv {
+  VITE_RESTAURANT_SLUG?: string;
   VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   VITE_SUPABASE_URL?: string;
 }
+
+const DEFAULT_RESTAURANT_SLUG = "harbour-demo";
 
 function normalizeSupabaseUrl(value: string): string {
   try {
@@ -29,6 +32,10 @@ export function getSupabaseConfig(env: SupabaseEnv = import.meta.env): SupabaseR
 
 export function isSupabaseConfigured(env: SupabaseEnv = import.meta.env): boolean {
   return getSupabaseConfig(env) !== null;
+}
+
+export function getRestaurantSlug(env: Pick<SupabaseEnv, "VITE_RESTAURANT_SLUG"> = import.meta.env): string {
+  return env.VITE_RESTAURANT_SLUG?.trim() || DEFAULT_RESTAURANT_SLUG;
 }
 
 export function createHarbourSupabaseClient(

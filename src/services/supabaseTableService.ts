@@ -1,7 +1,5 @@
 import type { TableInfo } from "../types";
-import { supabase } from "./supabaseClient";
-
-const RESTAURANT_SLUG = "harbour-demo";
+import { getRestaurantSlug, supabase } from "./supabaseClient";
 
 interface SupabaseRpcResult {
   data: unknown;
@@ -43,7 +41,7 @@ export async function saveSupabaseTables(
       number: table.number,
       seats: table.seats,
     })),
-    target_restaurant_slug: RESTAURANT_SLUG,
+    target_restaurant_slug: getRestaurantSlug(),
   });
 
   if (error) throw error;

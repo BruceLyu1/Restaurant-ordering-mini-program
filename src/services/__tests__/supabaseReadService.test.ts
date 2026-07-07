@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   loadSupabaseMenuItems,
   loadSupabasePrinterSettings,
@@ -8,9 +8,9 @@ import {
 
 function createQuery(rows: unknown[], error: Error | null = null) {
   const query = {
-    eq: () => query,
-    maybeSingle: async () => ({ data: rows[0] ?? null, error }),
-    order: () => query,
+    eq: vi.fn(() => query),
+    maybeSingle: vi.fn(async () => ({ data: rows[0] ?? null, error })),
+    order: vi.fn(() => query),
     single: async () => ({ data: rows[0] ?? null, error }),
     then: (resolve: (value: { data: unknown[]; error: Error | null }) => void) => (
       Promise.resolve({ data: rows, error }).then(resolve)
@@ -107,6 +107,7 @@ describe("supabaseReadService", () => {
   it("maps printer settings and table rows", async () => {
     const client = createClient({
       printer_settings: [{ auto_print: false, copies: 2, printer: "Kitchen", sound: true }],
+      restaurants: [{ id: 1 }],
       tables: [{ active: true, number: "01", seats: 4 }],
     });
 
@@ -119,5 +120,25 @@ describe("supabaseReadService", () => {
     await expect(loadSupabaseTables(client)).resolves.toEqual([
       { number: "01", seats: 4, status: "available" },
     ]);
+  });
+
+  it("loads printer settings for the configured restaurant slug instead of a hard-coded restaurant id", async () => {
+    const restaurantsQuery = createQuery([{ id: 9 }]);
+    const printerQuery = createQuery([{ auto_print: true, copies: 3, printer: "Kitchen", sound: false }]);
+    const client = {
+      from: vi.fn((table: string) => ({
+        select: () => (table === "restaurants" ? restaurantsQuery : printerQuery),
+      })),
+    };
+
+    await expect(loadSupabasePrinterSettings(client)).resolves.toEqual({
+      autoPrint: true,
+      copies: "3",
+      printer: "Kitchen",
+      sound: false,
+    });
+
+    expect(restaurantsQuery.eq).toHaveBeenCalledWith("slug", "harbour-demo");
+    expect(printerQuery.eq).toHaveBeenCalledWith("restaurant_id", 9);
   });
 });

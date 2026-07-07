@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_DATA_SOURCE?: string;
+  readonly VITE_RESTAURANT_SLUG?: string;
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   readonly VITE_SUPABASE_URL?: string;
 }

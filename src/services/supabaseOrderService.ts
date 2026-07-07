@@ -1,7 +1,5 @@
 import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings } from "../types";
-import { supabase } from "./supabaseClient";
-
-const RESTAURANT_SLUG = "harbour-demo";
+import { getRestaurantSlug, supabase } from "./supabaseClient";
 
 interface PlaceSupabaseOrderInput {
   activeMealPeriod: MealPeriod | null;
@@ -123,7 +121,7 @@ export async function placeSupabaseOrder(
       quantity: item.quantity,
     })),
     target_meal_period_id: activeMealPeriod?.id ?? null,
-    target_restaurant_slug: RESTAURANT_SLUG,
+    target_restaurant_slug: getRestaurantSlug(),
     target_table_number: table,
   });
   if (error) throw error;
@@ -154,7 +152,7 @@ export async function updateSupabaseOrderStatus(
   const { error } = await assertRpcClient(client).rpc("update_order_status", {
     next_status: status,
     target_order_id: id,
-    target_restaurant_slug: RESTAURANT_SLUG,
+    target_restaurant_slug: getRestaurantSlug(),
   });
   if (error) throw error;
 }

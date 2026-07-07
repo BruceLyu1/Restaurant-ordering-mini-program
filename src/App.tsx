@@ -50,8 +50,9 @@ function App() {
   useEffect(() => {
     void loadMenu().catch((error) => reportAsyncError("Load menu failed", error));
     void loadSettings().catch((error) => reportAsyncError("Load settings failed", error));
+    void loadStaff().catch((error) => reportAsyncError("Load staff failed", error));
     void loadTables().catch((error) => reportAsyncError("Load tables failed", error));
-  }, [loadMenu, loadSettings, loadTables]);
+  }, [loadMenu, loadSettings, loadStaff, loadTables]);
 
   useEffect(() => {
     void loadOrders(menuItems).catch((error) => reportAsyncError("Load orders failed", error));
@@ -162,6 +163,24 @@ function App() {
     return subscribeToStorage("harbour-admin-staff", () => {
       void Promise.resolve(loadStaff()).catch((error) => reportAsyncError("Reload staff failed", error));
     }, STAFF_CHANGE_EVENT);
+  }, [loadStaff]);
+
+  useEffect(() => {
+    if (getDataSourceMode() !== "supabase") return undefined;
+
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    void import("./services/supabaseStaffService").then(({ subscribeSupabaseStaffChanges }) => {
+      if (cancelled) return;
+      cleanup = subscribeSupabaseStaffChanges(() => {
+        void loadStaff().catch((error) => reportAsyncError("Realtime staff reload failed", error));
+      });
+    }).catch((error) => reportAsyncError("Load Supabase staff subscription failed", error));
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, [loadStaff]);
 
   useEffect(() => {

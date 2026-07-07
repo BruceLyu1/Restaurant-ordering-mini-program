@@ -1,7 +1,5 @@
 import type { MenuItem } from "../types";
-import { supabase } from "./supabaseClient";
-
-const RESTAURANT_SLUG = "harbour-demo";
+import { getRestaurantSlug, supabase } from "./supabaseClient";
 
 interface SupabaseRpcResult {
   data: unknown;
@@ -92,7 +90,7 @@ export async function saveSupabaseMenuItems(
       sold_out: item.soldOut,
       sort_order: index + 1,
     })),
-    target_restaurant_slug: RESTAURANT_SLUG,
+    target_restaurant_slug: getRestaurantSlug(),
   });
 
   if (error) throw error;

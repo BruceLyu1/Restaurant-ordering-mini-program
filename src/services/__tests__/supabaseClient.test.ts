@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import {
   createHarbourSupabaseClient,
+  getRestaurantSlug,
   getSupabaseConfig,
   isSupabaseConfigured,
 } from "../supabaseClient";
@@ -46,6 +47,11 @@ describe("supabase client configuration", () => {
       VITE_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
       VITE_SUPABASE_URL: "https://example.supabase.co",
     })).toBe(true);
+  });
+
+  it("uses harbour-demo as the default restaurant slug and trims env overrides", () => {
+    expect(getRestaurantSlug({})).toBe("harbour-demo");
+    expect(getRestaurantSlug({ VITE_RESTAURANT_SLUG: " harbour-branch " })).toBe("harbour-branch");
   });
 
   it("creates a Supabase client only when config is complete", () => {

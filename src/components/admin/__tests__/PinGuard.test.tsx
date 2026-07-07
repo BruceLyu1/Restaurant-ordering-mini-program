@@ -1,6 +1,6 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "../../../i18n/LanguageContext";
 import { useSettingsStore } from "../../../stores/settingsStore";
 import { PinGuard } from "../PinGuard";
@@ -20,7 +20,12 @@ describe("PinGuard", () => {
   beforeEach(() => {
     window.localStorage.clear();
     window.sessionStorage.clear();
+    vi.useRealTimers();
     useSettingsStore.getState().load();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("shows the PIN form and hides children by default", () => {
@@ -59,6 +64,33 @@ describe("PinGuard", () => {
       clipboardData: { getData: () => "000000" },
     });
 
+    expect(screen.getByText("Protected Admin")).toBeTruthy();
+  });
+
+  it("locks after five incorrect PIN attempts and unlocks attempts after five minutes", () => {
+    vi.useFakeTimers();
+    renderGuard();
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      fireEvent.paste(screen.getByTestId("pin-digits"), {
+        clipboardData: { getData: () => "123456" },
+      });
+      act(() => {
+        vi.advanceTimersByTime(600);
+      });
+    }
+
+    expect(screen.getByText("Too many incorrect attempts. Try again in 5 minutes.")).toBeTruthy();
+    expect((screen.getByLabelText("Digit 1") as HTMLInputElement).disabled).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(5 * 60 * 1000);
+    });
+    expect((screen.getByLabelText("Digit 1") as HTMLInputElement).disabled).toBe(false);
+
+    fireEvent.paste(screen.getByTestId("pin-digits"), {
+      clipboardData: { getData: () => "000000" },
+    });
     expect(screen.getByText("Protected Admin")).toBeTruthy();
   });
 });

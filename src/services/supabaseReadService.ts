@@ -1,6 +1,6 @@
 import type { MealPeriod, MenuItem, PrinterSettings, RestaurantSettings, TableInfo } from "../types";
 import { DEFAULT_PRINTER_SETTINGS, DEFAULT_RESTAURANT_SETTINGS } from "./settingsService";
-import { supabase } from "./supabaseClient";
+import { getRestaurantSlug, supabase } from "./supabaseClient";
 
 interface SupabaseQueryResult {
   data: unknown;
@@ -87,6 +87,16 @@ function mapMenuItem(row: MenuItemRow): MenuItem {
   };
 }
 
+async function loadRestaurantRow(db: SupabaseLike): Promise<RestaurantRow> {
+  const { data: restaurant, error } = await db
+    .from("restaurants")
+    .select("id,name,phone,address,default_language")
+    .eq("slug", getRestaurantSlug())
+    .single();
+  if (error) throw error;
+  return restaurant as RestaurantRow;
+}
+
 export async function loadSupabaseMenuItems(client: SupabaseLike | null = supabase as SupabaseLike | null): Promise<MenuItem[]> {
   const { data, error } = await assertSupabaseClient(client)
     .from("menu_items")
@@ -100,21 +110,15 @@ export async function loadSupabaseMenuItems(client: SupabaseLike | null = supaba
 
 export async function loadSupabaseRestaurantSettings(client: SupabaseLike | null = supabase as SupabaseLike | null): Promise<RestaurantSettings> {
   const db = assertSupabaseClient(client);
-  const { data: restaurant, error: restaurantError } = await db
-    .from("restaurants")
-    .select("id,name,phone,address,default_language")
-    .eq("slug", "harbour-demo")
-    .single();
-  if (restaurantError) throw restaurantError;
+  const restaurantRow = await loadRestaurantRow(db);
 
   const { data: settings, error: settingsError } = await db
     .from("restaurant_settings")
     .select("meal_periods")
-    .eq("restaurant_id", (restaurant as RestaurantRow).id)
+    .eq("restaurant_id", restaurantRow.id)
     .maybeSingle();
   if (settingsError) throw settingsError;
 
-  const restaurantRow = restaurant as RestaurantRow;
   const settingsRow = settings as RestaurantSettingsRow | null;
 
   return {
@@ -128,10 +132,12 @@ export async function loadSupabaseRestaurantSettings(client: SupabaseLike | null
 }
 
 export async function loadSupabasePrinterSettings(client: SupabaseLike | null = supabase as SupabaseLike | null): Promise<PrinterSettings> {
+  const db = assertSupabaseClient(client);
+  const restaurantRow = await loadRestaurantRow(db);
   const { data, error } = await assertSupabaseClient(client)
     .from("printer_settings")
     .select("auto_print,sound,printer,copies")
-    .eq("restaurant_id", 1)
+    .eq("restaurant_id", restaurantRow.id)
     .maybeSingle();
 
   if (error) throw error;
