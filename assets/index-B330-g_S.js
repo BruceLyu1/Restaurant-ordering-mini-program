@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./supabaseReadService-yvgAUnvr.js","./supabaseClient-DHMtQ5c0.js","./supabaseOrderService-Py6suClD.js","./supabaseMenuService-mzFwoyJY.js","./supabaseTableService-DkkhtM2S.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./supabaseReadService-CB0yAXd6.js","./supabaseClient-DHMtQ5c0.js","./supabaseSettingsService-B8yWDYj8.js","./supabaseOrderService-Py6suClD.js","./supabaseMenuService-mzFwoyJY.js","./supabaseTableService-DkkhtM2S.js"])))=>i.map(i=>d[i]);
 true               && (function polyfill() {
     const relList = document.createElement("link").relList;
     if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -17445,7 +17445,7 @@ async function loadRestaurantSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadRestaurantSettings();
     try {
-        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-yvgAUnvr.js');return { loadSupabaseRestaurantSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabaseRestaurantSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabaseRestaurantSettings();
     }
     catch {
@@ -17454,6 +17454,14 @@ async function loadRestaurantSettingsAsync() {
 }
 function saveRestaurantSettings(settings) {
     writeStorage(SETTINGS_STORAGE_KEY, settings, SETTINGS_CHANGE_EVENT);
+}
+async function saveRestaurantSettingsAsync(settings) {
+    if (getDataSourceMode() !== "supabase") {
+        saveRestaurantSettings(settings);
+        return;
+    }
+    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-B8yWDYj8.js');return { saveSupabaseRestaurantSettings }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+    await saveSupabaseRestaurantSettings(settings);
 }
 function loadPrinterSettings() {
     return {
@@ -17465,7 +17473,7 @@ async function loadPrinterSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadPrinterSettings();
     try {
-        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-yvgAUnvr.js');return { loadSupabasePrinterSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabasePrinterSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabasePrinterSettings();
     }
     catch {
@@ -17474,6 +17482,14 @@ async function loadPrinterSettingsAsync() {
 }
 function savePrinterSettings(settings) {
     writeStorage(PRINTER_STORAGE_KEY, settings, PRINTER_CHANGE_EVENT);
+}
+async function savePrinterSettingsAsync(settings) {
+    if (getDataSourceMode() !== "supabase") {
+        savePrinterSettings(settings);
+        return;
+    }
+    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-B8yWDYj8.js');return { saveSupabasePrinterSettings }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+    await saveSupabasePrinterSettings(settings);
 }
 function timeToMinutes(time) {
     if (!/^\d{2}:\d{2}$/.test(time || ""))
@@ -18400,29 +18416,161 @@ const createImpl = (createState) => {
 };
 const create = ((createState) => createState ? createImpl(createState) : createImpl);
 
-const useSettingsStore = create((set) => ({
+let printerSaveQueue = Promise.resolve();
+let restaurantSaveQueue = Promise.resolve();
+let pendingPrinterSaves = 0;
+let pendingRestaurantSaves = 0;
+let queuedSupabaseLoad$1 = false;
+let printerVersion = 0;
+let restaurantVersion = 0;
+let pendingPrinterSettings = null;
+let pendingRestaurantSettings = null;
+function arePrinterSettingsEqual(first, second) {
+    return first.autoPrint === second.autoPrint &&
+        first.copies === second.copies &&
+        first.printer === second.printer &&
+        first.sound === second.sound;
+}
+function applyPendingPrinterSettings(settings) {
+    if (!pendingPrinterSettings)
+        return settings;
+    if (arePrinterSettingsEqual(settings, pendingPrinterSettings.settings)) {
+        pendingPrinterSettings = null;
+        return settings;
+    }
+    return pendingPrinterSettings.settings;
+}
+function areMealPeriodsEqual(first, second) {
+    return JSON.stringify(first) === JSON.stringify(second);
+}
+function areRestaurantSettingsEqual(first, second, options = {}) {
+    const includePin = options.includePin ?? true;
+    return first.address === second.address &&
+        first.language === second.language &&
+        areMealPeriodsEqual(first.mealPeriods, second.mealPeriods) &&
+        first.name === second.name &&
+        first.phone === second.phone &&
+        (!includePin || first.pin === second.pin);
+}
+function applyPendingRestaurantSettings(settings) {
+    if (!pendingRestaurantSettings)
+        return settings;
+    if (areRestaurantSettingsEqual(settings, pendingRestaurantSettings.settings, { includePin: false })) {
+        const nextSettings = { ...settings, pin: pendingRestaurantSettings.settings.pin };
+        pendingRestaurantSettings = null;
+        return nextSettings;
+    }
+    return pendingRestaurantSettings.settings;
+}
+function hasPendingSettingsSaves() {
+    return pendingPrinterSaves > 0 || pendingRestaurantSaves > 0;
+}
+async function loadRemoteSettings() {
+    const [printer, restaurant] = await Promise.all([
+        loadPrinterSettingsAsync(),
+        loadRestaurantSettingsAsync(),
+    ]);
+    return {
+        printer: applyPendingPrinterSettings(printer),
+        restaurant: applyPendingRestaurantSettings(restaurant),
+    };
+}
+const useSettingsStore = create((set, get) => ({
     printer: loadPrinterSettings(),
     restaurant: loadRestaurantSettings(),
     load: async () => {
-        set({
-            printer: loadPrinterSettings(),
-            restaurant: loadRestaurantSettings(),
-        });
-        const [printer, restaurant] = await Promise.all([
-            loadPrinterSettingsAsync(),
-            loadRestaurantSettingsAsync(),
-        ]);
-        set({ printer, restaurant });
+        if (getDataSourceMode() !== "supabase") {
+            set({
+                printer: loadPrinterSettings(),
+                restaurant: loadRestaurantSettings(),
+            });
+            return;
+        }
+        if (hasPendingSettingsSaves()) {
+            queuedSupabaseLoad$1 = true;
+            return;
+        }
+        set(await loadRemoteSettings());
     },
-    updatePrinter: (settings) => {
-        savePrinterSettings(settings);
+    updatePrinter: async (settings) => {
+        const previous = get().printer;
+        const shouldProtectPrinter = getDataSourceMode() === "supabase";
+        const version = printerVersion + 1;
+        printerVersion = version;
+        if (shouldProtectPrinter) {
+            pendingPrinterSettings = { settings, version };
+        }
         set({ printer: settings });
+        try {
+            await queuePrinterSave(settings, set);
+        }
+        catch (error) {
+            if (pendingPrinterSettings?.version === version) {
+                pendingPrinterSettings = null;
+                if (arePrinterSettingsEqual(get().printer, settings))
+                    set({ printer: previous });
+            }
+            else if (!shouldProtectPrinter && get().printer === settings) {
+                set({ printer: previous });
+            }
+            throw error;
+        }
     },
-    updateRestaurant: (settings) => {
-        saveRestaurantSettings(settings);
+    updateRestaurant: async (settings) => {
+        const previous = get().restaurant;
+        const shouldProtectRestaurant = getDataSourceMode() === "supabase";
+        const version = restaurantVersion + 1;
+        restaurantVersion = version;
+        if (shouldProtectRestaurant) {
+            pendingRestaurantSettings = { settings, version };
+        }
         set({ restaurant: settings });
+        try {
+            await queueRestaurantSave(settings, set);
+        }
+        catch (error) {
+            if (pendingRestaurantSettings?.version === version) {
+                pendingRestaurantSettings = null;
+                if (areRestaurantSettingsEqual(get().restaurant, settings))
+                    set({ restaurant: previous });
+            }
+            else if (!shouldProtectRestaurant && areRestaurantSettingsEqual(get().restaurant, settings)) {
+                set({ restaurant: previous });
+            }
+            throw error;
+        }
     },
 }));
+async function queuePrinterSave(settings, set) {
+    pendingPrinterSaves += 1;
+    const saveTask = printerSaveQueue.then(() => savePrinterSettingsAsync(settings));
+    printerSaveQueue = saveTask.catch(() => undefined);
+    try {
+        await saveTask;
+    }
+    finally {
+        pendingPrinterSaves -= 1;
+        if (!hasPendingSettingsSaves() && queuedSupabaseLoad$1) {
+            queuedSupabaseLoad$1 = false;
+            set(await loadRemoteSettings());
+        }
+    }
+}
+async function queueRestaurantSave(settings, set) {
+    pendingRestaurantSaves += 1;
+    const saveTask = restaurantSaveQueue.then(() => saveRestaurantSettingsAsync(settings));
+    restaurantSaveQueue = saveTask.catch(() => undefined);
+    try {
+        await saveTask;
+    }
+    finally {
+        pendingRestaurantSaves -= 1;
+        if (!hasPendingSettingsSaves() && queuedSupabaseLoad$1) {
+            queuedSupabaseLoad$1 = false;
+            set(await loadRemoteSettings());
+        }
+    }
+}
 
 const PIN_LENGTH = 6;
 const SESSION_KEY = "harbour-admin-unlocked";
@@ -18639,7 +18787,7 @@ async function loadOrdersAsync(menuItems) {
     if (getDataSourceMode() !== "supabase")
         return loadOrders(menuItems);
     try {
-        const { loadSupabaseOrders } = await __vitePreload(async () => { const { loadSupabaseOrders } = await import('./supabaseOrderService-Py6suClD.js');return { loadSupabaseOrders }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+        const { loadSupabaseOrders } = await __vitePreload(async () => { const { loadSupabaseOrders } = await import('./supabaseOrderService-Py6suClD.js');return { loadSupabaseOrders }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
         return await loadSupabaseOrders();
     }
     catch {
@@ -18671,7 +18819,7 @@ async function placeOrderAsync(params) {
     if (getDataSourceMode() !== "supabase")
         return placeOrder(params);
     try {
-        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-Py6suClD.js');return { placeSupabaseOrder }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-Py6suClD.js');return { placeSupabaseOrder }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
         return await placeSupabaseOrder(params);
     }
     catch {
@@ -18687,7 +18835,7 @@ async function updateOrderStatusAsync(id, status, menuItems) {
         return;
     }
     try {
-        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-Py6suClD.js');return { updateSupabaseOrderStatus }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-Py6suClD.js');return { updateSupabaseOrderStatus }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
         await updateSupabaseOrderStatus(id, status);
     }
     catch {
@@ -18844,7 +18992,7 @@ async function loadMenuItemsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadMenuItems();
     try {
-        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-yvgAUnvr.js');return { loadSupabaseMenuItems }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabaseMenuItems }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabaseMenuItems();
     }
     catch {
@@ -18859,13 +19007,13 @@ async function saveMenuItemsAsync(items) {
         saveMenuItems(items);
         return;
     }
-    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-mzFwoyJY.js');return { saveSupabaseMenuItems }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
+    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-mzFwoyJY.js');return { saveSupabaseMenuItems }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
     await saveSupabaseMenuItems(items);
 }
 async function uploadDishPhotoAsync(dataUrl) {
     if (getDataSourceMode() !== "supabase")
         return dataUrl;
-    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-mzFwoyJY.js');return { uploadSupabaseDishPhoto }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
+    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-mzFwoyJY.js');return { uploadSupabaseDishPhoto }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
     return uploadSupabaseDishPhoto(dataUrl);
 }
 function toggleSoldOut(items, id) {
@@ -19022,7 +19170,7 @@ async function loadTablesAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadTables();
     try {
-        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-yvgAUnvr.js');return { loadSupabaseTables }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabaseTables }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabaseTables();
     }
     catch {
@@ -19037,7 +19185,7 @@ async function saveTablesAsync(tables) {
         saveTables(tables);
         return;
     }
-    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DkkhtM2S.js');return { saveSupabaseTables }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
+    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DkkhtM2S.js');return { saveSupabaseTables }},true              ?__vite__mapDeps([5,1]):void 0,import.meta.url);
     await saveSupabaseTables(tables);
 }
 
@@ -19491,7 +19639,11 @@ function PrinterSettings() {
         setMessage(message);
         window.setTimeout(() => setMessage(""), 2400);
     }
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("printerSettings.description"), title: t("printerSettings.title") }), message && jsx("div", { className: "save-message", children: message }), jsxs("section", { className: "settings-panel", children: [jsxs("label", { children: [jsx("span", { children: t("printerSettings.printer") }), jsxs("select", { onChange: (event) => updatePrinter({ ...settings, printer: event.target.value }), value: settings.printer, children: [jsx("option", { children: t("printerSettings.kitchenPrinter") }), jsx("option", { children: t("printerSettings.cashierPrinter") })] })] }), jsxs("label", { children: [jsx("span", { children: t("printerSettings.copies") }), jsxs("select", { onChange: (event) => updatePrinter({ ...settings, copies: event.target.value }), value: settings.copies, children: [jsx("option", { children: "1" }), jsx("option", { children: "2" }), jsx("option", { children: "3" })] })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.autoPrint") }), jsx("p", { children: t("printerSettings.autoPrintDesc") })] }), jsx(Toggle, { checked: settings.autoPrint, label: t("printerSettings.autoPrint"), onChange: () => updatePrinter({ ...settings, autoPrint: !settings.autoPrint }) })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.sound") }), jsx("p", { children: t("printerSettings.soundDesc") })] }), jsx(Toggle, { checked: settings.sound, label: t("printerSettings.sound"), onChange: () => updatePrinter({ ...settings, sound: !settings.sound }) })] }), jsxs("footer", { children: [jsx("button", { className: "management-secondary", onClick: () => save(t("printerSettings.testQueued")), type: "button", children: t("printerSettings.printTest") }), jsx("button", { className: "management-primary", onClick: () => save(t("printerSettings.saved")), type: "button", children: t("printerSettings.save") })] })] })] }));
+    function update(updates) {
+        const currentSettings = useSettingsStore.getState().printer;
+        void updatePrinter({ ...currentSettings, ...updates }).catch(() => undefined);
+    }
+    return (jsxs("section", { className: "management-page printer-settings-page", children: [jsx(SectionHeader, { description: t("printerSettings.description"), title: t("printerSettings.title") }), jsx("div", { "aria-live": "polite", className: "save-message", role: "status", children: message }), jsxs("section", { className: "settings-panel", children: [jsxs("label", { children: [jsx("span", { children: t("printerSettings.printer") }), jsxs("select", { onChange: (event) => update({ printer: event.target.value }), value: settings.printer, children: [jsx("option", { children: t("printerSettings.kitchenPrinter") }), jsx("option", { children: t("printerSettings.cashierPrinter") })] })] }), jsxs("label", { children: [jsx("span", { children: t("printerSettings.copies") }), jsxs("select", { onChange: (event) => update({ copies: event.target.value }), value: settings.copies, children: [jsx("option", { children: "1" }), jsx("option", { children: "2" }), jsx("option", { children: "3" })] })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.autoPrint") }), jsx("p", { children: t("printerSettings.autoPrintDesc") })] }), jsx(Toggle, { checked: settings.autoPrint, label: t("printerSettings.autoPrint"), onChange: () => update({ autoPrint: !useSettingsStore.getState().printer.autoPrint }) })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.sound") }), jsx("p", { children: t("printerSettings.soundDesc") })] }), jsx(Toggle, { checked: settings.sound, label: t("printerSettings.sound"), onChange: () => update({ sound: !useSettingsStore.getState().printer.sound }) })] }), jsxs("footer", { children: [jsx("button", { className: "management-secondary", onClick: () => save(t("printerSettings.testQueued")), type: "button", children: t("printerSettings.printTest") }), jsx("button", { className: "management-primary", onClick: () => save(t("printerSettings.saved")), type: "button", children: t("printerSettings.save") })] })] })] }));
 }
 
 function getSalesRanking(orders, menuItems) {
@@ -19536,14 +19688,19 @@ function RestaurantSettings() {
             language: languageToDisplayName(language),
         });
     }, [language, restaurant]);
-    function save(event) {
+    async function save(event) {
         event.preventDefault();
         if (pinDraft && !/^\d{6}$/.test(pinDraft)) {
             setPinError(t("restaurantSettings.pinValidation"));
             return;
         }
         const nextSettings = pinDraft ? { ...settings, pin: pinDraft } : settings;
-        updateRestaurant(nextSettings);
+        try {
+            await updateRestaurant(nextSettings);
+        }
+        catch {
+            return;
+        }
         setSettings(nextSettings);
         setPinDraft("");
         setPinError("");
@@ -19552,15 +19709,15 @@ function RestaurantSettings() {
         window.setTimeout(() => setSaved(false), 2400);
     }
     function updateMealPeriod(id, updates) {
-        setSettings({
-            ...settings,
-            mealPeriods: settings.mealPeriods.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry)),
-        });
+        setSettings((currentSettings) => ({
+            ...currentSettings,
+            mealPeriods: currentSettings.mealPeriods.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry)),
+        }));
     }
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("restaurantSettings.description"), title: t("restaurantSettings.title") }), saved && jsx("div", { className: "save-message", children: t("restaurantSettings.saved") }), jsxs("form", { className: "settings-panel", onSubmit: save, children: [jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.name") }), jsx("input", { onChange: (event) => setSettings({ ...settings, name: event.target.value }), value: settings.name })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.phone") }), jsx("input", { onChange: (event) => setSettings({ ...settings, phone: event.target.value }), value: settings.phone })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.address") }), jsx("input", { onChange: (event) => setSettings({ ...settings, address: event.target.value }), value: settings.address })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.language") }), jsxs("select", { onChange: (event) => {
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("restaurantSettings.description"), title: t("restaurantSettings.title") }), saved && jsx("div", { className: "save-message", children: t("restaurantSettings.saved") }), jsxs("form", { className: "settings-panel", onSubmit: save, children: [jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.name") }), jsx("input", { onChange: (event) => setSettings((currentSettings) => ({ ...currentSettings, name: event.target.value })), value: settings.name })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.phone") }), jsx("input", { onChange: (event) => setSettings((currentSettings) => ({ ...currentSettings, phone: event.target.value })), value: settings.phone })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.address") }), jsx("input", { onChange: (event) => setSettings((currentSettings) => ({ ...currentSettings, address: event.target.value })), value: settings.address })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.language") }), jsxs("select", { onChange: (event) => {
                                     const nextLanguage = displayNameToLanguageCode(event.target.value);
                                     setLanguage(nextLanguage);
-                                    setSettings({ ...settings, language: languageToDisplayName(nextLanguage) });
+                                    setSettings((currentSettings) => ({ ...currentSettings, language: languageToDisplayName(nextLanguage) }));
                                 }, value: settings.language, children: [jsx("option", { children: languageToDisplayName("zh-Hant") }), jsx("option", { children: languageToDisplayName("en") })] })] }), jsxs("section", { className: "meal-period-settings", children: [jsxs("header", { children: [jsx("h2", { children: t("restaurantSettings.mealPeriods") }), jsx("p", { children: t("restaurantSettings.mealPeriodsDescription") })] }), settings.mealPeriods.map((period) => (jsxs("div", { className: "meal-period-row", children: [jsx("strong", { children: period.name }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.start") }), jsx("input", { "aria-label": t("restaurantSettings.startTime", { name: period.name }), onChange: (event) => updateMealPeriod(period.id, { start: event.target.value }), required: true, type: "time", value: period.start })] }), jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.end") }), jsx("input", { "aria-label": t("restaurantSettings.endTime", { name: period.name }), onChange: (event) => updateMealPeriod(period.id, { end: event.target.value }), required: true, type: "time", value: period.end })] })] }, period.id)))] }), jsxs("section", { className: "meal-period-settings", children: [jsxs("header", { children: [jsx("h2", { children: t("restaurantSettings.changePin") }), jsx("p", { children: t("restaurantSettings.changePinDesc") })] }), jsxs("div", { className: "pin-change-row", children: [jsxs("label", { children: [jsx("span", { children: t("restaurantSettings.newPin") }), jsx("input", { "aria-label": t("restaurantSettings.newPin"), inputMode: "numeric", maxLength: 6, onChange: (event) => {
                                                     setPinDraft(event.target.value.replace(/\D/g, "").slice(0, 6));
                                                     setPinError("");
@@ -19994,7 +20151,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-Py6suClD.js');return { subscribeSupabaseOrderChanges }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-Py6suClD.js');return { subscribeSupabaseOrderChanges }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseOrderChanges(() => {
@@ -20028,6 +20185,30 @@ function App() {
         }, PRINTER_CHANGE_EVENT);
     }, [loadSettings]);
     useEffect(() => {
+        if (getDataSourceMode() !== "supabase")
+            return undefined;
+        let cleanup;
+        let cancelled = false;
+        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-B8yWDYj8.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
+            if (cancelled)
+                return;
+            const cleanupPrinterSettings = subscribeSupabasePrinterSettingsChanges(() => {
+                void loadSettings().catch((error) => reportAsyncError("Realtime printer settings reload failed", error));
+            });
+            const cleanupRestaurantSettings = subscribeSupabaseRestaurantSettingsChanges(() => {
+                void loadSettings().catch((error) => reportAsyncError("Realtime restaurant settings reload failed", error));
+            });
+            cleanup = () => {
+                cleanupPrinterSettings();
+                cleanupRestaurantSettings();
+            };
+        }).catch((error) => reportAsyncError("Load Supabase printer settings subscription failed", error));
+        return () => {
+            cancelled = true;
+            cleanup?.();
+        };
+    }, [loadSettings]);
+    useEffect(() => {
         return subscribeToStorage("harbour-admin-menu", () => {
             void loadMenu().catch((error) => reportAsyncError("Reload menu failed", error));
         }, MENU_CHANGE_EVENT);
@@ -20037,7 +20218,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-mzFwoyJY.js');return { subscribeSupabaseMenuChanges }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-mzFwoyJY.js');return { subscribeSupabaseMenuChanges }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseMenuChanges(() => {
@@ -20064,7 +20245,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DkkhtM2S.js');return { subscribeSupabaseTableChanges }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DkkhtM2S.js');return { subscribeSupabaseTableChanges }},true              ?__vite__mapDeps([5,1]):void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseTableChanges(() => {
