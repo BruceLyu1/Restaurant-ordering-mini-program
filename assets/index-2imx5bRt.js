@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./supabaseReadService-CB0yAXd6.js","./supabaseClient-DHMtQ5c0.js","./supabaseSettingsService-B8yWDYj8.js","./supabaseOrderService-Py6suClD.js","./supabaseMenuService-mzFwoyJY.js","./supabaseTableService-DkkhtM2S.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./supabaseReadService-PspqLRcl.js","./supabaseClient-B54kyZ9v.js","./supabaseSettingsService-BjhWQCl7.js","./supabaseOrderService-CfhcdO8Q.js","./supabaseMenuService-DEZVtd7o.js","./supabaseTableService-CHnY5znf.js","./supabaseStaffService-CjS-hp4t.js"])))=>i.map(i=>d[i]);
 true               && (function polyfill() {
     const relList = document.createElement("link").relList;
     if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -17445,7 +17445,7 @@ async function loadRestaurantSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadRestaurantSettings();
     try {
-        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabaseRestaurantSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-PspqLRcl.js');return { loadSupabaseRestaurantSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabaseRestaurantSettings();
     }
     catch {
@@ -17460,7 +17460,7 @@ async function saveRestaurantSettingsAsync(settings) {
         saveRestaurantSettings(settings);
         return;
     }
-    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-B8yWDYj8.js');return { saveSupabaseRestaurantSettings }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-BjhWQCl7.js');return { saveSupabaseRestaurantSettings }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
     await saveSupabaseRestaurantSettings(settings);
 }
 function loadPrinterSettings() {
@@ -17473,7 +17473,7 @@ async function loadPrinterSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadPrinterSettings();
     try {
-        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabasePrinterSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-PspqLRcl.js');return { loadSupabasePrinterSettings }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabasePrinterSettings();
     }
     catch {
@@ -17488,7 +17488,7 @@ async function savePrinterSettingsAsync(settings) {
         savePrinterSettings(settings);
         return;
     }
-    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-B8yWDYj8.js');return { saveSupabasePrinterSettings }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
+    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-BjhWQCl7.js');return { saveSupabasePrinterSettings }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url);
     await saveSupabasePrinterSettings(settings);
 }
 function timeToMinutes(time) {
@@ -17635,6 +17635,7 @@ const translations = {
                 description: "請輸入 6 位數字密碼以進入後台",
                 digitLabel: "第 {position} 位數字",
                 incorrect: "密碼錯誤，請重新輸入",
+                locked: "錯誤次數過多，請於 {minutes} 分鐘後再試。",
                 reset: "清除",
                 title: "管理員驗證",
             },
@@ -17968,6 +17969,7 @@ const translations = {
                 description: "Enter the 6-digit PIN to access the dashboard",
                 digitLabel: "Digit {position}",
                 incorrect: "Incorrect PIN, please try again",
+                locked: "Too many incorrect attempts. Try again in {minutes} minutes.",
                 reset: "Clear",
                 title: "Admin Verification",
             },
@@ -18420,7 +18422,7 @@ let printerSaveQueue = Promise.resolve();
 let restaurantSaveQueue = Promise.resolve();
 let pendingPrinterSaves = 0;
 let pendingRestaurantSaves = 0;
-let queuedSupabaseLoad$1 = false;
+let queuedSupabaseLoad$2 = false;
 let printerVersion = 0;
 let restaurantVersion = 0;
 let pendingPrinterSettings = null;
@@ -18487,7 +18489,7 @@ const useSettingsStore = create((set, get) => ({
             return;
         }
         if (hasPendingSettingsSaves()) {
-            queuedSupabaseLoad$1 = true;
+            queuedSupabaseLoad$2 = true;
             return;
         }
         set(await loadRemoteSettings());
@@ -18550,8 +18552,8 @@ async function queuePrinterSave(settings, set) {
     }
     finally {
         pendingPrinterSaves -= 1;
-        if (!hasPendingSettingsSaves() && queuedSupabaseLoad$1) {
-            queuedSupabaseLoad$1 = false;
+        if (!hasPendingSettingsSaves() && queuedSupabaseLoad$2) {
+            queuedSupabaseLoad$2 = false;
             set(await loadRemoteSettings());
         }
     }
@@ -18565,17 +18567,40 @@ async function queueRestaurantSave(settings, set) {
     }
     finally {
         pendingRestaurantSaves -= 1;
-        if (!hasPendingSettingsSaves() && queuedSupabaseLoad$1) {
-            queuedSupabaseLoad$1 = false;
+        if (!hasPendingSettingsSaves() && queuedSupabaseLoad$2) {
+            queuedSupabaseLoad$2 = false;
             set(await loadRemoteSettings());
         }
     }
 }
 
 const PIN_LENGTH = 6;
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 5 * 60 * 1000;
 const SESSION_KEY = "harbour-admin-unlocked";
+const ATTEMPTS_KEY = "harbour-admin-pin-attempts";
+const LOCKED_UNTIL_KEY = "harbour-admin-pin-locked-until";
 function createEmptyDigits() {
     return Array.from({ length: PIN_LENGTH }, () => "");
+}
+function readNumberFromSession(key) {
+    const value = Number(window.sessionStorage.getItem(key));
+    return Number.isFinite(value) ? value : 0;
+}
+function readLockedUntilFromSession() {
+    const lockedUntil = readNumberFromSession(LOCKED_UNTIL_KEY);
+    if (lockedUntil > Date.now())
+        return lockedUntil;
+    window.sessionStorage.removeItem(ATTEMPTS_KEY);
+    window.sessionStorage.removeItem(LOCKED_UNTIL_KEY);
+    return 0;
+}
+function pinsMatch(first, second) {
+    let diff = first.length === second.length ? 0 : 1;
+    for (let index = 0; index < PIN_LENGTH; index += 1) {
+        diff |= (first.charCodeAt(index) || 0) ^ (second.charCodeAt(index) || 0);
+    }
+    return diff === 0;
 }
 function PinGuard({ children }) {
     const { t } = useTranslation();
@@ -18583,25 +18608,49 @@ function PinGuard({ children }) {
     const [unlocked, setUnlocked] = useState(() => window.sessionStorage.getItem(SESSION_KEY) === "1");
     const [digits, setDigits] = useState(createEmptyDigits);
     const [error, setError] = useState("");
+    const [lockedUntil, setLockedUntil] = useState(readLockedUntilFromSession);
+    const [failedAttempts, setFailedAttempts] = useState(() => (lockedUntil > Date.now() ? readNumberFromSession(ATTEMPTS_KEY) : 0));
     const inputs = useRef([]);
+    const isLocked = lockedUntil > Date.now();
     const unlock = useCallback(() => {
         window.sessionStorage.setItem(SESSION_KEY, "1");
+        window.sessionStorage.removeItem(ATTEMPTS_KEY);
+        window.sessionStorage.removeItem(LOCKED_UNTIL_KEY);
+        setFailedAttempts(0);
+        setLockedUntil(0);
         setUnlocked(true);
     }, []);
     const reset = useCallback(() => {
         setDigits(createEmptyDigits());
-        setError("");
+        setError(lockedUntil > Date.now() ? t("adminApp.pin.locked", { minutes: 5 }) : "");
         window.setTimeout(() => inputs.current[0]?.focus(), 0);
-    }, []);
+    }, [lockedUntil, t]);
     const verifyPin = useCallback((value) => {
-        if (value === pin) {
+        if (lockedUntil > Date.now()) {
+            setError(t("adminApp.pin.locked", { minutes: 5 }));
+            return;
+        }
+        if (pinsMatch(value, pin)) {
             unlock();
+            return;
+        }
+        const nextAttempts = failedAttempts + 1;
+        setFailedAttempts(nextAttempts);
+        window.sessionStorage.setItem(ATTEMPTS_KEY, String(nextAttempts));
+        if (nextAttempts >= MAX_FAILED_ATTEMPTS) {
+            const nextLockedUntil = Date.now() + LOCK_DURATION_MS;
+            setLockedUntil(nextLockedUntil);
+            window.sessionStorage.setItem(LOCKED_UNTIL_KEY, String(nextLockedUntil));
+            setError(t("adminApp.pin.locked", { minutes: 5 }));
+            setDigits(createEmptyDigits());
             return;
         }
         setError(t("adminApp.pin.incorrect"));
         window.setTimeout(reset, 600);
-    }, [pin, reset, t, unlock]);
+    }, [failedAttempts, lockedUntil, pin, reset, t, unlock]);
     const handleChange = useCallback((index, value) => {
+        if (lockedUntil > Date.now())
+            return;
         if (!/^\d?$/.test(value))
             return;
         const next = [...digits];
@@ -18615,7 +18664,7 @@ function PinGuard({ children }) {
         if (fullPin.length === PIN_LENGTH && next.every(Boolean)) {
             verifyPin(fullPin);
         }
-    }, [digits, verifyPin]);
+    }, [digits, lockedUntil, verifyPin]);
     const handleKeyDown = useCallback((index, event) => {
         if (event.key === "Backspace" && !digits[index] && index > 0) {
             inputs.current[index - 1]?.focus();
@@ -18623,6 +18672,8 @@ function PinGuard({ children }) {
     }, [digits]);
     const handlePaste = useCallback((event) => {
         event.preventDefault();
+        if (lockedUntil > Date.now())
+            return;
         const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, PIN_LENGTH);
         if (!pasted)
             return;
@@ -18638,7 +18689,22 @@ function PinGuard({ children }) {
         else {
             inputs.current[pasted.length]?.focus();
         }
-    }, [verifyPin]);
+    }, [lockedUntil, verifyPin]);
+    useEffect(() => {
+        if (!isLocked)
+            return undefined;
+        setError(t("adminApp.pin.locked", { minutes: 5 }));
+        const timeoutId = window.setTimeout(() => {
+            window.sessionStorage.removeItem(ATTEMPTS_KEY);
+            window.sessionStorage.removeItem(LOCKED_UNTIL_KEY);
+            setFailedAttempts(0);
+            setLockedUntil(0);
+            setError("");
+            setDigits(createEmptyDigits());
+            window.setTimeout(() => inputs.current[0]?.focus(), 0);
+        }, Math.max(lockedUntil - Date.now(), 0));
+        return () => window.clearTimeout(timeoutId);
+    }, [isLocked, lockedUntil, t]);
     useEffect(() => {
         if (!unlocked) {
             inputs.current[0]?.focus();
@@ -18646,7 +18712,7 @@ function PinGuard({ children }) {
     }, [unlocked]);
     if (unlocked)
         return jsx(Fragment, { children: children });
-    return (jsx("main", { className: "pin-guard", children: jsxs("section", { className: "pin-card", children: [jsx("h1", { children: t("adminApp.pin.title") }), jsx("p", { children: t("adminApp.pin.description") }), jsx("div", { className: "pin-digits", "data-testid": "pin-digits", onPaste: handlePaste, children: digits.map((digit, index) => (jsx("input", { "aria-label": t("adminApp.pin.digitLabel", { position: index + 1 }), autoComplete: "off", className: `pin-digit ${error ? "pin-digit-error" : ""}`, inputMode: "numeric", maxLength: 1, onChange: (event) => handleChange(index, event.target.value), onKeyDown: (event) => handleKeyDown(index, event), ref: (element) => {
+    return (jsx("main", { className: "pin-guard", children: jsxs("section", { className: "pin-card", children: [jsx("h1", { children: t("adminApp.pin.title") }), jsx("p", { children: t("adminApp.pin.description") }), jsx("div", { className: "pin-digits", "data-testid": "pin-digits", onPaste: handlePaste, children: digits.map((digit, index) => (jsx("input", { "aria-label": t("adminApp.pin.digitLabel", { position: index + 1 }), autoComplete: "off", className: `pin-digit ${error ? "pin-digit-error" : ""}`, disabled: isLocked, inputMode: "numeric", maxLength: 1, onChange: (event) => handleChange(index, event.target.value), onKeyDown: (event) => handleKeyDown(index, event), ref: (element) => {
                             inputs.current[index] = element;
                         }, type: "text", value: digit }, index))) }), error && jsx("span", { className: "pin-error", children: error }), jsx("button", { className: "management-secondary", onClick: reset, type: "button", children: t("adminApp.pin.reset") })] }) }));
 }
@@ -18787,7 +18853,7 @@ async function loadOrdersAsync(menuItems) {
     if (getDataSourceMode() !== "supabase")
         return loadOrders(menuItems);
     try {
-        const { loadSupabaseOrders } = await __vitePreload(async () => { const { loadSupabaseOrders } = await import('./supabaseOrderService-Py6suClD.js');return { loadSupabaseOrders }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
+        const { loadSupabaseOrders } = await __vitePreload(async () => { const { loadSupabaseOrders } = await import('./supabaseOrderService-CfhcdO8Q.js');return { loadSupabaseOrders }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
         return await loadSupabaseOrders();
     }
     catch {
@@ -18819,7 +18885,7 @@ async function placeOrderAsync(params) {
     if (getDataSourceMode() !== "supabase")
         return placeOrder(params);
     try {
-        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-Py6suClD.js');return { placeSupabaseOrder }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
+        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-CfhcdO8Q.js');return { placeSupabaseOrder }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
         return await placeSupabaseOrder(params);
     }
     catch {
@@ -18835,7 +18901,7 @@ async function updateOrderStatusAsync(id, status, menuItems) {
         return;
     }
     try {
-        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-Py6suClD.js');return { updateSupabaseOrderStatus }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
+        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-CfhcdO8Q.js');return { updateSupabaseOrderStatus }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url);
         await updateSupabaseOrderStatus(id, status);
     }
     catch {
@@ -18992,7 +19058,7 @@ async function loadMenuItemsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadMenuItems();
     try {
-        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabaseMenuItems }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-PspqLRcl.js');return { loadSupabaseMenuItems }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabaseMenuItems();
     }
     catch {
@@ -19007,13 +19073,13 @@ async function saveMenuItemsAsync(items) {
         saveMenuItems(items);
         return;
     }
-    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-mzFwoyJY.js');return { saveSupabaseMenuItems }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
+    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-DEZVtd7o.js');return { saveSupabaseMenuItems }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
     await saveSupabaseMenuItems(items);
 }
 async function uploadDishPhotoAsync(dataUrl) {
     if (getDataSourceMode() !== "supabase")
         return dataUrl;
-    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-mzFwoyJY.js');return { uploadSupabaseDishPhoto }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
+    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-DEZVtd7o.js');return { uploadSupabaseDishPhoto }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url);
     return uploadSupabaseDishPhoto(dataUrl);
 }
 function toggleSoldOut(items, id) {
@@ -19022,7 +19088,7 @@ function toggleSoldOut(items, id) {
 
 let menuSaveQueue = Promise.resolve();
 let pendingMenuSaves = 0;
-let queuedSupabaseLoad = false;
+let queuedSupabaseLoad$1 = false;
 let soldOutVersion = 0;
 const pendingSoldOutById = new Map();
 function applyPendingSoldOut(items) {
@@ -19053,7 +19119,7 @@ const useMenuStore = create((set, get) => ({
     load: async () => {
         if (getDataSourceMode() === "supabase") {
             if (pendingMenuSaves > 0) {
-                queuedSupabaseLoad = true;
+                queuedSupabaseLoad$1 = true;
                 return;
             }
             set({ items: applyPendingSoldOut(await loadMenuItemsAsync()) });
@@ -19109,8 +19175,8 @@ async function queueMenuSave(items, set) {
     }
     finally {
         pendingMenuSaves -= 1;
-        if (pendingMenuSaves === 0 && queuedSupabaseLoad) {
-            queuedSupabaseLoad = false;
+        if (pendingMenuSaves === 0 && queuedSupabaseLoad$1) {
+            queuedSupabaseLoad$1 = false;
             set({ items: applyPendingSoldOut(await loadMenuItemsAsync()) });
         }
     }
@@ -19170,7 +19236,7 @@ async function loadTablesAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadTables();
     try {
-        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-CB0yAXd6.js');return { loadSupabaseTables }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
+        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-PspqLRcl.js');return { loadSupabaseTables }},true              ?__vite__mapDeps([0,1]):void 0,import.meta.url);
         return await loadSupabaseTables();
     }
     catch {
@@ -19185,7 +19251,7 @@ async function saveTablesAsync(tables) {
         saveTables(tables);
         return;
     }
-    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DkkhtM2S.js');return { saveSupabaseTables }},true              ?__vite__mapDeps([5,1]):void 0,import.meta.url);
+    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-CHnY5znf.js');return { saveSupabaseTables }},true              ?__vite__mapDeps([5,1]):void 0,import.meta.url);
     await saveSupabaseTables(tables);
 }
 
@@ -19733,46 +19799,153 @@ const seededStaff = [
 
 const STAFF_STORAGE_KEY = "harbour-admin-staff";
 const STAFF_CHANGE_EVENT = "harbour-staff-change";
+function normalizeStaffRole(role) {
+    const normalized = role.trim().toLowerCase();
+    if (normalized === "manager" || normalized === "經理" || normalized === "经理" || role === "缍撶悊")
+        return "manager";
+    if (normalized === "cashier" ||
+        normalized === "收銀員" ||
+        normalized === "收银员" ||
+        role === "鏀堕妧鍝?")
+        return "cashier";
+    return "floor";
+}
+function getStaffRoleLabelKey(role) {
+    return `staffManagement.roles.${normalizeStaffRole(role)}`;
+}
+function normalizeStaffMember(member) {
+    return {
+        ...member,
+        role: normalizeStaffRole(member.role),
+    };
+}
 function loadStaff() {
     const staff = readStorage(STAFF_STORAGE_KEY, seededStaff);
-    return Array.isArray(staff) ? staff : seededStaff;
+    return (Array.isArray(staff) ? staff : seededStaff).map(normalizeStaffMember);
+}
+async function loadStaffAsync() {
+    if (getDataSourceMode() !== "supabase")
+        return loadStaff();
+    try {
+        const { loadSupabaseStaffMembers } = await __vitePreload(async () => { const { loadSupabaseStaffMembers } = await import('./supabaseStaffService-CjS-hp4t.js');return { loadSupabaseStaffMembers }},true              ?__vite__mapDeps([6,1]):void 0,import.meta.url);
+        return await loadSupabaseStaffMembers();
+    }
+    catch {
+        return loadStaff();
+    }
 }
 function saveStaff(staff) {
-    writeStorage(STAFF_STORAGE_KEY, staff, STAFF_CHANGE_EVENT);
+    writeStorage(STAFF_STORAGE_KEY, staff.map(normalizeStaffMember), STAFF_CHANGE_EVENT);
+}
+async function saveStaffAsync(staff) {
+    const normalized = staff.map(normalizeStaffMember);
+    if (getDataSourceMode() !== "supabase") {
+        saveStaff(normalized);
+        return normalized;
+    }
+    const { saveSupabaseStaffMembers } = await __vitePreload(async () => { const { saveSupabaseStaffMembers } = await import('./supabaseStaffService-CjS-hp4t.js');return { saveSupabaseStaffMembers }},true              ?__vite__mapDeps([6,1]):void 0,import.meta.url);
+    return await saveSupabaseStaffMembers(normalized);
 }
 function createStaffMember(staff, member) {
-    return [...staff, { ...member, id: Date.now() }];
+    return [...staff, { ...member, id: Date.now(), role: normalizeStaffRole(member.role) }];
 }
 function toggleStaffActive(staff, id) {
     return staff.map((member) => (member.id === id ? { ...member, active: !member.active } : member));
 }
 
+let staffSaveQueue = Promise.resolve([]);
+let pendingStaffSaves = 0;
+let queuedSupabaseLoad = false;
+let staffVersion = 0;
+let pendingStaffMembers = null;
+function areStaffMembersEqual(first, second) {
+    return JSON.stringify(first) === JSON.stringify(second);
+}
+function applyPendingStaff(staff) {
+    if (!pendingStaffMembers)
+        return staff;
+    if (areStaffMembersEqual(staff, pendingStaffMembers.staff)) {
+        pendingStaffMembers = null;
+        return staff;
+    }
+    return pendingStaffMembers.staff;
+}
+async function loadRemoteStaff() {
+    return applyPendingStaff(await loadStaffAsync());
+}
 const useStaffStore = create((set) => ({
-    staff: loadStaff(),
-    add: (member) => {
-        set((state) => {
-            const updated = createStaffMember(state.staff, member);
-            saveStaff(updated);
-            return { staff: updated };
-        });
+    staff: getDataSourceMode() === "supabase" ? [] : loadStaff(),
+    add: async (member) => {
+        const previous = useStaffStore.getState().staff;
+        const updated = createStaffMember(previous, member);
+        await updateStaffMembers(updated, previous, set);
     },
-    load: () => {
-        set({ staff: loadStaff() });
+    load: async () => {
+        if (getDataSourceMode() !== "supabase") {
+            set({ staff: loadStaff() });
+            return;
+        }
+        if (pendingStaffSaves > 0) {
+            queuedSupabaseLoad = true;
+            return;
+        }
+        set({ staff: await loadRemoteStaff() });
     },
-    toggleActive: (id) => {
-        set((state) => {
-            const updated = toggleStaffActive(state.staff, id);
-            saveStaff(updated);
-            return { staff: updated };
-        });
+    toggleActive: async (id) => {
+        const previous = useStaffStore.getState().staff;
+        const updated = toggleStaffActive(previous, id);
+        await updateStaffMembers(updated, previous, set);
     },
 }));
+async function updateStaffMembers(staff, previous, set) {
+    const shouldProtectStaff = getDataSourceMode() === "supabase";
+    const version = staffVersion + 1;
+    staffVersion = version;
+    if (shouldProtectStaff) {
+        pendingStaffMembers = { staff, version };
+    }
+    set({ staff });
+    try {
+        if (shouldProtectStaff) {
+            await queueStaffSave(staff, set);
+        }
+        else {
+            saveStaff(staff);
+        }
+    }
+    catch (error) {
+        if (pendingStaffMembers?.version === version) {
+            pendingStaffMembers = null;
+            if (areStaffMembersEqual(useStaffStore.getState().staff, staff))
+                set({ staff: previous });
+        }
+        else if (!shouldProtectStaff && areStaffMembersEqual(useStaffStore.getState().staff, staff)) {
+            set({ staff: previous });
+        }
+        throw error;
+    }
+}
+async function queueStaffSave(staff, set) {
+    pendingStaffSaves += 1;
+    const saveTask = staffSaveQueue.then(() => saveStaffAsync(staff));
+    staffSaveQueue = saveTask.catch(() => []);
+    try {
+        await saveTask;
+    }
+    finally {
+        pendingStaffSaves -= 1;
+        if (pendingStaffSaves === 0 && queuedSupabaseLoad) {
+            queuedSupabaseLoad = false;
+            set({ staff: await loadRemoteStaff() });
+        }
+    }
+}
 
-const DEFAULT_ROLE = "樓面";
+const DEFAULT_ROLE = "floor";
 const ROLE_OPTIONS = [
     { labelKey: "staffManagement.roles.floor", value: DEFAULT_ROLE },
-    { labelKey: "staffManagement.roles.cashier", value: "收銀員" },
-    { labelKey: "staffManagement.roles.manager", value: "經理" },
+    { labelKey: "staffManagement.roles.cashier", value: "cashier" },
+    { labelKey: "staffManagement.roles.manager", value: "manager" },
 ];
 function StaffManagement() {
     const { t } = useTranslation();
@@ -19781,15 +19954,23 @@ function StaffManagement() {
     const toggleActive = useStaffStore((state) => state.toggleActive);
     const [showForm, setShowForm] = useState(false);
     const [draft, setDraft] = useState({ name: "", role: DEFAULT_ROLE });
-    function addStaff(event) {
+    async function addStaff(event) {
         event.preventDefault();
         if (!draft.name.trim())
             return;
-        add({ name: draft.name.trim(), role: draft.role, active: true });
-        setDraft({ name: "", role: DEFAULT_ROLE });
-        setShowForm(false);
+        try {
+            await add({ active: true, name: draft.name.trim(), role: draft.role });
+            setDraft({ name: "", role: DEFAULT_ROLE });
+            setShowForm(false);
+        }
+        catch (error) {
+            console.error("Save staff failed", error);
+        }
     }
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", onClick: () => setShowForm(true), type: "button", children: t("staffManagement.add") }), description: t("staffManagement.description"), title: t("staffManagement.title") }), showForm && (jsxs("form", { className: "inline-form", onSubmit: addStaff, children: [jsx("input", { "aria-label": t("staffManagement.name"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("staffManagement.name"), value: draft.name }), jsx("select", { "aria-label": t("staffManagement.role"), onChange: (event) => setDraft({ ...draft, role: event.target.value }), value: draft.role, children: ROLE_OPTIONS.map((role) => jsx("option", { value: role.value, children: t(role.labelKey) }, role.value)) }), jsx("button", { className: "management-primary", type: "submit", children: t("staffManagement.createAccount") }), jsx("button", { className: "management-secondary", onClick: () => setShowForm(false), type: "button", children: t("common.cancel") })] })), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("staffManagement.table.staff") }), jsx("th", { children: t("staffManagement.table.role") }), jsx("th", { children: t("staffManagement.table.status") }), jsx("th", { children: t("staffManagement.table.enabled") })] }) }), jsx("tbody", { children: staff.map((member) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { children: member.name }) }), jsx("td", { children: member.role }), jsx("td", { children: jsx("span", { className: `list-status ${member.active ? "active" : "inactive"}`, children: member.active ? t("staffManagement.active") : t("staffManagement.inactive") }) }), jsx("td", { children: jsx(Toggle, { checked: member.active, label: t("staffManagement.toggle", { name: member.name }), onChange: () => toggleActive(member.id) }) })] }, member.id))) })] }) })] }));
+    function toggleStaffActive(id) {
+        void toggleActive(id).catch((error) => console.error("Save staff status failed", error));
+    }
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", onClick: () => setShowForm(true), type: "button", children: t("staffManagement.add") }), description: t("staffManagement.description"), title: t("staffManagement.title") }), showForm && (jsxs("form", { className: "inline-form", onSubmit: addStaff, children: [jsx("input", { "aria-label": t("staffManagement.name"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("staffManagement.name"), value: draft.name }), jsx("select", { "aria-label": t("staffManagement.role"), onChange: (event) => setDraft({ ...draft, role: event.target.value }), value: draft.role, children: ROLE_OPTIONS.map((role) => jsx("option", { value: role.value, children: t(role.labelKey) }, role.value)) }), jsx("button", { className: "management-primary", type: "submit", children: t("staffManagement.createAccount") }), jsx("button", { className: "management-secondary", onClick: () => setShowForm(false), type: "button", children: t("common.cancel") })] })), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("staffManagement.table.staff") }), jsx("th", { children: t("staffManagement.table.role") }), jsx("th", { children: t("staffManagement.table.status") }), jsx("th", { children: t("staffManagement.table.enabled") })] }) }), jsx("tbody", { children: staff.map((member) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { children: member.name }) }), jsx("td", { children: t(getStaffRoleLabelKey(member.role)) }), jsx("td", { children: jsx("span", { className: `list-status ${member.active ? "active" : "inactive"}`, children: member.active ? t("staffManagement.active") : t("staffManagement.inactive") }) }), jsx("td", { children: jsx(Toggle, { checked: member.active, label: t("staffManagement.toggle", { name: member.name }), onChange: () => toggleStaffActive(member.id) }) })] }, member.id))) })] }) })] }));
 }
 
 function TableManagement({ guestBaseUrl, tables }) {
@@ -20136,8 +20317,9 @@ function App() {
     useEffect(() => {
         void loadMenu().catch((error) => reportAsyncError("Load menu failed", error));
         void loadSettings().catch((error) => reportAsyncError("Load settings failed", error));
+        void loadStaff().catch((error) => reportAsyncError("Load staff failed", error));
         void loadTables().catch((error) => reportAsyncError("Load tables failed", error));
-    }, [loadMenu, loadSettings, loadTables]);
+    }, [loadMenu, loadSettings, loadStaff, loadTables]);
     useEffect(() => {
         void loadOrders(menuItems).catch((error) => reportAsyncError("Load orders failed", error));
     }, [loadOrders, menuItems]);
@@ -20151,7 +20333,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-Py6suClD.js');return { subscribeSupabaseOrderChanges }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-CfhcdO8Q.js');return { subscribeSupabaseOrderChanges }},true              ?__vite__mapDeps([3,1]):void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseOrderChanges(() => {
@@ -20189,7 +20371,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-B8yWDYj8.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
+        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-BjhWQCl7.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?__vite__mapDeps([2,1]):void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
             if (cancelled)
                 return;
             const cleanupPrinterSettings = subscribeSupabasePrinterSettingsChanges(() => {
@@ -20218,7 +20400,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-mzFwoyJY.js');return { subscribeSupabaseMenuChanges }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-DEZVtd7o.js');return { subscribeSupabaseMenuChanges }},true              ?__vite__mapDeps([4,1]):void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseMenuChanges(() => {
@@ -20236,6 +20418,23 @@ function App() {
         }, STAFF_CHANGE_EVENT);
     }, [loadStaff]);
     useEffect(() => {
+        if (getDataSourceMode() !== "supabase")
+            return undefined;
+        let cleanup;
+        let cancelled = false;
+        void __vitePreload(async () => { const {subscribeSupabaseStaffChanges} = await import('./supabaseStaffService-CjS-hp4t.js');return { subscribeSupabaseStaffChanges }},true              ?__vite__mapDeps([6,1]):void 0,import.meta.url).then(({ subscribeSupabaseStaffChanges }) => {
+            if (cancelled)
+                return;
+            cleanup = subscribeSupabaseStaffChanges(() => {
+                void loadStaff().catch((error) => reportAsyncError("Realtime staff reload failed", error));
+            });
+        }).catch((error) => reportAsyncError("Load Supabase staff subscription failed", error));
+        return () => {
+            cancelled = true;
+            cleanup?.();
+        };
+    }, [loadStaff]);
+    useEffect(() => {
         return subscribeToStorage("harbour-admin-tables", () => {
             void loadTables().catch((error) => reportAsyncError("Reload tables failed", error));
         }, TABLE_CHANGE_EVENT);
@@ -20245,7 +20444,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DkkhtM2S.js');return { subscribeSupabaseTableChanges }},true              ?__vite__mapDeps([5,1]):void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-CHnY5znf.js');return { subscribeSupabaseTableChanges }},true              ?__vite__mapDeps([5,1]):void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseTableChanges(() => {
@@ -20289,4 +20488,4 @@ class ErrorBoundary extends Component {
 
 createRoot(document.getElementById("root")).render(jsx(StrictMode, { children: jsx(LanguageProvider, { children: jsx(ErrorBoundary, { children: jsx(App, {}) }) }) }));
 
-export { DEFAULT_PRINTER_SETTINGS as D, DEFAULT_RESTAURANT_SETTINGS as a };
+export { DEFAULT_PRINTER_SETTINGS as D, DEFAULT_RESTAURANT_SETTINGS as a, normalizeStaffRole as n };

@@ -1,6 +1,5 @@
-import { s as supabase } from './supabaseClient-DHMtQ5c0.js';
+import { s as supabase, g as getRestaurantSlug } from './supabaseClient-B54kyZ9v.js';
 
-const RESTAURANT_SLUG = "harbour-demo";
 function assertSupabaseClient(client) {
     if (!client)
         throw new Error("Supabase is not configured");
@@ -26,7 +25,7 @@ async function saveSupabasePrinterSettings(settings, client = supabase) {
             printer: settings.printer,
             sound: settings.sound,
         },
-        target_restaurant_slug: RESTAURANT_SLUG,
+        target_restaurant_slug: getRestaurantSlug(),
     });
     if (error)
         throw error;
@@ -40,7 +39,7 @@ async function saveSupabaseRestaurantSettings(settings, client = supabase) {
             name: settings.name,
             phone: settings.phone,
         },
-        target_restaurant_slug: RESTAURANT_SLUG,
+        target_restaurant_slug: getRestaurantSlug(),
     });
     if (error)
         throw error;

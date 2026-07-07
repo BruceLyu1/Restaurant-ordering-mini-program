@@ -1,5 +1,5 @@
-import { D as DEFAULT_PRINTER_SETTINGS, a as DEFAULT_RESTAURANT_SETTINGS } from './index-B330-g_S.js';
-import { s as supabase } from './supabaseClient-DHMtQ5c0.js';
+import { D as DEFAULT_PRINTER_SETTINGS, a as DEFAULT_RESTAURANT_SETTINGS } from './index-2imx5bRt.js';
+import { s as supabase, g as getRestaurantSlug } from './supabaseClient-B54kyZ9v.js';
 
 function assertSupabaseClient(client) {
     if (!client)
@@ -33,6 +33,16 @@ function mapMenuItem(row) {
         soldOut: Boolean(row.sold_out),
     };
 }
+async function loadRestaurantRow(db) {
+    const { data: restaurant, error } = await db
+        .from("restaurants")
+        .select("id,name,phone,address,default_language")
+        .eq("slug", getRestaurantSlug())
+        .single();
+    if (error)
+        throw error;
+    return restaurant;
+}
 async function loadSupabaseMenuItems(client = supabase) {
     const { data, error } = await assertSupabaseClient(client)
         .from("menu_items")
@@ -45,21 +55,14 @@ async function loadSupabaseMenuItems(client = supabase) {
 }
 async function loadSupabaseRestaurantSettings(client = supabase) {
     const db = assertSupabaseClient(client);
-    const { data: restaurant, error: restaurantError } = await db
-        .from("restaurants")
-        .select("id,name,phone,address,default_language")
-        .eq("slug", "harbour-demo")
-        .single();
-    if (restaurantError)
-        throw restaurantError;
+    const restaurantRow = await loadRestaurantRow(db);
     const { data: settings, error: settingsError } = await db
         .from("restaurant_settings")
         .select("meal_periods")
-        .eq("restaurant_id", restaurant.id)
+        .eq("restaurant_id", restaurantRow.id)
         .maybeSingle();
     if (settingsError)
         throw settingsError;
-    const restaurantRow = restaurant;
     const settingsRow = settings;
     return {
         address: restaurantRow.address || "",
@@ -71,10 +74,12 @@ async function loadSupabaseRestaurantSettings(client = supabase) {
     };
 }
 async function loadSupabasePrinterSettings(client = supabase) {
+    const db = assertSupabaseClient(client);
+    const restaurantRow = await loadRestaurantRow(db);
     const { data, error } = await assertSupabaseClient(client)
         .from("printer_settings")
         .select("auto_print,sound,printer,copies")
-        .eq("restaurant_id", 1)
+        .eq("restaurant_id", restaurantRow.id)
         .maybeSingle();
     if (error)
         throw error;

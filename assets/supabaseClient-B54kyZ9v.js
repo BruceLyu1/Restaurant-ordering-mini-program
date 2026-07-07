@@ -21837,6 +21837,7 @@ function shouldShowDeprecationWarning() {
 if (shouldShowDeprecationWarning()) console.warn("⚠️  Node.js 20 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 22 or later. For more information, visit: https://github.com/orgs/supabase/discussions/45715");
 
 const __vite_import_meta_env__ = {"BASE_URL": "./", "DEV": false, "MODE": "production", "PROD": true, "SSR": false, "VITE_DATA_SOURCE": "supabase", "VITE_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_tcny5kDIqKNmIOr2wCF3AA_Pq7DACTA", "VITE_SUPABASE_URL": "https://lgdgsbjvlwjhijbwwjor.supabase.co/rest/v1/"};
+const DEFAULT_RESTAURANT_SLUG = "harbour-demo";
 function normalizeSupabaseUrl(value) {
   try {
     return new URL(value).origin;
@@ -21851,6 +21852,9 @@ function getSupabaseConfig(env = __vite_import_meta_env__) {
     return null;
   return { publishableKey, url: normalizeSupabaseUrl(url) };
 }
+function getRestaurantSlug(env = __vite_import_meta_env__) {
+  return env.VITE_RESTAURANT_SLUG?.trim() || DEFAULT_RESTAURANT_SLUG;
+}
 function createHarbourSupabaseClient(config = getSupabaseConfig()) {
   if (!config)
     return null;
@@ -21864,4 +21868,4 @@ function createHarbourSupabaseClient(config = getSupabaseConfig()) {
 }
 const supabase = createHarbourSupabaseClient();
 
-export { supabase as s };
+export { getRestaurantSlug as g, supabase as s };

@@ -1,6 +1,5 @@
-import { s as supabase } from './supabaseClient-DHMtQ5c0.js';
+import { s as supabase, g as getRestaurantSlug } from './supabaseClient-B54kyZ9v.js';
 
-const RESTAURANT_SLUG = "harbour-demo";
 function assertSupabaseClient(client) {
     if (!client)
         throw new Error("Supabase is not configured");
@@ -47,7 +46,7 @@ async function saveSupabaseMenuItems(items, client = supabase) {
             sold_out: item.soldOut,
             sort_order: index + 1,
         })),
-        target_restaurant_slug: RESTAURANT_SLUG,
+        target_restaurant_slug: getRestaurantSlug(),
     });
     if (error)
         throw error;
