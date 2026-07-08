@@ -200,10 +200,7 @@ GitHub Pages 来源分支是 `gh-pages`，不是 `main`。每次同步代码到 
 5. 推送 `gh-pages` 到 GitHub。
 6. 确认 GitHub Pages build 状态为 `built`。
 
-最近一次已同步状态：
-
-- `main`：`280655b feat: sync settings with supabase`
-- `gh-pages`：`8bb0093 deploy latest site`
+同步状态以 GitHub 上 `main` 和 `gh-pages` 分支的最新提交为准；每次同步功能代码后都需要重新执行以上 Pages 发布流程。
 
 ## 推荐验收流程
 
