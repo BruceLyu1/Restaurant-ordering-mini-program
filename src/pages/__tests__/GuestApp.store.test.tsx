@@ -57,12 +57,13 @@ describe("GuestApp store integration", () => {
   it("renders restaurant and menu data from stores", () => {
     render(
       <LanguageProvider>
-        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} tableNumber="12" />
       </LanguageProvider>,
     );
 
     expect(screen.getByText("Store Brand")).toBeTruthy();
     expect(screen.getByText("Store Rice")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "後台" })).toBeNull();
   });
 
   it("renders the full menu and all category tabs without crashing", () => {
@@ -72,7 +73,7 @@ describe("GuestApp store integration", () => {
 
     render(
       <LanguageProvider>
-        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} tableNumber="12" />
       </LanguageProvider>,
     );
 
@@ -91,7 +92,7 @@ describe("GuestApp store integration", () => {
 
     render(
       <LanguageProvider>
-        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} tableNumber="12" />
       </LanguageProvider>,
     );
 
@@ -119,7 +120,7 @@ describe("GuestApp store integration", () => {
 
     render(
       <LanguageProvider>
-        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} tableNumber="12" />
       </LanguageProvider>,
     );
 
@@ -142,7 +143,7 @@ describe("GuestApp store integration", () => {
 
     render(
       <LanguageProvider>
-        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} setView={vi.fn()} tableNumber="12" />
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} tableNumber="12" />
       </LanguageProvider>,
     );
 

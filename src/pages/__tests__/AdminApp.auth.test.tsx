@@ -13,7 +13,7 @@ function renderAdmin() {
   window.localStorage.setItem("harbour-language", "en");
   return render(
     <LanguageProvider>
-      <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} setView={vi.fn()} />
+      <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} />
     </LanguageProvider>,
   );
 }
@@ -51,6 +51,7 @@ describe("AdminApp auth permissions", () => {
     expect(screen.getByRole("button", { name: /Tables/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Staff/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Settings/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Back to guest/ })).toBeNull();
   });
 
   it("shows signed-in staff details and signs out in supabase mode", () => {

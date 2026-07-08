@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { MealPeriod, MenuItem, PrinterSettings } from "../../types";
 import {
+  loadSupabaseTableOrders,
   loadSupabaseOrders,
   placeSupabaseOrder,
   subscribeSupabaseOrderChanges,
@@ -109,6 +110,38 @@ describe("supabaseOrderService", () => {
       status: "printed",
       table: "02",
     }]);
+  });
+
+  it("loads open orders for one guest table through the table RPC", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: [{
+        created_at: "2026-07-02T07:05:00.000Z",
+        items: [{
+          id: "rice",
+          name: "BBQ Rice",
+          notes: null,
+          quantity: 1,
+          unitPrice: 68,
+        }],
+        order_number: 1003,
+        status: "printed",
+        table: "12",
+      }],
+      error: null,
+    });
+
+    await expect(loadSupabaseTableOrders("12", { rpc })).resolves.toEqual([{
+      createdAt: "2026-07-02T07:05:00.000Z",
+      id: "HO-1003",
+      items: [{ id: "rice", name: "BBQ Rice", notes: undefined, quantity: 1, unitPrice: 68 }],
+      sequence: 1003,
+      status: "printed",
+      table: "12",
+    }]);
+    expect(rpc).toHaveBeenCalledWith("list_table_open_orders", {
+      target_restaurant_slug: "harbour-demo",
+      target_table_number: "12",
+    });
   });
 
   it("updates order status through the status RPC", async () => {

@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ViewToggle } from "./components/ui/ViewToggle";
 import { AdminApp } from "./pages/AdminApp";
 import { GuestApp } from "./pages/GuestApp";
 import { getDataSourceMode } from "./services/dataSource";
@@ -21,6 +20,7 @@ import { useStaffStore } from "./stores/staffStore";
 import { useTableStore } from "./stores/tableStore";
 import { useAuthStore } from "./stores/authStore";
 import { getGuestBaseUrl, getTableNumberFromUrl } from "./utils/table";
+import { getInitialViewFromLocation } from "./utils/view";
 import type { MealPeriod } from "./types";
 
 function reportAsyncError(label: string, error: unknown): void {
@@ -28,11 +28,7 @@ function reportAsyncError(label: string, error: unknown): void {
 }
 
 function App() {
-  const [view, setView] = useState<"guest" | "admin">(
-    new URLSearchParams(window.location.search).get("view") === "admin"
-      ? "admin"
-      : "guest",
-  );
+  const view = useMemo(() => getInitialViewFromLocation(window.location), []);
   const [tableNumber, setTableNumber] = useState<string>(getTableNumberFromUrl);
   const [now, setNow] = useState(() => new Date());
   const menuItems = useMenuStore((state) => state.items);
@@ -63,9 +59,17 @@ function App() {
   }, [subscribeAuth]);
 
   useEffect(() => {
-    if (getDataSourceMode() === "supabase" && authStatus !== "signed-in") return;
+    if (getDataSourceMode() === "supabase") {
+      if (view === "admin") {
+        if (authStatus !== "signed-in") return;
+        void loadOrders(menuItems).catch((error) => reportAsyncError("Load orders failed", error));
+        return;
+      }
+      void loadOrders(menuItems, { tableNumber }).catch((error) => reportAsyncError("Load table orders failed", error));
+      return;
+    }
     void loadOrders(menuItems).catch((error) => reportAsyncError("Load orders failed", error));
-  }, [authStatus, loadOrders, menuItems]);
+  }, [authStatus, loadOrders, menuItems, tableNumber, view]);
 
   useEffect(() => {
     if (getDataSourceMode() === "supabase") return () => undefined;
@@ -76,14 +80,16 @@ function App() {
 
   useEffect(() => {
     if (getDataSourceMode() !== "supabase") return undefined;
-    if (authStatus !== "signed-in") return undefined;
+    if (view === "admin" && authStatus !== "signed-in") return undefined;
 
     let cleanup: (() => void) | undefined;
     let cancelled = false;
     void import("./services/supabaseOrderService").then(({ subscribeSupabaseOrderChanges }) => {
       if (cancelled) return;
       cleanup = subscribeSupabaseOrderChanges(() => {
-        void loadOrders(useMenuStore.getState().items).catch((error) => reportAsyncError("Realtime orders reload failed", error));
+        const latestMenuItems = useMenuStore.getState().items;
+        const loadOptions = view === "guest" ? { tableNumber } : undefined;
+        void loadOrders(latestMenuItems, loadOptions).catch((error) => reportAsyncError("Realtime orders reload failed", error));
       });
     }).catch((error) => reportAsyncError("Load Supabase order subscription failed", error));
 
@@ -91,7 +97,17 @@ function App() {
       cancelled = true;
       cleanup?.();
     };
-  }, [authStatus, loadOrders]);
+  }, [authStatus, loadOrders, tableNumber, view]);
+
+  useEffect(() => {
+    if (getDataSourceMode() !== "supabase" || view !== "guest") return undefined;
+
+    const intervalId = window.setInterval(() => {
+      void loadOrders(useMenuStore.getState().items, { tableNumber })
+        .catch((error) => reportAsyncError("Poll table orders failed", error));
+    }, 3000);
+    return () => window.clearInterval(intervalId);
+  }, [loadOrders, tableNumber, view]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60 * 1000);
@@ -233,11 +249,9 @@ function App() {
 
   return (
     <>
-      <ViewToggle setView={setView} view={view} />
       {view === "guest" ? (
         <GuestApp
           activeMealPeriod={activeMealPeriod}
-          setView={setView}
           tableNumber={tableNumber}
         />
       ) : (
@@ -245,7 +259,6 @@ function App() {
           activeMealPeriod={activeMealPeriod}
           guestBaseUrl={guestBaseUrl}
           now={now}
-          setView={setView}
         />
       )}
     </>

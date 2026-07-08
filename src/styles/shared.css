@@ -1,34 +1,5 @@
 /* harbour-ordering-h5 shared UI utilities */
 
-.view-toggle {
-  align-items: center;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  box-shadow: 0 8px 24px rgba(35, 50, 41, 0.12);
-  display: flex;
-  gap: 3px;
-  padding: 4px;
-  position: fixed;
-  right: 18px;
-  top: 18px;
-  z-index: 20;
-}
-
-.view-toggle button {
-  background: transparent;
-  border-radius: 7px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 8px 11px;
-}
-
-.view-toggle button.active {
-  background: var(--green);
-  color: #fff;
-}
-
 .modal-backdrop {
   align-items: end;
   background: rgba(18, 31, 24, 0.45);
@@ -68,7 +39,6 @@
   width: 100%;
 }
 
-.guest-shortcut,
 .reset-button {
   align-items: center;
   background: transparent;

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --configLoader native",
+    "dev:guest": "vite --host 127.0.0.1 --port 5173 --strictPort --configLoader native",
+    "dev:admin": "vite --host 127.0.0.1 --port 5174 --strictPort --configLoader native",
     "build": "vite build --configLoader native",
     "preview": "vite preview",
     "test": "vitest run --configLoader native"

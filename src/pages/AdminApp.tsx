@@ -29,10 +29,9 @@ interface AdminAppProps {
   activeMealPeriod: MealPeriod | null;
   guestBaseUrl: string;
   now: Date;
-  setView: (view: "guest" | "admin") => void;
 }
 
-export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: AdminAppProps) {
+export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps) {
   const { t } = useTranslation();
   const formatAdminDate = useFormatAdminDate();
   const menuItems = useMenuStore((state) => state.items);
@@ -143,9 +142,6 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
                 </button>
               </div>
             )}
-            <button className="guest-shortcut" onClick={() => setView("guest")} type="button">
-              {t("adminApp.guestShortcut")}
-            </button>
           </div>
         </header>
         {activeSection !== "orders" ? renderAdminSection() : (

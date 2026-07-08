@@ -47,8 +47,7 @@
   gap: 8px;
 }
 
-.language-button,
-.admin-shortcut {
+.language-button {
   background: transparent;
   color: var(--muted);
   font-size: 12px;
@@ -57,13 +56,6 @@
 
 .language-button span {
   color: var(--green);
-}
-
-.admin-shortcut {
-  background: #f4f5f1;
-  border-radius: 999px;
-  color: var(--green);
-  padding: 7px 10px;
 }
 
 .guest-menu-tabs {

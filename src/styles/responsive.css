@@ -20,10 +20,6 @@
 }
 
 @media (max-width: 740px) {
-  .view-toggle {
-    display: none;
-  }
-
   .guest-header {
     padding: 22px 18px 16px;
   }

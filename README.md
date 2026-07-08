@@ -22,6 +22,8 @@
 - Supabase 模式后台已接入 Supabase Auth、员工资料绑定和 RLS 权限收紧；经理可管理后台全部功能，收银/楼面仅处理订单和查看仪表盘。
 - 菜品图片可上传到 Supabase Storage `dish-photos` bucket。
 - 菜单告罄、打印设置开关、餐厅设置保存已处理快速点击/旧快照回拉导致的状态抖动问题。
+- 顾客端和后台已经移除右上角演示切换按钮；本地开发使用 5173 / 5174 双端口分别进入顾客端和后台。
+- Supabase 模式下顾客端通过本桌未结账订单 RPC 同步打印/结账状态，后台结账后顾客端订单详情会自动清空。
 - GitHub Pages 当前通过 `gh-pages` 分支发布，代码同步到 `main` 后需要重新 build 并推送 `gh-pages`。
 
 ## Supabase 试点模式
@@ -38,6 +40,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=你的 publishable key
 
 - 菜单：读取、写入、告罄状态、分类、图片上传、Realtime 刷新。
 - 订单：顾客下单写入 `orders` / `order_lines`，后台打印、补印、结账与 Realtime 刷新。
+- 顾客端订单详情：匿名顾客端只读取当前桌未结账订单，不读取后台全量订单列表。
 - 桌位：后台新增、修改、停用、复制点餐链接，远端写入与 Realtime 刷新。
 - 打印设置：打印机、份数、自动打印、提示音写入 Supabase，并同步其他后台窗口。
 - 餐厅设置：餐厅名、电话、地址、默认语言、营业时段写入 Supabase，并同步其他窗口。
@@ -108,21 +111,28 @@ docs/
 npm install
 ```
 
-启动开发环境：
+启动默认开发环境：
 
 ```bash
 npm run dev
 ```
 
+分别启动顾客端和后台：
+
+```bash
+npm run dev:guest
+npm run dev:admin
+```
+
 常用访问地址：
 
 ```text
-http://127.0.0.1:5173/?view=guest
-http://127.0.0.1:5173/?view=guest&table=02
-http://127.0.0.1:5173/?view=admin
+http://127.0.0.1:5173/
+http://127.0.0.1:5173/?table=02
+http://127.0.0.1:5174/
 ```
 
-端口可能被 Vite 自动调整，请以终端实际输出为准。
+`dev:guest` 固定使用 5173 端口并默认进入顾客端；`dev:admin` 固定使用 5174 端口并默认进入后台。线上 GitHub Pages 不能使用两个自定义端口，仍通过 `?view=guest` / `?view=admin` 两个入口链接区分顾客端和后台。
 
 ## 验证命令
 
@@ -156,6 +166,7 @@ npm run build
 - `20260702007000_restaurant_settings_write_realtime_demo.sql`
 - `20260702008000_staff_write_realtime_demo.sql`
 - `20260702009000_auth_rls_staff_security.sql`
+- `20260702010000_guest_table_open_orders_rpc.sql`
 
 可在 Supabase Dashboard 的 SQL Editor 中运行对应 SQL，然后用以下查询确认 RPC 和 Realtime publication 是否生效：
 
@@ -168,7 +179,8 @@ where proname in (
   'save_demo_printer_settings',
   'save_demo_restaurant_settings',
   'save_demo_staff_members',
-  'claim_staff_profile'
+  'claim_staff_profile',
+  'list_table_open_orders'
 );
 
 select tablename
@@ -220,9 +232,8 @@ GitHub Pages 来源分支是 `gh-pages`，不是 `main`。每次同步代码到 
 
 ## 下一步建议
 
-下一阶段建议先完善后台账号体验和员工邀请流程：
+下一阶段建议先完善员工邀请和正式试点运维流程：
 
-- 增加后台登出按钮，方便切换账号和验证登录流程。
 - 设计经理邀请员工功能，通过安全的后端函数邀请 Supabase Auth 用户。
 - 继续打磨 cashier / floor 的订单处理体验。
 - 正式试点前设计多餐厅权限隔离和更完整的运维流程。

@@ -1,7 +1,20 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ORDER_STORAGE_KEY } from "../../data/orders";
 import type { MealPeriod, MenuItem, Order, PrinterSettings } from "../../types";
-import { listActiveOrders, listSettledOrders, loadOrders, placeOrder, updateOrderStatus } from "../orderService";
+import {
+  listActiveOrders,
+  listSettledOrders,
+  loadOrders,
+  loadOrdersAsync,
+  placeOrder,
+  updateOrderStatus,
+} from "../orderService";
+import { loadSupabaseOrders, loadSupabaseTableOrders } from "../supabaseOrderService";
+
+vi.mock("../supabaseOrderService", () => ({
+  loadSupabaseOrders: vi.fn(async () => []),
+  loadSupabaseTableOrders: vi.fn(async () => []),
+}));
 
 const menuItems: MenuItem[] = [
   {
@@ -21,6 +34,9 @@ const printerSettings: PrinterSettings = { autoPrint: false, copies: "1", printe
 
 describe("orderService", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    vi.stubEnv("VITE_DATA_SOURCE", "local");
     window.localStorage.clear();
     window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify([]));
   });
@@ -88,5 +104,41 @@ describe("orderService", () => {
     ];
 
     expect(listSettledOrders(orders).map((order) => order.id)).toEqual(["newer", "older"]);
+  });
+
+  it("loads only the current table orders in Supabase guest mode", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    const tableOrders: Order[] = [{
+      createdAt: "2026-07-02T07:05:00.000Z",
+      id: "HO-1003",
+      items: [],
+      sequence: 1003,
+      status: "printed",
+      table: "12",
+    }];
+    vi.mocked(loadSupabaseTableOrders).mockResolvedValue(tableOrders);
+
+    await expect(loadOrdersAsync(menuItems, { tableNumber: "12" })).resolves.toEqual(tableOrders);
+
+    expect(loadSupabaseTableOrders).toHaveBeenCalledWith("12");
+    expect(loadSupabaseOrders).not.toHaveBeenCalled();
+  });
+
+  it("loads all orders in Supabase admin mode", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    const adminOrders: Order[] = [{
+      createdAt: "2026-07-02T07:00:00.000Z",
+      id: "HO-1002",
+      items: [],
+      sequence: 1002,
+      status: "pending",
+      table: "02",
+    }];
+    vi.mocked(loadSupabaseOrders).mockResolvedValue(adminOrders);
+
+    await expect(loadOrdersAsync(menuItems)).resolves.toEqual(adminOrders);
+
+    expect(loadSupabaseOrders).toHaveBeenCalled();
+    expect(loadSupabaseTableOrders).not.toHaveBeenCalled();
   });
 });

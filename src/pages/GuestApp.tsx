@@ -18,13 +18,12 @@ import type { CartItem } from "../components/guest/CartBar";
 
 interface GuestAppProps {
   activeMealPeriod: MealPeriod | null;
-  setView: (view: "guest" | "admin") => void;
   tableNumber: string;
 }
 
 const ALL_CATEGORY = "__all";
 
-export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppProps) {
+export function GuestApp({ activeMealPeriod, tableNumber }: GuestAppProps) {
   const { language, setLanguage, t } = useTranslation();
   const menuItems = useMenuStore((state) => state.items);
   const orders = useOrderStore((state) => state.orders);
@@ -183,9 +182,6 @@ export function GuestApp({ activeMealPeriod, setView, tableNumber }: GuestAppPro
         <div className="guest-header-actions">
           <button className="language-button" onClick={() => setLanguage(language === "zh-Hant" ? "en" : "zh-Hant")} type="button">
             {t("guestApp.languageToggle")}
-          </button>
-          <button className="admin-shortcut" onClick={() => setView("admin")} type="button">
-            {t("guestApp.adminShortcut")}
           </button>
         </div>
       </header>

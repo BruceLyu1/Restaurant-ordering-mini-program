@@ -3,6 +3,7 @@ import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings } from "..
 import {
   loadOrders,
   loadOrdersAsync,
+  type LoadOrdersOptions,
   placeOrder as placeOrderService,
   placeOrderAsync as placeOrderServiceAsync,
   resetDemoOrders,
@@ -21,7 +22,7 @@ interface PlaceOrderInput {
 
 interface OrderStore {
   orders: Order[];
-  load: (menuItems: MenuItem[]) => Promise<void>;
+  load: (menuItems: MenuItem[], options?: LoadOrdersOptions) => Promise<void>;
   placeOrder: (params: PlaceOrderInput) => Promise<Order | null>;
   resetDemo: (menuItems: MenuItem[]) => void;
   updateStatus: (id: string, status: Order["status"], menuItems: MenuItem[]) => Promise<void>;
@@ -30,9 +31,9 @@ interface OrderStore {
 export const useOrderStore = create<OrderStore>((set) => ({
   orders: [],
 
-  load: async (menuItems) => {
+  load: async (menuItems, options = {}) => {
     const orders = getDataSourceMode() === "supabase"
-      ? await loadOrdersAsync(menuItems)
+      ? await loadOrdersAsync(menuItems, options)
       : loadOrders(menuItems);
     set({ orders });
   },

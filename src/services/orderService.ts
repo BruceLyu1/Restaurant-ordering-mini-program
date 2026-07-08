@@ -16,6 +16,10 @@ export interface PlaceOrderInput {
   table: string;
 }
 
+export interface LoadOrdersOptions {
+  tableNumber?: string;
+}
+
 function byCreatedAtAsc(a: Order, b: Order): number {
   return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
 }
@@ -57,12 +61,14 @@ export function loadOrders(menuItems: MenuItem[]): Order[] {
   return Array.from(ordersById.values()).map((order) => normalizeOrder(order, menuItems));
 }
 
-export async function loadOrdersAsync(menuItems: MenuItem[]): Promise<Order[]> {
+export async function loadOrdersAsync(menuItems: MenuItem[], options: LoadOrdersOptions = {}): Promise<Order[]> {
   if (getDataSourceMode() !== "supabase") return loadOrders(menuItems);
 
   try {
-    const { loadSupabaseOrders } = await import("./supabaseOrderService");
-    return await loadSupabaseOrders();
+    const { loadSupabaseOrders, loadSupabaseTableOrders } = await import("./supabaseOrderService");
+    return options.tableNumber
+      ? await loadSupabaseTableOrders(options.tableNumber)
+      : await loadSupabaseOrders();
   } catch {
     return loadOrders(menuItems);
   }

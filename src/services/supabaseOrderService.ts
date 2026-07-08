@@ -144,6 +144,19 @@ export async function loadSupabaseOrders(
   return ((data || []) as RemoteOrderRow[]).map(mapOrder);
 }
 
+export async function loadSupabaseTableOrders(
+  tableNumber: string,
+  client: SupabaseLike | null = supabase as SupabaseLike | null,
+): Promise<Order[]> {
+  const { data, error } = await assertRpcClient(client).rpc("list_table_open_orders", {
+    target_restaurant_slug: getRestaurantSlug(),
+    target_table_number: tableNumber,
+  });
+
+  if (error) throw error;
+  return ((data || []) as RemoteOrderRow[]).map(mapOrder);
+}
+
 export async function updateSupabaseOrderStatus(
   id: string,
   status: Order["status"],

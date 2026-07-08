@@ -59,7 +59,6 @@ export const translations: Record<Language, TranslationTree> = {
       },
     },
     guestApp: {
-      adminShortcut: "後台",
       addItem: "加入{name}",
       cart: "購物車",
       cartHint: "請確認餐點數量",
@@ -104,7 +103,6 @@ export const translations: Record<Language, TranslationTree> = {
         resetDemo: "重設演示",
         resetDemoConfirm: "重設演示資料？目前瀏覽器中的訂單會還原為預設資料。",
       },
-      guestShortcut: "返回顧客端",
       managementMenu: "管理菜單",
       mealPeriodClosed: "非營業時段",
       mealPeriodOpen: "{name}營業中",
@@ -366,7 +364,6 @@ export const translations: Record<Language, TranslationTree> = {
         title: "頁面出現錯誤",
       },
       sectionHeader: { breadcrumb: "餐廳管理" },
-      viewToggle: { admin: "餐廳後台", guest: "顧客點餐", label: "切換演示畫面" },
     },
   },
   en: {
@@ -409,7 +406,6 @@ export const translations: Record<Language, TranslationTree> = {
       },
     },
     guestApp: {
-      adminShortcut: "Admin",
       addItem: "Add {name}",
       cart: "Cart",
       cartHint: "Please confirm item quantities",
@@ -454,7 +450,6 @@ export const translations: Record<Language, TranslationTree> = {
         resetDemo: "Reset demo",
         resetDemoConfirm: "Reset demo data? Orders in this browser will be restored to the default demo data.",
       },
-      guestShortcut: "Back to guest",
       managementMenu: "Management menu",
       mealPeriodClosed: "Closed",
       mealPeriodOpen: "{name} open",
@@ -716,7 +711,6 @@ export const translations: Record<Language, TranslationTree> = {
         title: "Something went wrong",
       },
       sectionHeader: { breadcrumb: "Restaurant management" },
-      viewToggle: { admin: "Admin", guest: "Guest ordering", label: "Switch demo view" },
     },
   },
 };

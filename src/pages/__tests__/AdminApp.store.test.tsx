@@ -41,19 +41,20 @@ describe("AdminApp store integration", () => {
   it("renders admin brand and pending order count from stores", () => {
     render(
       <LanguageProvider>
-        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
       </LanguageProvider>,
     );
 
     expect(screen.getAllByText("Store Admin").length).toBeGreaterThan(0);
     expect(screen.getAllByText("1").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "返回顧客端" })).toBeNull();
   });
 
   it("asks for confirmation before resetting demo orders", () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(
       <LanguageProvider>
-        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
       </LanguageProvider>,
     );
 
@@ -69,7 +70,7 @@ describe("AdminApp store integration", () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     render(
       <LanguageProvider>
-        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
       </LanguageProvider>,
     );
 
@@ -86,7 +87,7 @@ describe("AdminApp store integration", () => {
 
     render(
       <LanguageProvider>
-        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
       </LanguageProvider>,
     );
 
@@ -106,7 +107,7 @@ describe("AdminApp store integration", () => {
 
     render(
       <LanguageProvider>
-        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
       </LanguageProvider>,
     );
 
@@ -124,7 +125,7 @@ describe("AdminApp store integration", () => {
 
     render(
       <LanguageProvider>
-        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} setView={vi.fn()} />
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
       </LanguageProvider>,
     );
 
