@@ -49,4 +49,19 @@ describe("admin layout overflow guard", () => {
     expect(footerButton).toContain("width: 156px");
     expect(toggle).toContain("flex: 0 0 42px");
   });
+
+  it("stacks the staff auth form fields instead of inline labels", () => {
+    const css = readStyle("admin.css");
+    const card = ruleBody(css, ".admin-auth-card");
+    const form = ruleBody(css, ".admin-auth-form");
+    const label = ruleBody(css, ".admin-auth-form label");
+    const input = ruleBody(css, ".admin-auth-form input");
+    const error = ruleBody(css, ".admin-auth-form .pin-error");
+
+    expect(card).toContain("align-items: stretch");
+    expect(form).toContain("display: grid");
+    expect(label).toContain("display: grid");
+    expect(input).toContain("width: 100%");
+    expect(error).toContain("min-height: 18px");
+  });
 });

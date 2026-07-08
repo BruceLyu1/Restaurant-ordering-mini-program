@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "../../i18n/useTranslation";
 import { navItems } from "../../utils/navigation";
+import type { NavItem } from "../../utils/navigation";
 import { Icon } from "../ui/Icon";
 
 interface SidebarProps {
@@ -8,9 +9,10 @@ interface SidebarProps {
   onNavigate: (section: string) => void;
   orderBadgeCount: number;
   restaurantName: string;
+  navItemsOverride?: NavItem[];
 }
 
-export function Sidebar({ activeSection, onNavigate, orderBadgeCount, restaurantName }: SidebarProps) {
+export function Sidebar({ activeSection, onNavigate, orderBadgeCount, restaurantName, navItemsOverride = navItems }: SidebarProps) {
   const { t } = useTranslation();
 
   return (
@@ -22,7 +24,7 @@ export function Sidebar({ activeSection, onNavigate, orderBadgeCount, restaurant
         <strong>{restaurantName}</strong>
       </div>
       <nav>
-        {navItems.map(([section, icon]) => (
+        {navItemsOverride.map(([section, icon]) => (
           <button className={section === activeSection ? "active" : ""} key={section} onClick={() => onNavigate(section)} type="button">
             <Icon name={icon} size={18} />
             <span>{t(`navigation.${section}`)}</span>

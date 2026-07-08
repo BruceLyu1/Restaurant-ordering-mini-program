@@ -34,7 +34,9 @@ interface RestaurantRow {
 
 interface StaffMemberRow {
   active: boolean | null;
+  auth_user_id?: string | null;
   client_id: string | null;
+  email?: string | null;
   id: number;
   name: string;
   role: string | null;
@@ -65,6 +67,8 @@ function mapStaffId(row: StaffMemberRow): number {
 function mapStaffMember(row: StaffMemberRow): StaffMember {
   return {
     active: row.active ?? true,
+    authUserId: row.auth_user_id ?? null,
+    email: row.email || undefined,
     id: mapStaffId(row),
     name: row.name,
     role: normalizeStaffRole(row.role || "floor"),
@@ -84,7 +88,7 @@ export async function loadSupabaseStaffMembers(
 
   const { data, error } = await db
     .from("staff_members")
-    .select("id,client_id,name,role,active")
+    .select("id,client_id,name,email,role,active,auth_user_id")
     .eq("restaurant_id", (restaurant as RestaurantRow).id)
     .order("id", { ascending: true }) as SupabaseQueryResult;
 
@@ -99,6 +103,7 @@ export async function saveSupabaseStaffMembers(
   const members = staff.map((member) => ({
     active: member.active,
     client_id: String(member.id),
+    email: member.email || null,
     name: member.name,
     role: normalizeStaffRole(member.role),
   }));

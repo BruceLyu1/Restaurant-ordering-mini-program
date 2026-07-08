@@ -45,6 +45,8 @@ export interface StaffMember {
   name: string;
   role: string;
   active: boolean;
+  email?: string;
+  authUserId?: string | null;
 }
 
 export interface PrinterSettings {

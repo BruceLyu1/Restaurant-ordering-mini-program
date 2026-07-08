@@ -19,6 +19,7 @@ import { useOrderStore } from "./stores/orderStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useStaffStore } from "./stores/staffStore";
 import { useTableStore } from "./stores/tableStore";
+import { useAuthStore } from "./stores/authStore";
 import { getGuestBaseUrl, getTableNumberFromUrl } from "./utils/table";
 import type { MealPeriod } from "./types";
 
@@ -40,6 +41,9 @@ function App() {
   const loadSettings = useSettingsStore((state) => state.load);
   const loadStaff = useStaffStore((state) => state.load);
   const loadTables = useTableStore((state) => state.load);
+  const authStatus = useAuthStore((state) => state.status);
+  const staffProfile = useAuthStore((state) => state.staffProfile);
+  const subscribeAuth = useAuthStore((state) => state.subscribe);
   const restaurantSettings = useSettingsStore((state) => state.restaurant);
   const guestBaseUrl = useMemo<string>(getGuestBaseUrl, []);
   const activeMealPeriod: MealPeriod | null = useMemo(
@@ -50,15 +54,21 @@ function App() {
   useEffect(() => {
     void loadMenu().catch((error) => reportAsyncError("Load menu failed", error));
     void loadSettings().catch((error) => reportAsyncError("Load settings failed", error));
-    void loadStaff().catch((error) => reportAsyncError("Load staff failed", error));
     void loadTables().catch((error) => reportAsyncError("Load tables failed", error));
-  }, [loadMenu, loadSettings, loadStaff, loadTables]);
+  }, [loadMenu, loadSettings, loadTables]);
 
   useEffect(() => {
+    if (getDataSourceMode() !== "supabase") return undefined;
+    return subscribeAuth();
+  }, [subscribeAuth]);
+
+  useEffect(() => {
+    if (getDataSourceMode() === "supabase" && authStatus !== "signed-in") return;
     void loadOrders(menuItems).catch((error) => reportAsyncError("Load orders failed", error));
-  }, [loadOrders, menuItems]);
+  }, [authStatus, loadOrders, menuItems]);
 
   useEffect(() => {
+    if (getDataSourceMode() === "supabase") return () => undefined;
     return subscribeToStorage("harbour-ordering-demo-orders", () => {
       void loadOrders(useMenuStore.getState().items).catch((error) => reportAsyncError("Reload orders failed", error));
     }, ORDER_CHANGE_EVENT);
@@ -66,6 +76,7 @@ function App() {
 
   useEffect(() => {
     if (getDataSourceMode() !== "supabase") return undefined;
+    if (authStatus !== "signed-in") return undefined;
 
     let cleanup: (() => void) | undefined;
     let cancelled = false;
@@ -80,7 +91,7 @@ function App() {
       cancelled = true;
       cleanup?.();
     };
-  }, [loadOrders]);
+  }, [authStatus, loadOrders]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 60 * 1000);
@@ -96,12 +107,14 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (getDataSourceMode() === "supabase") return () => undefined;
     return subscribeToStorage("harbour-admin-settings", () => {
       void loadSettings().catch((error) => reportAsyncError("Reload settings failed", error));
     }, SETTINGS_CHANGE_EVENT);
   }, [loadSettings]);
 
   useEffect(() => {
+    if (getDataSourceMode() === "supabase") return () => undefined;
     return subscribeToStorage(PRINTER_STORAGE_KEY, () => {
       void loadSettings().catch((error) => reportAsyncError("Reload printer settings failed", error));
     }, PRINTER_CHANGE_EVENT);
@@ -117,12 +130,14 @@ function App() {
       subscribeSupabaseRestaurantSettingsChanges,
     }) => {
       if (cancelled) return;
-      const cleanupPrinterSettings = subscribeSupabasePrinterSettingsChanges(() => {
-        void loadSettings().catch((error) => reportAsyncError("Realtime printer settings reload failed", error));
-      });
       const cleanupRestaurantSettings = subscribeSupabaseRestaurantSettingsChanges(() => {
         void loadSettings().catch((error) => reportAsyncError("Realtime restaurant settings reload failed", error));
       });
+      const cleanupPrinterSettings = authStatus === "signed-in"
+        ? subscribeSupabasePrinterSettingsChanges(() => {
+          void loadSettings().catch((error) => reportAsyncError("Realtime printer settings reload failed", error));
+        })
+        : () => undefined;
       cleanup = () => {
         cleanupPrinterSettings();
         cleanupRestaurantSettings();
@@ -133,9 +148,10 @@ function App() {
       cancelled = true;
       cleanup?.();
     };
-  }, [loadSettings]);
+  }, [authStatus, loadSettings]);
 
   useEffect(() => {
+    if (getDataSourceMode() === "supabase") return () => undefined;
     return subscribeToStorage("harbour-admin-menu", () => {
       void loadMenu().catch((error) => reportAsyncError("Reload menu failed", error));
     }, MENU_CHANGE_EVENT);
@@ -160,13 +176,20 @@ function App() {
   }, [loadMenu]);
 
   useEffect(() => {
+    if (getDataSourceMode() === "supabase") {
+      if (authStatus === "signed-in" && staffProfile?.role === "manager") {
+        void loadStaff().catch((error) => reportAsyncError("Load staff failed", error));
+      }
+      return () => undefined;
+    }
     return subscribeToStorage("harbour-admin-staff", () => {
       void Promise.resolve(loadStaff()).catch((error) => reportAsyncError("Reload staff failed", error));
     }, STAFF_CHANGE_EVENT);
-  }, [loadStaff]);
+  }, [authStatus, loadStaff, staffProfile?.role]);
 
   useEffect(() => {
     if (getDataSourceMode() !== "supabase") return undefined;
+    if (authStatus !== "signed-in" || staffProfile?.role !== "manager") return undefined;
 
     let cleanup: (() => void) | undefined;
     let cancelled = false;
@@ -181,9 +204,10 @@ function App() {
       cancelled = true;
       cleanup?.();
     };
-  }, [loadStaff]);
+  }, [authStatus, loadStaff, staffProfile?.role]);
 
   useEffect(() => {
+    if (getDataSourceMode() === "supabase") return () => undefined;
     return subscribeToStorage("harbour-admin-tables", () => {
       void loadTables().catch((error) => reportAsyncError("Reload tables failed", error));
     }, TABLE_CHANGE_EVENT);

@@ -7,8 +7,8 @@ import {
 } from "../supabaseStaffService";
 
 const staff: StaffMember[] = [
-  { active: true, id: 101, name: "Alex", role: "manager" },
-  { active: false, id: 102, name: "Casey", role: "cashier" },
+  { active: true, email: "alex@example.com", id: 101, name: "Alex", role: "manager" },
+  { active: false, email: "casey@example.com", id: 102, name: "Casey", role: "cashier" },
 ];
 
 function createRpcClient(error: Error | null = null) {
@@ -41,14 +41,14 @@ describe("supabaseStaffService", () => {
 
     await saveSupabaseStaffMembers([
       ...staff,
-      { active: true, id: 103, name: "May", role: "Cashier" },
+      { active: true, email: "may@example.com", id: 103, name: "May", role: "Cashier" },
     ], client);
 
     expect(client.rpc).toHaveBeenCalledWith("save_demo_staff_members", {
       members: [
-        { active: true, client_id: "101", name: "Alex", role: "manager" },
-        { active: false, client_id: "102", name: "Casey", role: "cashier" },
-        { active: true, client_id: "103", name: "May", role: "cashier" },
+        { active: true, client_id: "101", email: "alex@example.com", name: "Alex", role: "manager" },
+        { active: false, client_id: "102", email: "casey@example.com", name: "Casey", role: "cashier" },
+        { active: true, client_id: "103", email: "may@example.com", name: "May", role: "cashier" },
       ],
       target_restaurant_slug: "harbour-demo",
     });
@@ -74,8 +74,8 @@ describe("supabaseStaffService", () => {
     vi.stubEnv("VITE_RESTAURANT_SLUG", "harbour-branch");
     const restaurantsQuery = createQuery([{ id: 7 }]);
     const staffQuery = createQuery([
-      { active: true, client_id: "201", id: 1, name: "Alex", role: "manager" },
-      { active: false, client_id: null, id: 2, name: "Casey", role: "floor" },
+      { active: true, auth_user_id: "auth-1", client_id: "201", email: "alex@example.com", id: 1, name: "Alex", role: "manager" },
+      { active: false, auth_user_id: null, client_id: null, email: "casey@example.com", id: 2, name: "Casey", role: "floor" },
     ]);
     const client = {
       from: vi.fn((table: string) => ({
@@ -84,8 +84,8 @@ describe("supabaseStaffService", () => {
     };
 
     await expect(loadSupabaseStaffMembers(client)).resolves.toEqual([
-      { active: true, id: 201, name: "Alex", role: "manager" },
-      { active: false, id: 2, name: "Casey", role: "floor" },
+      { active: true, authUserId: "auth-1", email: "alex@example.com", id: 201, name: "Alex", role: "manager" },
+      { active: false, authUserId: null, email: "casey@example.com", id: 2, name: "Casey", role: "floor" },
     ]);
     expect(restaurantsQuery.eq).toHaveBeenCalledWith("slug", "harbour-branch");
     expect(staffQuery.eq).toHaveBeenCalledWith("restaurant_id", 7);

@@ -7,7 +7,7 @@ import { StaffManagement } from "../StaffManagement";
 import type { StaffMember } from "../../types";
 
 const staff: StaffMember[] = [
-  { active: true, id: 1, name: "Alex", role: "manager" },
+  { active: true, email: "alex@example.com", id: 1, name: "Alex", role: "manager" },
 ];
 
 function renderWithLanguage(ui: React.ReactElement) {
@@ -38,6 +38,7 @@ describe("StaffManagement", () => {
     renderWithLanguage(<StaffManagement />);
 
     expect(screen.getByText("Alex")).toBeTruthy();
+    expect(screen.getByText("alex@example.com")).toBeTruthy();
     expect(screen.getByText("Manager")).toBeTruthy();
     expect(screen.getByText("Can sign in")).toBeTruthy();
     fireEvent.click(screen.getByLabelText("Toggle account status for Alex"));
@@ -49,11 +50,13 @@ describe("StaffManagement", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Add staff" }));
     fireEvent.change(screen.getByLabelText("Staff name"), { target: { value: "Casey" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "casey@example.com" } });
     fireEvent.change(screen.getByLabelText("Staff role"), { target: { value: "cashier" } });
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
     await waitFor(() => expect(screen.getByText("Casey")).toBeTruthy());
     expect(useStaffStore.getState().add).toHaveBeenCalledWith({
       active: true,
+      email: "casey@example.com",
       name: "Casey",
       role: "cashier",
     });

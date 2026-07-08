@@ -522,6 +522,69 @@
   font-size: 14px;
 }
 
+.admin-auth-card {
+  align-items: stretch;
+  gap: 24px;
+  max-width: 460px;
+  padding: 44px 40px;
+  text-align: left;
+}
+
+.admin-auth-card h1,
+.admin-auth-card p {
+  text-align: center;
+}
+
+.admin-auth-card h1 {
+  font-size: 26px;
+}
+
+.admin-auth-card p {
+  line-height: 1.7;
+  margin: 0 auto;
+  max-width: 320px;
+}
+
+.admin-auth-form {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+
+.admin-auth-form label {
+  color: var(--ink);
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.admin-auth-form input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  font: inherit;
+  height: 44px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.admin-auth-form input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(31, 98, 70, 0.12);
+  outline: none;
+}
+
+.admin-auth-form .pin-error {
+  min-height: 18px;
+  text-align: left;
+}
+
+.admin-auth-form .management-primary {
+  justify-self: stretch;
+  min-height: 46px;
+}
+
 .pin-digits {
   display: flex;
   gap: 10px;

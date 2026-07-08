@@ -1,6 +1,6 @@
 # 海港小馆扫码点餐 H5
 
-更新时间：2026-07-07
+更新时间：2026-07-08
 
 这是一个面向香港中小餐厅的扫码点餐 H5 应用。顾客扫码后可以在手机上浏览菜单、加入购物车、填写单品备注并下单；餐厅后台可以接收订单、打印/补印、结账、维护菜单、管理桌位、配置打印与餐厅设置，并查看营业报表。
 
@@ -12,13 +12,14 @@
 - 指定桌号示例：[https://brucelyu1.github.io/harbour-ordering-h5/?view=guest&table=02](https://brucelyu1.github.io/harbour-ordering-h5/?view=guest&table=02)
 - 餐厅后台：[https://brucelyu1.github.io/harbour-ordering-h5/?view=admin](https://brucelyu1.github.io/harbour-ordering-h5/?view=admin)
 
-后台默认 PIN：`000000`。
+本地演示模式后台默认 PIN：`000000`；Supabase 模式后台使用员工邮箱密码登录。
 
 ## 当前状态
 
 - 前端已完成模块化重构、TypeScript 迁移、Zustand 状态层、轻量 i18n、核心测试补强和移动端体验修复。
 - `localStorage` 模式可完整演示顾客下单、后台处理、菜单维护、桌位管理、打印设置、餐厅设置、员工管理和报表。
-- Supabase 试点模式已经支持菜单、订单、桌位、打印设置、餐厅设置的远端读写与 Realtime 刷新。
+- Supabase 试点模式已经支持菜单、订单、桌位、打印设置、餐厅设置、员工管理的远端读写与 Realtime 刷新。
+- Supabase 模式后台已接入 Supabase Auth、员工资料绑定和 RLS 权限收紧；经理可管理后台全部功能，收银/楼面仅处理订单和查看仪表盘。
 - 菜品图片可上传到 Supabase Storage `dish-photos` bucket。
 - 菜单告罄、打印设置开关、餐厅设置保存已处理快速点击/旧快照回拉导致的状态抖动问题。
 - GitHub Pages 当前通过 `gh-pages` 分支发布，代码同步到 `main` 后需要重新 build 并推送 `gh-pages`。
@@ -40,8 +41,9 @@ VITE_SUPABASE_PUBLISHABLE_KEY=你的 publishable key
 - 桌位：后台新增、修改、停用、复制点餐链接，远端写入与 Realtime 刷新。
 - 打印设置：打印机、份数、自动打印、提示音写入 Supabase，并同步其他后台窗口。
 - 餐厅设置：餐厅名、电话、地址、默认语言、营业时段写入 Supabase，并同步其他窗口。
+- 员工管理：员工姓名、email、角色和启用状态写入 Supabase；Supabase Auth 用户需在 Dashboard 手动创建或邀请，邮箱需与员工资料一致。
 
-试点阶段仍使用 `harbour-demo` 餐厅和 demo RPC，部分 anon/authenticated 调用暂时开放。正式试点前需要接入 Supabase Auth、员工登录、权限控制和 RLS 收紧。
+试点阶段仍使用 `harbour-demo` 餐厅和 demo RPC 名称；后台写操作已经收紧为已登录且启用中的员工，顾客端继续保留匿名浏览菜单和下单能力。
 
 ## 主要功能
 
@@ -56,15 +58,16 @@ VITE_SUPABASE_PUBLISHABLE_KEY=你的 publishable key
 
 ### 餐厅后台
 
-- 后台入口有 6 位数字 PIN 保护。
+- 本地演示模式后台入口有 6 位数字 PIN 保护；Supabase 模式后台使用员工邮箱密码登录。
+- Supabase 模式支持角色权限：经理可管理全部后台功能，收银/楼面仅可查看订单和仪表盘并处理订单状态。
 - 运营总览：查看待处理订单、营业额、桌位和菜单概况。
 - 订单管理：查看新订单、打印、补印、结账，并显示顾客填写的单品备注。
 - 菜单管理：新增、编辑、删除/下架菜品，维护图片、名称、描述、分类、价格、供应时段和售罄状态。
 - 分类管理：新增、重命名、合并重复分类、删除分类并下架相关菜品。
 - 桌位管理：新增、修改、停用桌位，查看桌位状态，复制点餐链接。
 - 打印设置：选择模拟打印机、设置份数、自动打印和提示音。
-- 餐厅设置：维护餐厅名、电话、地址、默认语言、供应时段和后台 PIN。
-- 员工管理：本地演示模式支持新增员工、设置角色、启用或停用账号。
+- 餐厅设置：维护餐厅名、电话、地址、默认语言、供应时段；本地模式仍可维护后台 PIN。
+- 员工管理：维护员工姓名、email、角色、启用或停用状态；Supabase 模式下需另行在 Authentication Users 创建或邀请同邮箱用户。
 - 报表分析：查看日/周/月/年营收、订单数、售出份数和菜品排行。
 
 ## 技术栈
@@ -151,6 +154,8 @@ npm run build
 - `20260702005000_table_write_realtime_demo.sql`
 - `20260702006000_printer_settings_write_realtime_demo.sql`
 - `20260702007000_restaurant_settings_write_realtime_demo.sql`
+- `20260702008000_staff_write_realtime_demo.sql`
+- `20260702009000_auth_rls_staff_security.sql`
 
 可在 Supabase Dashboard 的 SQL Editor 中运行对应 SQL，然后用以下查询确认 RPC 和 Realtime publication 是否生效：
 
@@ -161,7 +166,9 @@ where proname in (
   'save_demo_menu_items',
   'save_demo_tables',
   'save_demo_printer_settings',
-  'save_demo_restaurant_settings'
+  'save_demo_restaurant_settings',
+  'save_demo_staff_members',
+  'claim_staff_profile'
 );
 
 select tablename
@@ -191,7 +198,7 @@ GitHub Pages 来源分支是 `gh-pages`，不是 `main`。每次同步代码到 
 1. 打开顾客端，例如 `?view=guest&table=02`。
 2. 添加几道菜到购物车，并给其中一道菜填写备注。
 3. 确认下单。
-4. 切换到后台订单管理，输入默认 PIN `000000`。
+4. 切换到后台订单管理：本地模式输入默认 PIN `000000`；Supabase 模式使用员工邮箱密码登录。
 5. 确认后台能看到新订单和备注。
 6. 点击打印，确认订单状态变为已打印。
 7. 回到顾客端订单详情，确认状态同步变化。
@@ -203,9 +210,9 @@ GitHub Pages 来源分支是 `gh-pages`，不是 `main`。每次同步代码到 
 
 ## 当前限制
 
-- Supabase 仍处于试点模式，demo RPC 暂时开放；正式试点前需要接入 Supabase Auth、员工登录、权限控制和 RLS。
-- 员工管理仍主要是本地演示数据，尚未完成 Supabase 写入同步。
-- 后台 PIN 仍是前端演示保护；不应视为正式身份认证。
+- Supabase 仍处于单餐厅试点模式，默认使用 `harbour-demo` 餐厅。
+- Supabase 模式下新增员工资料后，仍需在 Supabase Dashboard 的 Authentication Users 手动创建或邀请同 email 用户。
+- 本地模式的后台 PIN 仍是前端演示保护；不应视为正式身份认证。
 - 暂未接入真实打印机或 ESC/POS 打印服务。
 - `localStorage` 模式下不同设备之间不会同步数据。
 - 暂未做正式多门店、多餐厅权限隔离。
@@ -213,10 +220,9 @@ GitHub Pages 来源分支是 `gh-pages`，不是 `main`。每次同步代码到 
 
 ## 下一步建议
 
-下一阶段建议先做员工管理 Supabase 写入，然后接入员工登录和 RLS 收紧：
+下一阶段建议先完善后台账号体验和员工邀请流程：
 
-- 员工资料从本地迁移到 Supabase `staff_members`。
-- 后台登录接入 Supabase Auth。
-- 区分经理、收银、楼面等角色。
-- 将菜单、桌位、打印设置、餐厅设置 demo RPC 的开放写入权限逐步收紧为员工权限。
-- 顾客端继续保留公开读菜单、公开下单能力。
+- 增加后台登出按钮，方便切换账号和验证登录流程。
+- 设计经理邀请员工功能，通过安全的后端函数邀请 Supabase Auth 用户。
+- 继续打磨 cashier / floor 的订单处理体验。
+- 正式试点前设计多餐厅权限隔离和更完整的运维流程。

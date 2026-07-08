@@ -18,15 +18,15 @@ export function StaffManagement() {
   const add = useStaffStore((state) => state.add);
   const toggleActive = useStaffStore((state) => state.toggleActive);
   const [showForm, setShowForm] = useState(false);
-  const [draft, setDraft] = useState({ name: "", role: DEFAULT_ROLE });
+  const [draft, setDraft] = useState({ email: "", name: "", role: DEFAULT_ROLE });
 
   async function addStaff(event: React.FormEvent): Promise<void> {
     event.preventDefault();
-    if (!draft.name.trim()) return;
+    if (!draft.name.trim() || !draft.email.trim()) return;
 
     try {
-      await add({ active: true, name: draft.name.trim(), role: draft.role });
-      setDraft({ name: "", role: DEFAULT_ROLE });
+      await add({ active: true, email: draft.email.trim(), name: draft.name.trim(), role: draft.role });
+      setDraft({ email: "", name: "", role: DEFAULT_ROLE });
       setShowForm(false);
     } catch (error) {
       console.error("Save staff failed", error);
@@ -47,6 +47,7 @@ export function StaffManagement() {
       {showForm && (
         <form className="inline-form" onSubmit={addStaff}>
           <input aria-label={t("staffManagement.name")} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder={t("staffManagement.name")} value={draft.name} />
+          <input aria-label={t("staffManagement.email")} onChange={(event) => setDraft({ ...draft, email: event.target.value })} placeholder={t("staffManagement.email")} type="email" value={draft.email} />
           <select aria-label={t("staffManagement.role")} onChange={(event) => setDraft({ ...draft, role: event.target.value })} value={draft.role}>
             {ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{t(role.labelKey)}</option>)}
           </select>
@@ -56,11 +57,12 @@ export function StaffManagement() {
       )}
       <div className="management-panel table-panel">
         <table className="management-table">
-          <thead><tr><th>{t("staffManagement.table.staff")}</th><th>{t("staffManagement.table.role")}</th><th>{t("staffManagement.table.status")}</th><th>{t("staffManagement.table.enabled")}</th></tr></thead>
+          <thead><tr><th>{t("staffManagement.table.staff")}</th><th>{t("staffManagement.table.email")}</th><th>{t("staffManagement.table.role")}</th><th>{t("staffManagement.table.status")}</th><th>{t("staffManagement.table.enabled")}</th></tr></thead>
           <tbody>
             {staff.map((member) => (
               <tr key={member.id}>
                 <td><strong>{member.name}</strong></td>
+                <td>{member.email || "-"}</td>
                 <td>{t(getStaffRoleLabelKey(member.role))}</td>
                 <td><span className={`list-status ${member.active ? "active" : "inactive"}`}>{member.active ? t("staffManagement.active") : t("staffManagement.inactive")}</span></td>
                 <td><Toggle checked={member.active} label={t("staffManagement.toggle", { name: member.name })} onChange={() => toggleStaffActive(member.id)} /></td>

@@ -132,6 +132,18 @@ export const translations: Record<Language, TranslationTree> = {
         title: "管理員驗證",
       },
     },
+    adminAuth: {
+      description: "請使用已綁定的員工電郵和密碼登入後台。",
+      email: "員工電郵",
+      errors: {
+        signInFailed: "登入失敗，請檢查帳號或聯絡經理。",
+        unauthorized: "此員工帳號沒有後台權限。",
+      },
+      password: "密碼",
+      signIn: "登入",
+      signingIn: "登入中",
+      title: "員工登入",
+    },
     dashboard: {
       description: "掌握午市訂單、桌位和菜品狀況。",
       latestOrders: "最新訂單",
@@ -292,6 +304,7 @@ export const translations: Record<Language, TranslationTree> = {
       add: "新增員工",
       createAccount: "建立帳戶",
       description: "建立員工帳戶並控制後台使用權限。",
+      email: "Email",
       inactive: "已停用",
       name: "員工姓名",
       role: "員工角色",
@@ -302,6 +315,7 @@ export const translations: Record<Language, TranslationTree> = {
       },
       table: {
         enabled: "啟用",
+        email: "Email",
         role: "角色",
         staff: "員工",
         status: "帳戶狀態",
@@ -466,6 +480,18 @@ export const translations: Record<Language, TranslationTree> = {
         title: "Admin Verification",
       },
     },
+    adminAuth: {
+      description: "Use your linked staff email and password to access the dashboard.",
+      email: "Email",
+      errors: {
+        signInFailed: "Sign in failed. Check your account or contact a manager.",
+        unauthorized: "This staff account is not allowed to access the dashboard.",
+      },
+      password: "Password",
+      signIn: "Sign in",
+      signingIn: "Signing in",
+      title: "Staff sign in",
+    },
     dashboard: {
       description: "Track lunch orders, table usage, and menu status.",
       latestOrders: "Latest orders",
@@ -626,6 +652,7 @@ export const translations: Record<Language, TranslationTree> = {
       add: "Add staff",
       createAccount: "Create account",
       description: "Create staff accounts and control back-office access.",
+      email: "Email",
       inactive: "Disabled",
       name: "Staff name",
       role: "Staff role",
@@ -636,6 +663,7 @@ export const translations: Record<Language, TranslationTree> = {
       },
       table: {
         enabled: "Enabled",
+        email: "Email",
         role: "Role",
         staff: "Staff",
         status: "Account status",

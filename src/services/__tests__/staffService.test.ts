@@ -35,7 +35,7 @@ describe("staffService", () => {
   it("persists staff through the async local path and dispatches the staff change event", async () => {
     const listener = vi.fn();
     window.addEventListener(STAFF_CHANGE_EVENT, listener);
-    const staff: StaffMember[] = [{ active: true, id: 1, name: "Alex", role: "manager" }];
+    const staff: StaffMember[] = [{ active: true, email: "alex@example.com", id: 1, name: "Alex", role: "manager" }];
 
     await saveStaffAsync(staff);
 
@@ -47,7 +47,7 @@ describe("staffService", () => {
 
   it("loads and saves staff through Supabase in supabase mode", async () => {
     vi.stubEnv("VITE_DATA_SOURCE", "supabase");
-    const staff: StaffMember[] = [{ active: true, id: 1, name: "Alex", role: "manager" }];
+    const staff: StaffMember[] = [{ active: true, email: "alex@example.com", id: 1, name: "Alex", role: "manager" }];
     vi.mocked(loadSupabaseStaffMembers).mockResolvedValueOnce(staff);
 
     await expect(loadStaffAsync()).resolves.toEqual(staff);

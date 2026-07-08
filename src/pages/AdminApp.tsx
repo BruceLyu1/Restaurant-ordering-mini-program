@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { AdminAuthGuard } from "../components/admin/AdminAuthGuard";
 import { MobileAdminNav } from "../components/admin/MobileAdminNav";
 import { OrderCard } from "../components/admin/OrderCard";
-import { PinGuard } from "../components/admin/PinGuard";
 import { PopularDishes } from "../components/admin/PopularDishes";
 import { Sidebar } from "../components/admin/Sidebar";
 import { Icon } from "../components/ui/Icon";
@@ -12,7 +12,9 @@ import { listActiveOrders, listSettledOrders } from "../services/orderService";
 import { useMenuStore } from "../stores/menuStore";
 import { useOrderStore } from "../stores/orderStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { useAuthStore } from "../stores/authStore";
 import { useTableStore } from "../stores/tableStore";
+import { canAccessAdminSection, getAllowedNavItems } from "../utils/adminPermissions";
 import { getTablesWithOrderStatus } from "../utils/table";
 import { Dashboard } from "./Dashboard";
 import { MenuManagement } from "./MenuManagement";
@@ -40,13 +42,22 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   const newOrderCount = useMemo(() => orders.filter((order) => order.status === "pending").length, [orders]);
   const completedOrders = useMemo(() => listSettledOrders(orders), [orders]);
   const restaurantName = useSettingsStore((state) => state.restaurant.name);
+  const staffProfile = useAuthStore((state) => state.staffProfile);
   const [filter, setFilter] = useState<"pending" | "settled">("pending");
   const [activeSection, setActiveSection] = useState("orders");
   const [actionError, setActionError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isSupabaseMode = getDataSourceMode() === "supabase";
+  const permissionProfile = isSupabaseMode
+    ? staffProfile
+    : { active: true, id: 0, name: "Local Admin", role: "manager" };
   const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
   const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
+  const allowedNavItems = useMemo(() => getAllowedNavItems(permissionProfile), [permissionProfile]);
+
+  useEffect(() => {
+    if (!canAccessAdminSection(permissionProfile, activeSection)) setActiveSection("orders");
+  }, [activeSection, permissionProfile]);
 
   async function handlePrint(id: string): Promise<void> {
     setActionError("");
@@ -75,6 +86,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   }
 
   function renderAdminSection() {
+    if (!canAccessAdminSection(permissionProfile, activeSection)) return null;
     if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={setActiveSection} orders={orders} tables={tablesWithStatus} />;
     if (activeSection === "menu") return <MenuManagement />;
     if (activeSection === "tables") return <TableManagement guestBaseUrl={guestBaseUrl} tables={tablesWithStatus} />;
@@ -85,11 +97,11 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   }
 
   return (
-    <PinGuard>
+    <AdminAuthGuard>
     <main className="admin-shell">
-      <Sidebar activeSection={activeSection} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
+      <Sidebar activeSection={activeSection} navItemsOverride={allowedNavItems} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
       {mobileMenuOpen && (
-        <MobileAdminNav activeSection={activeSection} onClose={() => setMobileMenuOpen(false)} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
+        <MobileAdminNav activeSection={activeSection} navItemsOverride={allowedNavItems} onClose={() => setMobileMenuOpen(false)} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
       )}
       <section className="admin-workspace">
         <header className="admin-topbar">
@@ -170,6 +182,6 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
         )}
       </section>
     </main>
-    </PinGuard>
+    </AdminAuthGuard>
   );
 }

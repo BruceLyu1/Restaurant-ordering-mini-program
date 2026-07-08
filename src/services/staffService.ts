@@ -25,6 +25,7 @@ export function getStaffRoleLabelKey(role: string): string {
 function normalizeStaffMember(member: StaffMember): StaffMember {
   return {
     ...member,
+    email: member.email?.trim() || undefined,
     role: normalizeStaffRole(member.role),
   };
 }
@@ -61,7 +62,7 @@ export async function saveStaffAsync(staff: StaffMember[]): Promise<StaffMember[
 }
 
 export function createStaffMember(staff: StaffMember[], member: Omit<StaffMember, "id">): StaffMember[] {
-  return [...staff, { ...member, id: Date.now(), role: normalizeStaffRole(member.role) }];
+  return [...staff, { ...member, email: member.email?.trim() || undefined, id: Date.now(), role: normalizeStaffRole(member.role) }];
 }
 
 export function toggleStaffActive(staff: StaffMember[], id: number): StaffMember[] {

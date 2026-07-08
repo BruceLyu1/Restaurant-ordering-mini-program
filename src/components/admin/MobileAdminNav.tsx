@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "../../i18n/useTranslation";
 import { navItems } from "../../utils/navigation";
+import type { NavItem } from "../../utils/navigation";
 import { Icon } from "../ui/Icon";
 
 interface MobileAdminNavProps {
@@ -9,9 +10,10 @@ interface MobileAdminNavProps {
   onNavigate: (section: string) => void;
   orderBadgeCount: number;
   restaurantName: string;
+  navItemsOverride?: NavItem[];
 }
 
-export function MobileAdminNav({ activeSection, onClose, onNavigate, orderBadgeCount, restaurantName }: MobileAdminNavProps) {
+export function MobileAdminNav({ activeSection, onClose, onNavigate, orderBadgeCount, restaurantName, navItemsOverride = navItems }: MobileAdminNavProps) {
   const { t } = useTranslation();
 
   return (
@@ -29,7 +31,7 @@ export function MobileAdminNav({ activeSection, onClose, onNavigate, orderBadgeC
           </button>
         </header>
         <nav>
-          {navItems.map(([section, icon]) => (
+          {navItemsOverride.map(([section, icon]) => (
             <button
               className={section === activeSection ? "active" : ""}
               key={section}
