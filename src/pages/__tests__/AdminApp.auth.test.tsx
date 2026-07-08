@@ -26,6 +26,7 @@ describe("AdminApp auth permissions", () => {
       session: null,
       staffProfile: { active: true, id: 1, name: "Alex", role: "manager" },
       status: "signed-in",
+      signOut: vi.fn(async () => undefined),
     });
     useMenuStore.setState({ items: [] });
     useOrderStore.setState({ orders: [] });
@@ -50,6 +51,27 @@ describe("AdminApp auth permissions", () => {
     expect(screen.getByRole("button", { name: /Tables/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Staff/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Settings/ })).toBeTruthy();
+  });
+
+  it("shows signed-in staff details and signs out in supabase mode", () => {
+    const signOut = vi.fn(async () => undefined);
+    useAuthStore.setState({ signOut } as Partial<ReturnType<typeof useAuthStore.getState>>);
+
+    renderAdmin();
+
+    expect(screen.getByText("Alex")).toBeTruthy();
+    expect(screen.getByText("Manager")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Sign out/ }));
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not show the supabase sign-out control in local mode", () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "local");
+
+    renderAdmin();
+
+    expect(screen.queryByRole("button", { name: /Sign out/ })).toBeNull();
   });
 
   it("limits cashier and floor roles to orders and dashboard", () => {

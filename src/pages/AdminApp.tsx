@@ -43,6 +43,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
   const completedOrders = useMemo(() => listSettledOrders(orders), [orders]);
   const restaurantName = useSettingsStore((state) => state.restaurant.name);
   const staffProfile = useAuthStore((state) => state.staffProfile);
+  const signOut = useAuthStore((state) => state.signOut);
   const [filter, setFilter] = useState<"pending" | "settled">("pending");
   const [activeSection, setActiveSection] = useState("orders");
   const [actionError, setActionError] = useState("");
@@ -85,6 +86,19 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
     }
   }
 
+  async function handleSignOut(): Promise<void> {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Sign out failed", error);
+    }
+  }
+
+  function getStaffRoleLabel(): string {
+    if (!staffProfile) return "";
+    return t(`staffManagement.roles.${staffProfile.role}`);
+  }
+
   function renderAdminSection() {
     if (!canAccessAdminSection(permissionProfile, activeSection)) return null;
     if (activeSection === "dashboard") return <Dashboard menuItems={menuItems} onNavigate={setActiveSection} orders={orders} tables={tablesWithStatus} />;
@@ -113,11 +127,22 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now, setView }: Admin
             <span>{formatAdminDate(now)}</span>
             <strong>{activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed")}</strong>
           </div>
-          <div>
+          <div className="admin-topbar-actions">
             <button aria-label={t("adminApp.notification")} className="topbar-icon" type="button">
               <Icon name="bell" size={18} />
               {pendingOrders.some((order) => order.status === "pending") && <small />}
             </button>
+            {isSupabaseMode && staffProfile && (
+              <div className="admin-session">
+                <span>{t("adminApp.signedInAs")}</span>
+                <strong>{staffProfile.name}</strong>
+                <small>{getStaffRoleLabel()}</small>
+                <button className="sign-out-button" onClick={handleSignOut} type="button">
+                  <Icon name="log-out" size={16} />
+                  {t("adminApp.signOut")}
+                </button>
+              </div>
+            )}
             <button className="guest-shortcut" onClick={() => setView("guest")} type="button">
               {t("adminApp.guestShortcut")}
             </button>

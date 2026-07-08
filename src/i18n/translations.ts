@@ -111,6 +111,8 @@ export const translations: Record<Language, TranslationTree> = {
       printFailed: "打印失敗，請檢查打印機",
       notification: "通知",
       settleFailed: "結帳失敗，請重試",
+      signedInAs: "目前登入",
+      signOut: "登出",
       orders: {
         activeTab: "待處理及已列印",
         completedTab: "已結帳",
@@ -459,6 +461,8 @@ export const translations: Record<Language, TranslationTree> = {
       printFailed: "Print failed, please check printer",
       notification: "Notifications",
       settleFailed: "Settlement failed, please retry",
+      signedInAs: "Signed in",
+      signOut: "Sign out",
       orders: {
         activeTab: "Pending and printed",
         completedTab: "Settled",
