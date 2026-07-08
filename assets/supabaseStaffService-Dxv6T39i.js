@@ -1,4 +1,4 @@
-import { s as supabase, n as normalizeStaffRole, g as getRestaurantSlug } from './index-DI5FOoSV.js';
+import { s as supabase, n as normalizeStaffRole, g as getRestaurantSlug } from './index-CjqRY2-P.js';
 
 function assertSupabaseClient(client) {
     if (!client)

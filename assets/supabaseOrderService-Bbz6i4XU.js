@@ -1,4 +1,4 @@
-import { s as supabase, g as getRestaurantSlug } from './supabaseClient-B54kyZ9v.js';
+import { s as supabase, g as getRestaurantSlug } from './index-CjqRY2-P.js';
 
 function assertSupabaseClient(client) {
     if (!client)
@@ -80,6 +80,15 @@ async function loadSupabaseOrders(client = supabase) {
         throw error;
     return (data || []).map(mapOrder);
 }
+async function loadSupabaseTableOrders(tableNumber, client = supabase) {
+    const { data, error } = await assertRpcClient(client).rpc("list_table_open_orders", {
+        target_restaurant_slug: getRestaurantSlug(),
+        target_table_number: tableNumber,
+    });
+    if (error)
+        throw error;
+    return (data || []).map(mapOrder);
+}
 async function updateSupabaseOrderStatus(id, status, client = supabase) {
     const { error } = await assertRpcClient(client).rpc("update_order_status", {
         next_status: status,
@@ -119,4 +128,4 @@ function subscribeSupabaseOrderChanges(onChange, client = supabase) {
     };
 }
 
-export { loadSupabaseOrders, placeSupabaseOrder, subscribeSupabaseOrderChanges, updateSupabaseOrderStatus };
+export { loadSupabaseOrders, loadSupabaseTableOrders, placeSupabaseOrder, subscribeSupabaseOrderChanges, updateSupabaseOrderStatus };

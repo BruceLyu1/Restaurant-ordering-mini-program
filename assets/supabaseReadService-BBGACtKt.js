@@ -1,4 +1,4 @@
-import { s as supabase, D as DEFAULT_PRINTER_SETTINGS, a as DEFAULT_RESTAURANT_SETTINGS, g as getRestaurantSlug } from './index-C7qrDld_.js';
+import { s as supabase, D as DEFAULT_PRINTER_SETTINGS, a as DEFAULT_RESTAURANT_SETTINGS, g as getRestaurantSlug } from './index-CjqRY2-P.js';
 
 function assertSupabaseClient(client) {
     if (!client)
