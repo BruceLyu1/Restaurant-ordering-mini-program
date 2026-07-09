@@ -65,11 +65,13 @@ function mapStaffId(row: StaffMemberRow): number {
 }
 
 function mapStaffMember(row: StaffMemberRow): StaffMember {
+  const id = mapStaffId(row);
   return {
     active: row.active ?? true,
     authUserId: row.auth_user_id ?? null,
+    clientId: row.client_id || String(id),
     email: row.email || undefined,
-    id: mapStaffId(row),
+    id,
     name: row.name,
     role: normalizeStaffRole(row.role || "floor"),
   };
@@ -102,7 +104,7 @@ export async function saveSupabaseStaffMembers(
 ): Promise<StaffMember[]> {
   const members = staff.map((member) => ({
     active: member.active,
-    client_id: String(member.id),
+    client_id: member.clientId || String(member.id),
     email: member.email || null,
     name: member.name,
     role: normalizeStaffRole(member.role),

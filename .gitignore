@@ -7,3 +7,4 @@ dist/
 work/
 outputs/
 vite-dev.*.log
+supabase/.temp/

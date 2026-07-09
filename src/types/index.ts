@@ -42,6 +42,7 @@ export interface TableInfo {
 
 export interface StaffMember {
   id: number;
+  clientId?: string;
   name: string;
   role: string;
   active: boolean;

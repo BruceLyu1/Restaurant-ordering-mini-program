@@ -62,7 +62,14 @@ export async function saveStaffAsync(staff: StaffMember[]): Promise<StaffMember[
 }
 
 export function createStaffMember(staff: StaffMember[], member: Omit<StaffMember, "id">): StaffMember[] {
-  return [...staff, { ...member, email: member.email?.trim() || undefined, id: Date.now(), role: normalizeStaffRole(member.role) }];
+  const id = Date.now();
+  return [...staff, {
+    ...member,
+    clientId: member.clientId || String(id),
+    email: member.email?.trim() || undefined,
+    id,
+    role: normalizeStaffRole(member.role),
+  }];
 }
 
 export function toggleStaffActive(staff: StaffMember[], id: number): StaffMember[] {

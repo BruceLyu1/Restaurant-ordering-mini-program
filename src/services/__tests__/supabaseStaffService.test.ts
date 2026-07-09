@@ -41,6 +41,7 @@ describe("supabaseStaffService", () => {
 
     await saveSupabaseStaffMembers([
       ...staff,
+      { active: true, id: 104, name: "Legacy", role: "floor" },
       { active: true, email: "may@example.com", id: 103, name: "May", role: "Cashier" },
     ], client);
 
@@ -48,7 +49,23 @@ describe("supabaseStaffService", () => {
       members: [
         { active: true, client_id: "101", email: "alex@example.com", name: "Alex", role: "manager" },
         { active: false, client_id: "102", email: "casey@example.com", name: "Casey", role: "cashier" },
+        { active: true, client_id: "104", email: null, name: "Legacy", role: "floor" },
         { active: true, client_id: "103", email: "may@example.com", name: "May", role: "cashier" },
+      ],
+      target_restaurant_slug: "harbour-demo",
+    });
+  });
+
+  it("preserves non-numeric Supabase client ids when saving loaded staff", async () => {
+    const client = createRpcClient();
+
+    await saveSupabaseStaffMembers([
+      { active: false, authUserId: "auth-123", clientId: "auth-123", email: "new@example.com", id: 21, name: "New Staff", role: "cashier" },
+    ], client);
+
+    expect(client.rpc).toHaveBeenCalledWith("save_demo_staff_members", {
+      members: [
+        { active: false, client_id: "auth-123", email: "new@example.com", name: "New Staff", role: "cashier" },
       ],
       target_restaurant_slug: "harbour-demo",
     });
@@ -84,8 +101,8 @@ describe("supabaseStaffService", () => {
     };
 
     await expect(loadSupabaseStaffMembers(client)).resolves.toEqual([
-      { active: true, authUserId: "auth-1", email: "alex@example.com", id: 201, name: "Alex", role: "manager" },
-      { active: false, authUserId: null, email: "casey@example.com", id: 2, name: "Casey", role: "floor" },
+      { active: true, authUserId: "auth-1", clientId: "201", email: "alex@example.com", id: 201, name: "Alex", role: "manager" },
+      { active: false, authUserId: null, clientId: "2", email: "casey@example.com", id: 2, name: "Casey", role: "floor" },
     ]);
     expect(restaurantsQuery.eq).toHaveBeenCalledWith("slug", "harbour-branch");
     expect(staffQuery.eq).toHaveBeenCalledWith("restaurant_id", 7);

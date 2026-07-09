@@ -2,8 +2,14 @@ import React, { useState } from "react";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { Toggle } from "../components/ui/Toggle";
 import { useTranslation } from "../i18n/useTranslation";
-import { getStaffRoleLabelKey } from "../services/staffService";
+import { getDataSourceMode } from "../services/dataSource";
+import {
+  createStaffAccount,
+} from "../services/staffAccountService";
+import { getStaffRoleLabelKey, normalizeStaffRole } from "../services/staffService";
+import { useAuthStore } from "../stores/authStore";
 import { useStaffStore } from "../stores/staffStore";
+import type { StaffMember } from "../types";
 
 const DEFAULT_ROLE = "floor";
 const ROLE_OPTIONS = [
@@ -16,25 +22,85 @@ export function StaffManagement() {
   const { t } = useTranslation();
   const staff = useStaffStore((state) => state.staff);
   const add = useStaffStore((state) => state.add);
+  const load = useStaffStore((state) => state.load);
   const toggleActive = useStaffStore((state) => state.toggleActive);
+  const currentStaff = useAuthStore((state) => state.staffProfile);
   const [showForm, setShowForm] = useState(false);
-  const [draft, setDraft] = useState({ email: "", name: "", role: DEFAULT_ROLE });
+  const [draft, setDraft] = useState({ email: "", name: "", password: "", role: DEFAULT_ROLE });
+  const [accountMessage, setAccountMessage] = useState("");
+  const [accountError, setAccountError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [creatingAccount, setCreatingAccount] = useState(false);
+  const isSupabaseMode = getDataSourceMode() === "supabase";
 
   async function addStaff(event: React.FormEvent): Promise<void> {
     event.preventDefault();
-    if (!draft.name.trim() || !draft.email.trim()) return;
+    if (!draft.name.trim() || !draft.email.trim() || (isSupabaseMode && !draft.password)) return;
 
     try {
-      await add({ active: true, email: draft.email.trim(), name: draft.name.trim(), role: draft.role });
-      setDraft({ email: "", name: "", role: DEFAULT_ROLE });
+      setAccountError("");
+      setAccountMessage("");
+      setSaveError("");
+      setCreatingAccount(true);
+      if (isSupabaseMode) {
+        const email = draft.email.trim();
+        await createStaffAccount({
+          email,
+          name: draft.name.trim(),
+          password: draft.password,
+          role: draft.role,
+        });
+        await load();
+        setAccountMessage(t("staffManagement.account.created", { email }));
+      } else {
+        await add({ active: true, email: draft.email.trim(), name: draft.name.trim(), role: draft.role });
+      }
+      setDraft({ email: "", name: "", password: "", role: DEFAULT_ROLE });
       setShowForm(false);
     } catch (error) {
-      console.error("Save staff failed", error);
+      console.error("Create staff account failed", error);
+      const message = error instanceof Error && error.message ? error.message : t("staffManagement.saveFailed");
+      if (isSupabaseMode) setAccountError(message);
+      else setSaveError(t("staffManagement.saveFailed"));
+    } finally {
+      setCreatingAccount(false);
     }
   }
 
-  function toggleStaffActive(id: number): void {
-    void toggleActive(id).catch((error) => console.error("Save staff status failed", error));
+  function isCurrentStaff(member: StaffMember): boolean {
+    if (!currentStaff) return false;
+    if (member.authUserId && currentStaff.authUserId) return member.authUserId === currentStaff.authUserId;
+    if (member.email && currentStaff.email) return member.email.toLowerCase() === currentStaff.email.toLowerCase();
+    return member.id === currentStaff.id;
+  }
+
+  function getActiveManagerCount(): number {
+    return staff.filter((member) => member.active && normalizeStaffRole(member.role) === "manager").length;
+  }
+
+  function getStaffStatusClass(member: { active: boolean; authUserId?: string | null }): string {
+    if (!member.active) return "inactive";
+    return member.authUserId === null || member.authUserId === undefined ? "inactive" : "active";
+  }
+
+  function toggleStaffActive(member: StaffMember): void {
+    const isManager = normalizeStaffRole(member.role) === "manager";
+    if (member.active && isManager && isCurrentStaff(member)) {
+      setSaveError(t("staffManagement.cannotDisableCurrentManager"));
+      return;
+    }
+    if (member.active && isManager && getActiveManagerCount() <= 1) {
+      setSaveError(t("staffManagement.cannotDisableLastManager"));
+      return;
+    }
+
+    setSaveError("");
+    void toggleActive(member.id).catch((error) => console.error("Save staff status failed", error));
+  }
+
+  function getAccountStatus(member: { active: boolean; authUserId?: string | null }): string {
+    if (!member.active) return t("staffManagement.account.disabled");
+    return member.authUserId ? t("staffManagement.account.linked") : t("staffManagement.account.notLinked");
   }
 
   return (
@@ -44,20 +110,37 @@ export function StaffManagement() {
         description={t("staffManagement.description")}
         title={t("staffManagement.title")}
       />
+      {accountMessage && <p className="save-message" role="status">{accountMessage}</p>}
+      {accountError && <p className="save-message error" role="alert">{accountError}</p>}
+      {saveError && <p className="save-message error" role="alert">{saveError}</p>}
       {showForm && (
         <form className="inline-form" onSubmit={addStaff}>
           <input aria-label={t("staffManagement.name")} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder={t("staffManagement.name")} value={draft.name} />
           <input aria-label={t("staffManagement.email")} onChange={(event) => setDraft({ ...draft, email: event.target.value })} placeholder={t("staffManagement.email")} type="email" value={draft.email} />
+          {isSupabaseMode && (
+            <input aria-label={t("staffManagement.password")} onChange={(event) => setDraft({ ...draft, password: event.target.value })} placeholder={t("staffManagement.password")} type="password" value={draft.password} />
+          )}
           <select aria-label={t("staffManagement.role")} onChange={(event) => setDraft({ ...draft, role: event.target.value })} value={draft.role}>
             {ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{t(role.labelKey)}</option>)}
           </select>
-          <button className="management-primary" type="submit">{t("staffManagement.createAccount")}</button>
+          <button className="management-primary" disabled={creatingAccount} type="submit">
+            {isSupabaseMode ? t("staffManagement.createAccount") : t("staffManagement.createProfile")}
+          </button>
           <button className="management-secondary" onClick={() => setShowForm(false)} type="button">{t("common.cancel")}</button>
         </form>
       )}
       <div className="management-panel table-panel">
         <table className="management-table">
-          <thead><tr><th>{t("staffManagement.table.staff")}</th><th>{t("staffManagement.table.email")}</th><th>{t("staffManagement.table.role")}</th><th>{t("staffManagement.table.status")}</th><th>{t("staffManagement.table.enabled")}</th></tr></thead>
+          <thead>
+            <tr>
+              <th>{t("staffManagement.table.staff")}</th>
+              <th>{t("staffManagement.table.email")}</th>
+              <th>{t("staffManagement.table.role")}</th>
+              <th>{t("staffManagement.table.status")}</th>
+              {isSupabaseMode && <th>{t("staffManagement.table.account")}</th>}
+              <th>{t("staffManagement.table.enabled")}</th>
+            </tr>
+          </thead>
           <tbody>
             {staff.map((member) => (
               <tr key={member.id}>
@@ -65,7 +148,10 @@ export function StaffManagement() {
                 <td>{member.email || "-"}</td>
                 <td>{t(getStaffRoleLabelKey(member.role))}</td>
                 <td><span className={`list-status ${member.active ? "active" : "inactive"}`}>{member.active ? t("staffManagement.active") : t("staffManagement.inactive")}</span></td>
-                <td><Toggle checked={member.active} label={t("staffManagement.toggle", { name: member.name })} onChange={() => toggleStaffActive(member.id)} /></td>
+                {isSupabaseMode && (
+                  <td><span className={`list-status ${getStaffStatusClass(member)}`}>{getAccountStatus(member)}</span></td>
+                )}
+                <td><Toggle checked={member.active} label={t("staffManagement.toggle", { name: member.name })} onChange={() => toggleStaffActive(member)} /></td>
               </tr>
             ))}
           </tbody>
