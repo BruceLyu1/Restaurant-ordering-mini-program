@@ -1,4 +1,4 @@
-import { s as supabase, g as getRestaurantSlug } from './index-CjqRY2-P.js';
+import { s as supabase, g as getRestaurantSlug } from './index-Da5keMvf.js';
 
 function assertSupabaseClient(client) {
     if (!client)

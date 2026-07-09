@@ -1,4 +1,4 @@
-import { s as supabase, n as normalizeStaffRole, g as getRestaurantSlug } from './index-CjqRY2-P.js';
+import { s as supabase, n as normalizeStaffRole, g as getRestaurantSlug } from './index-Da5keMvf.js';
 
 function assertSupabaseClient(client) {
     if (!client)
@@ -22,11 +22,13 @@ function mapStaffId(row) {
     return Number.isFinite(clientId) && clientId > 0 ? clientId : row.id;
 }
 function mapStaffMember(row) {
+    const id = mapStaffId(row);
     return {
         active: row.active ?? true,
         authUserId: row.auth_user_id ?? null,
+        clientId: row.client_id || String(id),
         email: row.email || undefined,
-        id: mapStaffId(row),
+        id,
         name: row.name,
         role: normalizeStaffRole(row.role || "floor"),
     };
@@ -52,7 +54,7 @@ async function loadSupabaseStaffMembers(client = supabase) {
 async function saveSupabaseStaffMembers(staff, client = supabase) {
     const members = staff.map((member) => ({
         active: member.active,
-        client_id: String(member.id),
+        client_id: member.clientId || String(member.id),
         email: member.email || null,
         name: member.name,
         role: normalizeStaffRole(member.role),

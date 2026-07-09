@@ -17444,7 +17444,7 @@ async function loadRestaurantSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadRestaurantSettings();
     try {
-        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-BBGACtKt.js');return { loadSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseRestaurantSettings();
     }
     catch {
@@ -17459,7 +17459,7 @@ async function saveRestaurantSettingsAsync(settings) {
         saveRestaurantSettings(settings);
         return;
     }
-    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-C_CNKrER.js');return { saveSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-BvvyHVam.js');return { saveSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseRestaurantSettings(settings);
 }
 function loadPrinterSettings() {
@@ -17472,7 +17472,7 @@ async function loadPrinterSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadPrinterSettings();
     try {
-        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-BBGACtKt.js');return { loadSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
         return await loadSupabasePrinterSettings();
     }
     catch {
@@ -17487,7 +17487,7 @@ async function savePrinterSettingsAsync(settings) {
         savePrinterSettings(settings);
         return;
     }
-    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-C_CNKrER.js');return { saveSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-BvvyHVam.js');return { saveSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
     await saveSupabasePrinterSettings(settings);
 }
 function timeToMinutes(time) {
@@ -17809,18 +17809,31 @@ const translations = {
         staffManagement: {
             active: "可登入",
             add: "新增員工",
-            createAccount: "建立帳戶",
+            account: {
+                created: "已建立員工帳號：{email}。",
+                disabled: "已停用",
+                linked: "已綁定",
+                notLinked: "未綁定",
+            },
+            createAccount: "新增員工帳號",
+            createProfile: "新增員工資料",
+            cannotDisableCurrentManager: "不能停用目前登入的經理帳號，避免無法進入後台。",
+            cannotDisableLastManager: "至少需要保留一個啟用中的經理帳號。",
             description: "建立員工帳戶並控制後台使用權限。",
             email: "Email",
             inactive: "已停用",
             name: "員工姓名",
+            password: "密碼",
             role: "員工角色",
+            saveFailed: "員工資料保存失敗，請確認資料後再試。",
             roles: {
                 cashier: "收銀員",
                 floor: "樓面",
                 manager: "經理",
             },
             table: {
+                account: "帳號",
+                actions: "帳號操作",
                 enabled: "啟用",
                 email: "Email",
                 role: "角色",
@@ -18156,18 +18169,31 @@ const translations = {
         staffManagement: {
             active: "Can sign in",
             add: "Add staff",
-            createAccount: "Create account",
+            account: {
+                created: "Staff account created for {email}.",
+                disabled: "Disabled",
+                linked: "Linked",
+                notLinked: "Not linked",
+            },
+            createAccount: "Add staff account",
+            createProfile: "Add staff profile",
+            cannotDisableCurrentManager: "You cannot disable the manager account currently signed in.",
+            cannotDisableLastManager: "At least one active manager account must remain enabled.",
             description: "Create staff accounts and control back-office access.",
             email: "Email",
             inactive: "Disabled",
             name: "Staff name",
+            password: "Password",
             role: "Staff role",
+            saveFailed: "Staff save failed. Please check the details and try again.",
             roles: {
                 cashier: "Cashier",
                 floor: "Floor",
                 manager: "Manager",
             },
             table: {
+                account: "Account",
+                actions: "Account actions",
                 enabled: "Enabled",
                 email: "Email",
                 role: "Role",
@@ -18381,7 +18407,7 @@ async function loadStaffAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadStaff();
     try {
-        const { loadSupabaseStaffMembers } = await __vitePreload(async () => { const { loadSupabaseStaffMembers } = await import('./supabaseStaffService-Dxv6T39i.js');return { loadSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseStaffMembers } = await __vitePreload(async () => { const { loadSupabaseStaffMembers } = await import('./supabaseStaffService-CKPOXUlx.js');return { loadSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseStaffMembers();
     }
     catch {
@@ -18397,11 +18423,18 @@ async function saveStaffAsync(staff) {
         saveStaff(normalized);
         return normalized;
     }
-    const { saveSupabaseStaffMembers } = await __vitePreload(async () => { const { saveSupabaseStaffMembers } = await import('./supabaseStaffService-Dxv6T39i.js');return { saveSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseStaffMembers } = await __vitePreload(async () => { const { saveSupabaseStaffMembers } = await import('./supabaseStaffService-CKPOXUlx.js');return { saveSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
     return await saveSupabaseStaffMembers(normalized);
 }
 function createStaffMember(staff, member) {
-    return [...staff, { ...member, email: member.email?.trim() || undefined, id: Date.now(), role: normalizeStaffRole(member.role) }];
+    const id = Date.now();
+    return [...staff, {
+            ...member,
+            clientId: member.clientId || String(id),
+            email: member.email?.trim() || undefined,
+            id,
+            role: normalizeStaffRole(member.role),
+        }];
 }
 function toggleStaffActive(staff, id) {
     return staff.map((member) => (member.id === id ? { ...member, active: !member.active } : member));
@@ -40975,7 +41008,7 @@ async function loadOrdersAsync(menuItems, options = {}) {
     if (getDataSourceMode() !== "supabase")
         return loadOrders(menuItems);
     try {
-        const { loadSupabaseOrders, loadSupabaseTableOrders } = await __vitePreload(async () => { const { loadSupabaseOrders, loadSupabaseTableOrders } = await import('./supabaseOrderService-Bbz6i4XU.js');return { loadSupabaseOrders, loadSupabaseTableOrders }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseOrders, loadSupabaseTableOrders } = await __vitePreload(async () => { const { loadSupabaseOrders, loadSupabaseTableOrders } = await import('./supabaseOrderService-C8miLlKb.js');return { loadSupabaseOrders, loadSupabaseTableOrders }},true              ?[]:void 0,import.meta.url);
         return options.tableNumber
             ? await loadSupabaseTableOrders(options.tableNumber)
             : await loadSupabaseOrders();
@@ -41009,7 +41042,7 @@ async function placeOrderAsync(params) {
     if (getDataSourceMode() !== "supabase")
         return placeOrder(params);
     try {
-        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-Bbz6i4XU.js');return { placeSupabaseOrder }},true              ?[]:void 0,import.meta.url);
+        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-C8miLlKb.js');return { placeSupabaseOrder }},true              ?[]:void 0,import.meta.url);
         return await placeSupabaseOrder(params);
     }
     catch {
@@ -41025,7 +41058,7 @@ async function updateOrderStatusAsync(id, status, menuItems) {
         return;
     }
     try {
-        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-Bbz6i4XU.js');return { updateSupabaseOrderStatus }},true              ?[]:void 0,import.meta.url);
+        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-C8miLlKb.js');return { updateSupabaseOrderStatus }},true              ?[]:void 0,import.meta.url);
         await updateSupabaseOrderStatus(id, status);
     }
     catch {
@@ -41182,7 +41215,7 @@ async function loadMenuItemsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadMenuItems();
     try {
-        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-BBGACtKt.js');return { loadSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseMenuItems();
     }
     catch {
@@ -41197,13 +41230,13 @@ async function saveMenuItemsAsync(items) {
         saveMenuItems(items);
         return;
     }
-    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-CxdMawZ_.js');return { saveSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-DBmnZbNA.js');return { saveSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseMenuItems(items);
 }
 async function uploadDishPhotoAsync(dataUrl) {
     if (getDataSourceMode() !== "supabase")
         return dataUrl;
-    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-CxdMawZ_.js');return { uploadSupabaseDishPhoto }},true              ?[]:void 0,import.meta.url);
+    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-DBmnZbNA.js');return { uploadSupabaseDishPhoto }},true              ?[]:void 0,import.meta.url);
     return uploadSupabaseDishPhoto(dataUrl);
 }
 function toggleSoldOut(items, id) {
@@ -41360,7 +41393,7 @@ async function loadTablesAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadTables();
     try {
-        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-BBGACtKt.js');return { loadSupabaseTables }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabaseTables }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseTables();
     }
     catch {
@@ -41375,7 +41408,7 @@ async function saveTablesAsync(tables) {
         saveTables(tables);
         return;
     }
-    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-BoFarfHq.js');return { saveSupabaseTables }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DqZyybZG.js');return { saveSupabaseTables }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseTables(tables);
 }
 
@@ -41927,6 +41960,64 @@ function RestaurantSettings() {
                                                 }, placeholder: t("restaurantSettings.newPinPlaceholder"), type: "password", value: pinDraft })] }), pinError && jsx("span", { className: "pin-error", children: pinError })] })] }), jsx("footer", { children: jsx("button", { className: "management-primary", type: "submit", children: t("restaurantSettings.save") }) })] })] }));
 }
 
+function assertFunctionsClient(client) {
+    if (!client?.functions)
+        throw new Error("Supabase Functions are not configured");
+    return client;
+}
+function getFunctionMessage(data) {
+    if (!data || typeof data !== "object" || !("message" in data))
+        return null;
+    const message = data.message;
+    return typeof message === "string" && message.trim() ? message : null;
+}
+function isReadableResponse(value) {
+    return typeof Response !== "undefined" && value instanceof Response;
+}
+async function getErrorContextMessage(error) {
+    if (!error || !("context" in error) || !isReadableResponse(error.context))
+        return null;
+    const response = error.context;
+    try {
+        return getFunctionMessage(await response.clone().json());
+    }
+    catch {
+        try {
+            const text = await response.clone().text();
+            return text.trim() || null;
+        }
+        catch {
+            return null;
+        }
+    }
+}
+async function getFunctionErrorMessage(data, error) {
+    return getFunctionMessage(data)
+        || await getErrorContextMessage(error)
+        || error?.message
+        || "Staff account request failed";
+}
+async function invokeStaffAccountAction(staff, client = supabase) {
+    if (getDataSourceMode() !== "supabase" && client === supabase) {
+        throw new Error("Staff account creation is only available in Supabase mode");
+    }
+    const { data, error } = await assertFunctionsClient(client).functions.invoke("staff-account", {
+        body: {
+            action: "create-staff-account",
+            email: staff.email.trim().toLowerCase(),
+            name: staff.name.trim(),
+            password: staff.password,
+            restaurantSlug: getRestaurantSlug(),
+            role: staff.role,
+        },
+    });
+    if (error)
+        throw new Error(await getFunctionErrorMessage(data, error));
+}
+async function createStaffAccount(staff, client) {
+    return invokeStaffAccountAction(staff, client);
+}
+
 let staffSaveQueue = Promise.resolve([]);
 let pendingStaffSaves = 0;
 let queuedSupabaseLoad = false;
@@ -42025,26 +42116,90 @@ function StaffManagement() {
     const { t } = useTranslation();
     const staff = useStaffStore((state) => state.staff);
     const add = useStaffStore((state) => state.add);
+    const load = useStaffStore((state) => state.load);
     const toggleActive = useStaffStore((state) => state.toggleActive);
+    const currentStaff = useAuthStore((state) => state.staffProfile);
     const [showForm, setShowForm] = useState(false);
-    const [draft, setDraft] = useState({ email: "", name: "", role: DEFAULT_ROLE });
+    const [draft, setDraft] = useState({ email: "", name: "", password: "", role: DEFAULT_ROLE });
+    const [accountMessage, setAccountMessage] = useState("");
+    const [accountError, setAccountError] = useState("");
+    const [saveError, setSaveError] = useState("");
+    const [creatingAccount, setCreatingAccount] = useState(false);
+    const isSupabaseMode = getDataSourceMode() === "supabase";
     async function addStaff(event) {
         event.preventDefault();
-        if (!draft.name.trim() || !draft.email.trim())
+        if (!draft.name.trim() || !draft.email.trim() || (isSupabaseMode && !draft.password))
             return;
         try {
-            await add({ active: true, email: draft.email.trim(), name: draft.name.trim(), role: draft.role });
-            setDraft({ email: "", name: "", role: DEFAULT_ROLE });
+            setAccountError("");
+            setAccountMessage("");
+            setSaveError("");
+            setCreatingAccount(true);
+            if (isSupabaseMode) {
+                const email = draft.email.trim();
+                await createStaffAccount({
+                    email,
+                    name: draft.name.trim(),
+                    password: draft.password,
+                    role: draft.role,
+                });
+                await load();
+                setAccountMessage(t("staffManagement.account.created", { email }));
+            }
+            else {
+                await add({ active: true, email: draft.email.trim(), name: draft.name.trim(), role: draft.role });
+            }
+            setDraft({ email: "", name: "", password: "", role: DEFAULT_ROLE });
             setShowForm(false);
         }
         catch (error) {
-            console.error("Save staff failed", error);
+            console.error("Create staff account failed", error);
+            const message = error instanceof Error && error.message ? error.message : t("staffManagement.saveFailed");
+            if (isSupabaseMode)
+                setAccountError(message);
+            else
+                setSaveError(t("staffManagement.saveFailed"));
+        }
+        finally {
+            setCreatingAccount(false);
         }
     }
-    function toggleStaffActive(id) {
-        void toggleActive(id).catch((error) => console.error("Save staff status failed", error));
+    function isCurrentStaff(member) {
+        if (!currentStaff)
+            return false;
+        if (member.authUserId && currentStaff.authUserId)
+            return member.authUserId === currentStaff.authUserId;
+        if (member.email && currentStaff.email)
+            return member.email.toLowerCase() === currentStaff.email.toLowerCase();
+        return member.id === currentStaff.id;
     }
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", onClick: () => setShowForm(true), type: "button", children: t("staffManagement.add") }), description: t("staffManagement.description"), title: t("staffManagement.title") }), showForm && (jsxs("form", { className: "inline-form", onSubmit: addStaff, children: [jsx("input", { "aria-label": t("staffManagement.name"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("staffManagement.name"), value: draft.name }), jsx("input", { "aria-label": t("staffManagement.email"), onChange: (event) => setDraft({ ...draft, email: event.target.value }), placeholder: t("staffManagement.email"), type: "email", value: draft.email }), jsx("select", { "aria-label": t("staffManagement.role"), onChange: (event) => setDraft({ ...draft, role: event.target.value }), value: draft.role, children: ROLE_OPTIONS.map((role) => jsx("option", { value: role.value, children: t(role.labelKey) }, role.value)) }), jsx("button", { className: "management-primary", type: "submit", children: t("staffManagement.createAccount") }), jsx("button", { className: "management-secondary", onClick: () => setShowForm(false), type: "button", children: t("common.cancel") })] })), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("staffManagement.table.staff") }), jsx("th", { children: t("staffManagement.table.email") }), jsx("th", { children: t("staffManagement.table.role") }), jsx("th", { children: t("staffManagement.table.status") }), jsx("th", { children: t("staffManagement.table.enabled") })] }) }), jsx("tbody", { children: staff.map((member) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { children: member.name }) }), jsx("td", { children: member.email || "-" }), jsx("td", { children: t(getStaffRoleLabelKey(member.role)) }), jsx("td", { children: jsx("span", { className: `list-status ${member.active ? "active" : "inactive"}`, children: member.active ? t("staffManagement.active") : t("staffManagement.inactive") }) }), jsx("td", { children: jsx(Toggle, { checked: member.active, label: t("staffManagement.toggle", { name: member.name }), onChange: () => toggleStaffActive(member.id) }) })] }, member.id))) })] }) })] }));
+    function getActiveManagerCount() {
+        return staff.filter((member) => member.active && normalizeStaffRole(member.role) === "manager").length;
+    }
+    function getStaffStatusClass(member) {
+        if (!member.active)
+            return "inactive";
+        return member.authUserId === null || member.authUserId === undefined ? "inactive" : "active";
+    }
+    function toggleStaffActive(member) {
+        const isManager = normalizeStaffRole(member.role) === "manager";
+        if (member.active && isManager && isCurrentStaff(member)) {
+            setSaveError(t("staffManagement.cannotDisableCurrentManager"));
+            return;
+        }
+        if (member.active && isManager && getActiveManagerCount() <= 1) {
+            setSaveError(t("staffManagement.cannotDisableLastManager"));
+            return;
+        }
+        setSaveError("");
+        void toggleActive(member.id).catch((error) => console.error("Save staff status failed", error));
+    }
+    function getAccountStatus(member) {
+        if (!member.active)
+            return t("staffManagement.account.disabled");
+        return member.authUserId ? t("staffManagement.account.linked") : t("staffManagement.account.notLinked");
+    }
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { action: jsx("button", { className: "management-primary", onClick: () => setShowForm(true), type: "button", children: t("staffManagement.add") }), description: t("staffManagement.description"), title: t("staffManagement.title") }), accountMessage && jsx("p", { className: "save-message", role: "status", children: accountMessage }), accountError && jsx("p", { className: "save-message error", role: "alert", children: accountError }), saveError && jsx("p", { className: "save-message error", role: "alert", children: saveError }), showForm && (jsxs("form", { className: "inline-form", onSubmit: addStaff, children: [jsx("input", { "aria-label": t("staffManagement.name"), onChange: (event) => setDraft({ ...draft, name: event.target.value }), placeholder: t("staffManagement.name"), value: draft.name }), jsx("input", { "aria-label": t("staffManagement.email"), onChange: (event) => setDraft({ ...draft, email: event.target.value }), placeholder: t("staffManagement.email"), type: "email", value: draft.email }), isSupabaseMode && (jsx("input", { "aria-label": t("staffManagement.password"), onChange: (event) => setDraft({ ...draft, password: event.target.value }), placeholder: t("staffManagement.password"), type: "password", value: draft.password })), jsx("select", { "aria-label": t("staffManagement.role"), onChange: (event) => setDraft({ ...draft, role: event.target.value }), value: draft.role, children: ROLE_OPTIONS.map((role) => jsx("option", { value: role.value, children: t(role.labelKey) }, role.value)) }), jsx("button", { className: "management-primary", disabled: creatingAccount, type: "submit", children: isSupabaseMode ? t("staffManagement.createAccount") : t("staffManagement.createProfile") }), jsx("button", { className: "management-secondary", onClick: () => setShowForm(false), type: "button", children: t("common.cancel") })] })), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("staffManagement.table.staff") }), jsx("th", { children: t("staffManagement.table.email") }), jsx("th", { children: t("staffManagement.table.role") }), jsx("th", { children: t("staffManagement.table.status") }), isSupabaseMode && jsx("th", { children: t("staffManagement.table.account") }), jsx("th", { children: t("staffManagement.table.enabled") })] }) }), jsx("tbody", { children: staff.map((member) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { children: member.name }) }), jsx("td", { children: member.email || "-" }), jsx("td", { children: t(getStaffRoleLabelKey(member.role)) }), jsx("td", { children: jsx("span", { className: `list-status ${member.active ? "active" : "inactive"}`, children: member.active ? t("staffManagement.active") : t("staffManagement.inactive") }) }), isSupabaseMode && (jsx("td", { children: jsx("span", { className: `list-status ${getStaffStatusClass(member)}`, children: getAccountStatus(member) }) })), jsx("td", { children: jsx(Toggle, { checked: member.active, label: t("staffManagement.toggle", { name: member.name }), onChange: () => toggleStaffActive(member) }) })] }, member.id))) })] }) })] }));
 }
 
 function TableManagement({ guestBaseUrl, tables }) {
@@ -42460,7 +42615,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-Bbz6i4XU.js');return { subscribeSupabaseOrderChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-C8miLlKb.js');return { subscribeSupabaseOrderChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseOrderChanges(() => {
@@ -42513,7 +42668,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-C_CNKrER.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
+        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-BvvyHVam.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
             if (cancelled)
                 return;
             const cleanupRestaurantSettings = subscribeSupabaseRestaurantSettingsChanges(() => {
@@ -42546,7 +42701,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-CxdMawZ_.js');return { subscribeSupabaseMenuChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-DBmnZbNA.js');return { subscribeSupabaseMenuChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseMenuChanges(() => {
@@ -42576,7 +42731,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseStaffChanges} = await import('./supabaseStaffService-Dxv6T39i.js');return { subscribeSupabaseStaffChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseStaffChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseStaffChanges} = await import('./supabaseStaffService-CKPOXUlx.js');return { subscribeSupabaseStaffChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseStaffChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseStaffChanges(() => {
@@ -42600,7 +42755,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-BoFarfHq.js');return { subscribeSupabaseTableChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DqZyybZG.js');return { subscribeSupabaseTableChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseTableChanges(() => {

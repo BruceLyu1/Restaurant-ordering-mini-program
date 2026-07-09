@@ -296,8 +296,8 @@ p {
 }
 
 .list-status.inactive {
-  background: var(--orange-pale);
-  color: var(--orange);
+  background: #fee4e2;
+  color: #b42318;
 }
 
 .toggle {
