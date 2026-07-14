@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CartBar } from "../components/guest/CartBar";
 import { CartSheet } from "../components/guest/CartSheet";
 import { ConfirmationCard } from "../components/guest/ConfirmationCard";
@@ -36,6 +36,7 @@ export function GuestApp({ activeMealPeriod, tableNumber }: GuestAppProps) {
   const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<Order | null>(null);
   const [stockNotice, setStockNotice] = useState("");
+  const hadOpenTableOrders = useRef(false);
   const tableOrders = useMemo(
     () => listOrdersByTable(orders, tableNumber),
     [orders, tableNumber],
@@ -99,6 +100,18 @@ export function GuestApp({ activeMealPeriod, tableNumber }: GuestAppProps) {
   useEffect(() => {
     if (!categories.includes(activeCategory)) setActiveCategory(ALL_CATEGORY);
   }, [activeCategory, categories]);
+
+  useEffect(() => {
+    if (tableOrders.length > 0) {
+      hadOpenTableOrders.current = true;
+      return;
+    }
+    if (!hadOpenTableOrders.current || !isOrderHistoryOpen) return;
+
+    hadOpenTableOrders.current = false;
+    setOrderHistoryOpen(false);
+    setStockNotice(t("guestApp.ordersSettled"));
+  }, [isOrderHistoryOpen, t, tableOrders.length]);
 
   useEffect(() => {
     const unavailableIds = new Set(menuItems

@@ -64,14 +64,10 @@ export function loadOrders(menuItems: MenuItem[]): Order[] {
 export async function loadOrdersAsync(menuItems: MenuItem[], options: LoadOrdersOptions = {}): Promise<Order[]> {
   if (getDataSourceMode() !== "supabase") return loadOrders(menuItems);
 
-  try {
-    const { loadSupabaseOrders, loadSupabaseTableOrders } = await import("./supabaseOrderService");
-    return options.tableNumber
-      ? await loadSupabaseTableOrders(options.tableNumber)
-      : await loadSupabaseOrders();
-  } catch {
-    return loadOrders(menuItems);
-  }
+  const { loadSupabaseOrders, loadSupabaseTableOrders } = await import("./supabaseOrderService");
+  return options.tableNumber
+    ? await loadSupabaseTableOrders(options.tableNumber)
+    : await loadSupabaseOrders();
 }
 
 export function saveOrders(orders: Order[]): void {
@@ -99,12 +95,8 @@ export async function placeOrderAsync(params: PlaceOrderInput): Promise<Order | 
   if (!canPlaceOrder(params)) return null;
   if (getDataSourceMode() !== "supabase") return placeOrder(params);
 
-  try {
-    const { placeSupabaseOrder } = await import("./supabaseOrderService");
-    return await placeSupabaseOrder(params);
-  } catch {
-    return placeOrder(params);
-  }
+  const { placeSupabaseOrder } = await import("./supabaseOrderService");
+  return placeSupabaseOrder(params);
 }
 
 export function updateOrderStatus(id: string, status: Order["status"], menuItems: MenuItem[]): void {
@@ -117,12 +109,8 @@ export async function updateOrderStatusAsync(id: string, status: Order["status"]
     return;
   }
 
-  try {
-    const { updateSupabaseOrderStatus } = await import("./supabaseOrderService");
-    await updateSupabaseOrderStatus(id, status);
-  } catch {
-    updateOrderStatus(id, status, menuItems);
-  }
+  const { updateSupabaseOrderStatus } = await import("./supabaseOrderService");
+  await updateSupabaseOrderStatus(id, status);
 }
 
 export function listActiveOrders(orders: Order[]): Order[] {

@@ -116,6 +116,28 @@ describe("AdminApp store integration", () => {
     expect(await screen.findByText("Print failed, please check printer")).toBeTruthy();
   });
 
+  it("confirms settlement before updating the order status", async () => {
+    window.localStorage.setItem("harbour-language", "en");
+    const updateStatus = vi.fn(async () => undefined);
+    useOrderStore.setState({ updateStatus });
+
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Settle" }));
+
+    expect(screen.getByRole("dialog", { name: "Confirm settlement" })).toBeTruthy();
+    expect(updateStatus).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm settlement" }));
+
+    await vi.waitFor(() => {
+      expect(updateStatus).toHaveBeenCalledWith("HO-2001", "settled", []);
+    });
+  });
+
   it("shows an error when settlement status update fails", async () => {
     window.localStorage.setItem("harbour-language", "en");
     const updateStatus = vi.fn(async () => {
@@ -130,6 +152,7 @@ describe("AdminApp store integration", () => {
     );
 
     fireEvent.click(screen.getAllByRole("button", { name: /Settle/ }).at(-1)!);
+    fireEvent.click(screen.getByRole("button", { name: "Confirm settlement" }));
 
     expect(await screen.findByText("Settlement failed, please retry")).toBeTruthy();
   });

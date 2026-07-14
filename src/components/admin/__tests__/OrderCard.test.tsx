@@ -41,4 +41,19 @@ describe("OrderCard", () => {
     expect(screen.getByText("Settled")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /Print|Settle/ })).toBeNull();
   });
+
+  it("keeps print available but hides settlement when the role cannot settle", () => {
+    renderWithLanguage(<OrderCard canSettle={false} menuItems={menuItems} onPrint={vi.fn()} onSettle={vi.fn()} order={makeOrder("printed")} />);
+
+    expect(screen.getByRole("button", { name: /Reprint/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Settle/ })).toBeNull();
+  });
+
+  it("shows settlement audit details for settled orders", () => {
+    const order = { ...makeOrder("settled"), settledAt: "2026-06-24T10:30:00.000Z", settledByName: "Alex" };
+    renderWithLanguage(<OrderCard menuItems={menuItems} onPrint={vi.fn()} onSettle={vi.fn()} order={order} />);
+
+    expect(screen.getByText("Settled by: Alex")).toBeTruthy();
+    expect(screen.getByText(/Settled at:/)).toBeTruthy();
+  });
 });

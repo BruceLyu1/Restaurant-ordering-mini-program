@@ -8,13 +8,15 @@ import { getMenuItem, getOrderCount, getOrderTotal } from "../../utils/order";
 import type { MenuItem, Order } from "../../types";
 
 interface OrderCardProps {
+  canSettle?: boolean;
+  isSettling?: boolean;
   menuItems: MenuItem[];
   order: Order;
   onPrint: (id: string) => void;
   onSettle: (id: string) => void;
 }
 
-export function OrderCard({ menuItems, order, onPrint, onSettle }: OrderCardProps) {
+export function OrderCard({ canSettle = true, isSettling = false, menuItems, order, onPrint, onSettle }: OrderCardProps) {
   const { t } = useTranslation();
 
   return (
@@ -56,14 +58,20 @@ export function OrderCard({ menuItems, order, onPrint, onSettle }: OrderCardProp
               {order.status === "printed" ? t("adminApp.orders.reprint") : t("common.print")}
             </button>
           )}
-          {order.status !== "settled" && (
-            <button className="settle-button" onClick={() => onSettle(order.id)} type="button">
+          {order.status !== "settled" && canSettle && (
+            <button className="settle-button" disabled={isSettling} onClick={() => onSettle(order.id)} type="button">
               <Icon name="check" size={15} />
               {t("adminApp.orders.settle")}
             </button>
           )}
         </div>
       </footer>
+      {order.status === "settled" && (order.settledAt || order.settledByName) && (
+        <p className="settlement-record">
+          {order.settledByName && <span>{t("adminApp.orders.settledBy", { name: order.settledByName })}</span>}
+          {order.settledAt && <time dateTime={order.settledAt}>{t("adminApp.orders.settledAt", { time: formatTime(order.settledAt) })}</time>}
+        </p>
+      )}
     </article>
   );
 }

@@ -38,6 +38,8 @@ interface RemoteOrderRow {
   order_lines?: RemoteOrderLineRow[];
   order_number?: number;
   sequence?: number;
+  settled_at?: string | null;
+  settled_by_name?: string | null;
   status?: string;
   table?: string;
   tables?: { number?: string } | { number?: string }[];
@@ -103,6 +105,8 @@ function mapOrder(row: RemoteOrderRow): Order {
     id: typeof row.id === "string" && row.id.startsWith("HO-") ? row.id : `HO-${sequence}`,
     items: lines.map(mapOrderLine),
     sequence,
+    settledAt: row.settled_at || undefined,
+    settledByName: row.settled_by_name || undefined,
     status: getOrderStatus(row.status),
     table: getTableNumber(row),
   };
@@ -137,7 +141,7 @@ export async function loadSupabaseOrders(
 
   const { data, error } = await db
     .from("orders")
-    .select("order_number,status,created_at,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents)")
+    .select("order_number,status,created_at,settled_at,settled_by_name,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents)")
     .order("created_at", { ascending: true });
 
   if (error) throw error;

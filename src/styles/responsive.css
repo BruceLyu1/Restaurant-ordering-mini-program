@@ -66,6 +66,11 @@
     grid-template-columns: 1fr;
   }
 
+  .settlement-record {
+    flex-direction: column;
+    gap: 3px;
+  }
+
   .ranking-panel {
     padding: 20px 12px;
   }

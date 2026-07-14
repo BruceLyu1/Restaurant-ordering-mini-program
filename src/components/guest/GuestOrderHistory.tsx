@@ -20,7 +20,7 @@ export function GuestOrderHistory({ menuItems, onClose, orders, tableNumber }: G
 
   return (
     <div className="modal-backdrop">
-      <section className="cart-sheet order-history-sheet" aria-label={t("guestApp.history.label")}>
+      <section aria-label={t("guestApp.history.label")} aria-modal="true" className="cart-sheet order-history-sheet" role="dialog">
         <div className="sheet-handle" />
         <header>
           <div>

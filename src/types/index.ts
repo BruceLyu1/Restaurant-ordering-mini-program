@@ -31,6 +31,8 @@ export interface Order {
   table: string;
   createdAt: string;
   status: "pending" | "printed" | "settled";
+  settledAt?: string;
+  settledByName?: string;
   items: OrderLine[];
 }
 

@@ -3,6 +3,7 @@ import { AdminAuthGuard } from "../components/admin/AdminAuthGuard";
 import { MobileAdminNav } from "../components/admin/MobileAdminNav";
 import { OrderCard } from "../components/admin/OrderCard";
 import { PopularDishes } from "../components/admin/PopularDishes";
+import { SettlementConfirmDialog } from "../components/admin/SettlementConfirmDialog";
 import { Sidebar } from "../components/admin/Sidebar";
 import { Icon } from "../components/ui/Icon";
 import { useFormatAdminDate } from "../i18n/useFormatAdminDate";
@@ -23,7 +24,7 @@ import { Reports } from "./Reports";
 import { RestaurantSettings } from "./RestaurantSettings";
 import { StaffManagement } from "./StaffManagement";
 import { TableManagement } from "./TableManagement";
-import type { MealPeriod } from "../types";
+import type { MealPeriod, Order } from "../types";
 
 interface AdminAppProps {
   activeMealPeriod: MealPeriod | null;
@@ -47,6 +48,8 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const [activeSection, setActiveSection] = useState("orders");
   const [actionError, setActionError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settlementOrder, setSettlementOrder] = useState<Order | null>(null);
+  const [settlingOrderId, setSettlingOrderId] = useState<string | null>(null);
   const isSupabaseMode = getDataSourceMode() === "supabase";
   const permissionProfile = isSupabaseMode
     ? staffProfile
@@ -54,6 +57,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
   const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
   const allowedNavItems = useMemo(() => getAllowedNavItems(permissionProfile), [permissionProfile]);
+  const canSettleOrders = permissionProfile?.role === "manager" || permissionProfile?.role === "cashier";
 
   useEffect(() => {
     if (!canAccessAdminSection(permissionProfile, activeSection)) setActiveSection("orders");
@@ -75,13 +79,25 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
     useOrderStore.getState().resetDemo(useMenuStore.getState().items);
   }
 
-  async function handleSettle(id: string): Promise<void> {
+  function handleSettle(id: string): void {
+    const order = orders.find((entry) => entry.id === id);
+    if (!order || !canSettleOrders) return;
     setActionError("");
+    setSettlementOrder(order);
+  }
+
+  async function confirmSettlement(): Promise<void> {
+    if (!settlementOrder || settlingOrderId) return;
+    setActionError("");
+    setSettlingOrderId(settlementOrder.id);
     try {
-      await useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
+      await useOrderStore.getState().updateStatus(settlementOrder.id, "settled", useMenuStore.getState().items);
+      setSettlementOrder(null);
     } catch (error) {
       console.error("Settle order failed", error);
       setActionError(t("adminApp.settleFailed"));
+    } finally {
+      setSettlingOrderId(null);
     }
   }
 
@@ -187,7 +203,15 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
               <div className="orders-grid">
                 {visibleOrders.length ? (
                   visibleOrders.map((order) => (
-                    <OrderCard key={order.id} menuItems={menuItems} onPrint={handlePrint} onSettle={handleSettle} order={order} />
+                    <OrderCard
+                      canSettle={canSettleOrders}
+                      isSettling={settlingOrderId === order.id}
+                      key={order.id}
+                      menuItems={menuItems}
+                      onPrint={handlePrint}
+                      onSettle={handleSettle}
+                      order={order}
+                    />
                   ))
                 ) : (
                   <div className="empty-state">
@@ -197,6 +221,16 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
                   </div>
                 )}
               </div>
+              {settlementOrder && (
+                <SettlementConfirmDialog
+                  isSubmitting={settlingOrderId === settlementOrder.id}
+                  menuItems={menuItems}
+                  onCancel={() => setSettlementOrder(null)}
+                  onConfirm={() => void confirmSettlement()}
+                  operatorName={staffProfile?.name || t("adminApp.orders.localOperator")}
+                  order={settlementOrder}
+                />
+              )}
             </section>
             <PopularDishes menuItems={menuItems} onOpenReports={() => setActiveSection("reports")} orders={orders} />
           </div>

@@ -89,6 +89,26 @@ describe("AdminApp auth permissions", () => {
     expect(screen.queryByRole("button", { name: /Staff/ })).toBeNull();
   });
 
+  it("lets cashiers settle orders but keeps settlement unavailable to floor staff", () => {
+    useOrderStore.setState({
+      orders: [{ createdAt: "2026-07-07T10:00:00.000Z", id: "HO-3001", items: [], sequence: 3001, status: "pending", table: "12" }],
+    });
+    useAuthStore.setState({ staffProfile: { active: true, id: 2, name: "Casey", role: "cashier" }, status: "signed-in" });
+
+    const { rerender } = renderAdmin();
+    expect(screen.getByRole("button", { name: "Settle" })).toBeTruthy();
+
+    useAuthStore.setState({ staffProfile: { active: true, id: 3, name: "Riley", role: "floor" }, status: "signed-in" });
+    rerender(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: /Print/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Settle" })).toBeNull();
+  });
+
   it("lets restricted roles open the dashboard but not restricted sections", () => {
     useAuthStore.setState({
       staffProfile: { active: true, id: 2, name: "Casey", role: "floor" },

@@ -7,13 +7,29 @@ import {
   loadOrders,
   loadOrdersAsync,
   placeOrder,
+  placeOrderAsync,
   updateOrderStatus,
+  updateOrderStatusAsync,
 } from "../orderService";
-import { loadSupabaseOrders, loadSupabaseTableOrders } from "../supabaseOrderService";
+import {
+  loadSupabaseOrders,
+  loadSupabaseTableOrders,
+  placeSupabaseOrder,
+  updateSupabaseOrderStatus,
+} from "../supabaseOrderService";
 
 vi.mock("../supabaseOrderService", () => ({
   loadSupabaseOrders: vi.fn(async () => []),
   loadSupabaseTableOrders: vi.fn(async () => []),
+  placeSupabaseOrder: vi.fn(async () => ({
+    createdAt: "2026-07-02T07:00:00.000Z",
+    id: "HO-1001",
+    items: [],
+    sequence: 1001,
+    status: "pending",
+    table: "12",
+  })),
+  updateSupabaseOrderStatus: vi.fn(async () => undefined),
 }));
 
 const menuItems: MenuItem[] = [
@@ -140,5 +156,53 @@ describe("orderService", () => {
 
     expect(loadSupabaseOrders).toHaveBeenCalled();
     expect(loadSupabaseTableOrders).not.toHaveBeenCalled();
+  });
+
+  it("does not fall back to local orders when a Supabase order query fails", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify([{
+      createdAt: "2026-07-02T07:00:00.000Z",
+      id: "HO-1999",
+      items: [],
+      sequence: 1999,
+      status: "pending",
+      table: "12",
+    }]));
+    vi.mocked(loadSupabaseOrders).mockRejectedValueOnce(new Error("column orders.settled_by_name does not exist"));
+
+    await expect(loadOrdersAsync(menuItems)).rejects.toThrow("column orders.settled_by_name does not exist");
+    expect(loadOrders(menuItems)).toHaveLength(1);
+  });
+
+  it("does not create a local-only order when Supabase order creation fails", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    vi.mocked(placeSupabaseOrder).mockRejectedValueOnce(new Error("create_pending_order failed"));
+
+    await expect(placeOrderAsync({
+      activeMealPeriod,
+      items: [{ id: "rice", name: "BBQ Rice", quantity: 1, unitPrice: 68 }],
+      menuItems,
+      printerSettings,
+      table: "12",
+    })).rejects.toThrow("create_pending_order failed");
+
+    expect(loadOrders(menuItems)).toEqual([]);
+  });
+
+  it("does not write local storage when Supabase rejects an order status update", async () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify([{
+      createdAt: "2026-07-02T07:00:00.000Z",
+      id: "HO-1002",
+      items: [],
+      sequence: 1002,
+      status: "pending",
+      table: "02",
+    }]));
+    vi.mocked(updateSupabaseOrderStatus).mockRejectedValueOnce(new Error("staff permission denied"));
+
+    await expect(updateOrderStatusAsync("HO-1002", "settled", menuItems)).rejects.toThrow("staff permission denied");
+
+    expect(loadOrders(menuItems)[0].status).toBe("pending");
   });
 });

@@ -154,4 +154,32 @@ describe("GuestApp store integration", () => {
     expect(await screen.findByText("Order submission failed, please try again")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /Place order/ }).length).toBeGreaterThan(0);
   });
+
+  it("closes the open table order sheet when all table orders are settled", async () => {
+    window.localStorage.setItem("harbour-language", "en");
+    useOrderStore.setState({
+      orders: [{
+        createdAt: "2026-07-02T07:00:00.000Z",
+        id: "HO-1001",
+        items: [{ id: "store-rice", quantity: 1, unitPrice: 68 }],
+        sequence: 1001,
+        status: "printed",
+        table: "12",
+      }],
+    });
+
+    render(
+      <LanguageProvider>
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} tableNumber="12" />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Order details/ }));
+    expect(screen.getByRole("dialog", { name: "Table order details" })).toBeTruthy();
+
+    useOrderStore.setState({ orders: [] });
+
+    expect(await screen.findByText("This table order has been settled. You can continue ordering.")).toBeTruthy();
+    expect(screen.queryByRole("dialog", { name: "Table order details" })).toBeNull();
+  });
 });

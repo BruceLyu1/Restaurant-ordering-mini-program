@@ -71,7 +71,7 @@ describe("orderStore", () => {
     }
   });
 
-  it("does not publish local orders before supabase load resolves", async () => {
+  it("does not publish local orders when Supabase order loading fails", async () => {
     vi.stubEnv("VITE_DATA_SOURCE", "supabase");
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "");
@@ -80,8 +80,8 @@ describe("orderStore", () => {
     const result = useOrderStore.getState().load(menuItems);
 
     expect(useOrderStore.getState().orders).toEqual([]);
-    await result;
-    expect(useOrderStore.getState().orders).toHaveLength(seedOrders.length);
+    await expect(result).rejects.toThrow("Supabase is not configured");
+    expect(useOrderStore.getState().orders).toEqual([]);
   });
 
   it("updates order status and resets demo orders without reading another store", async () => {

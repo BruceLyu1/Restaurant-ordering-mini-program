@@ -97,6 +97,8 @@ describe("supabaseOrderService", () => {
           unit_price_cents: 6800,
         }],
         order_number: 1002,
+        settled_at: "2026-07-02T07:20:00.000Z",
+        settled_by_name: "Alex",
         status: "printed",
         tables: { number: "02" },
       }]),
@@ -106,8 +108,10 @@ describe("supabaseOrderService", () => {
       createdAt: "2026-07-02T07:00:00.000Z",
       id: "HO-1002",
       items: [{ id: "rice", name: "BBQ Rice", notes: undefined, quantity: 1, unitPrice: 68 }],
-      sequence: 1002,
-      status: "printed",
+        sequence: 1002,
+        settledAt: "2026-07-02T07:20:00.000Z",
+        settledByName: "Alex",
+        status: "printed",
       table: "02",
     }]);
   });
@@ -155,6 +159,12 @@ describe("supabaseOrderService", () => {
       target_order_id: "HO-1002",
       target_restaurant_slug: "harbour-demo",
     });
+  });
+
+  it("rejects when the status RPC denies an order action", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: new Error("staff permission denied") });
+
+    await expect(updateSupabaseOrderStatus("HO-1002", "settled", { rpc })).rejects.toThrow("staff permission denied");
   });
 
   it("rejects empty orders and missing Supabase configuration", async () => {
