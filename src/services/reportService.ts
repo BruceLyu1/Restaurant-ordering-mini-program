@@ -1,13 +1,92 @@
 
 import { getOrderTotal } from "../utils/order";
 import { getPeriodRevenue } from "../utils/revenue";
-import type { MenuItem, Order, RevenueSummary } from "../types";
+import type {
+  DishSalesReportItem,
+  MenuItem,
+  Order,
+  RevenueReport,
+  RevenueSummary,
+  StaffSalesReportItem,
+} from "../types";
+import { getDataSourceMode } from "./dataSource";
+import { getRestaurantSlug, supabase } from "./supabaseClient";
 
 export { getPeriodRevenue };
 
 export interface SalesRankingItem extends MenuItem {
   quantity: number;
   revenue: number;
+}
+
+export interface ReportRange {
+  end: Date;
+  start: Date;
+}
+
+interface SupabaseRpcResult {
+  data: unknown;
+  error: Error | null;
+}
+
+interface SupabaseLike {
+  rpc?: (fn: string, args: Record<string, unknown>) => Promise<SupabaseRpcResult>;
+}
+
+interface RemoteRevenueReport {
+  dishSales?: RemoteDishSalesItem[];
+  staffSales?: RemoteStaffSalesItem[];
+  summary?: Partial<RevenueReport["summary"]>;
+}
+
+interface RemoteDishSalesItem {
+  id?: string;
+  name?: string;
+  quantity?: number;
+  revenue?: number;
+}
+
+interface RemoteStaffSalesItem {
+  name?: string;
+  orderCount?: number;
+  revenue?: number;
+  staffId?: number | null;
+}
+
+const EMPTY_REPORT: RevenueReport = {
+  dishSales: [],
+  staffSales: [],
+  summary: {
+    averageOrderValue: 0,
+    itemCount: 0,
+    orderCount: 0,
+    revenue: 0,
+  },
+};
+
+function assertRpcClient(client: SupabaseLike | null): Required<Pick<SupabaseLike, "rpc">> {
+  if (!client?.rpc) throw new Error("Supabase is not configured");
+  return client as Required<Pick<SupabaseLike, "rpc">>;
+}
+
+function isSettledInRange(order: Order, { end, start }: ReportRange): boolean {
+  if (order.status !== "settled" || !order.settledAt) return false;
+  const settledAt = new Date(order.settledAt);
+  return settledAt >= start && settledAt < end;
+}
+
+function toMoneyValue(value: unknown): number {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+}
+
+function toCount(value: unknown): number {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? Math.max(0, Math.trunc(numberValue)) : 0;
+}
+
+function getReportOrders(orders: Order[], range: ReportRange): Order[] {
+  return orders.filter((order) => isSettledInRange(order, range));
 }
 
 export function getSalesRanking(orders: Order[], menuItems: MenuItem[]): SalesRankingItem[] {
@@ -32,4 +111,118 @@ export function getRevenueSummary(orders: Order[], menuItems: MenuItem[]): Reven
 
 export function getOrderRevenue(order: Order, menuItems: MenuItem[]): number {
   return getOrderTotal(order, menuItems);
+}
+
+export function getLocalRevenueReport(
+  orders: Order[],
+  menuItems: MenuItem[],
+  range: ReportRange,
+): RevenueReport {
+  const reportOrders = getReportOrders(orders, range);
+  const dishMap = new Map<string, DishSalesReportItem>();
+  const staffMap = new Map<string, StaffSalesReportItem>();
+  let revenue = 0;
+  let itemCount = 0;
+
+  reportOrders.forEach((order) => {
+    const orderTotal = getOrderTotal(order, menuItems);
+    revenue += orderTotal;
+    const staffName = order.settledByName || "Unknown";
+    const staffEntry = staffMap.get(staffName) || {
+      name: staffName,
+      orderCount: 0,
+      revenue: 0,
+      staffId: null,
+    };
+    staffEntry.orderCount += 1;
+    staffEntry.revenue += orderTotal;
+    staffMap.set(staffName, staffEntry);
+
+    order.items.forEach((line) => {
+      const menuItem = menuItems.find((entry) => entry.id === line.id);
+      const unitPrice = line.unitPrice ?? menuItem?.price ?? 0;
+      const lineRevenue = unitPrice * line.quantity;
+      const entry = dishMap.get(line.id) || {
+        id: line.id,
+        name: line.name || menuItem?.name || line.id,
+        quantity: 0,
+        revenue: 0,
+      };
+      entry.quantity += line.quantity;
+      entry.revenue += lineRevenue;
+      itemCount += line.quantity;
+      dishMap.set(line.id, entry);
+    });
+  });
+
+  return {
+    dishSales: Array.from(dishMap.values()).sort((a, b) => (
+      b.quantity - a.quantity || b.revenue - a.revenue || a.name.localeCompare(b.name)
+    )),
+    staffSales: Array.from(staffMap.values()).sort((a, b) => (
+      b.revenue - a.revenue || b.orderCount - a.orderCount || a.name.localeCompare(b.name)
+    )),
+    summary: {
+      averageOrderValue: reportOrders.length ? revenue / reportOrders.length : 0,
+      itemCount,
+      orderCount: reportOrders.length,
+      revenue,
+    },
+  };
+}
+
+function mapRemoteReport(value: unknown): RevenueReport {
+  const report = (value || {}) as RemoteRevenueReport;
+  const summary = report.summary || {};
+
+  return {
+    dishSales: (report.dishSales || []).map((item) => ({
+      id: String(item.id || ""),
+      name: item.name || "",
+      quantity: toCount(item.quantity),
+      revenue: toMoneyValue(item.revenue),
+    })).filter((item) => item.id && item.name),
+    staffSales: (report.staffSales || []).map((item) => ({
+      name: item.name || "Unknown",
+      orderCount: toCount(item.orderCount),
+      revenue: toMoneyValue(item.revenue),
+      staffId: item.staffId ?? null,
+    })),
+    summary: {
+      averageOrderValue: toMoneyValue(summary.averageOrderValue),
+      itemCount: toCount(summary.itemCount),
+      orderCount: toCount(summary.orderCount),
+      revenue: toMoneyValue(summary.revenue),
+    },
+  };
+}
+
+export async function loadSupabaseRevenueReport(
+  range: ReportRange,
+  client: SupabaseLike | null = supabase as SupabaseLike | null,
+): Promise<RevenueReport> {
+  const { data, error } = await assertRpcClient(client).rpc("get_revenue_report", {
+    range_end: range.end.toISOString(),
+    range_start: range.start.toISOString(),
+    target_restaurant_slug: getRestaurantSlug(),
+  });
+  if (error) throw error;
+  return mapRemoteReport(data);
+}
+
+export async function loadRevenueReport(
+  orders: Order[],
+  menuItems: MenuItem[],
+  range: ReportRange,
+): Promise<RevenueReport> {
+  if (getDataSourceMode() === "supabase") return loadSupabaseRevenueReport(range);
+  return getLocalRevenueReport(orders, menuItems, range);
+}
+
+export function getEmptyRevenueReport(): RevenueReport {
+  return {
+    dishSales: [...EMPTY_REPORT.dishSales],
+    staffSales: [...EMPTY_REPORT.staffSales],
+    summary: { ...EMPTY_REPORT.summary },
+  };
 }

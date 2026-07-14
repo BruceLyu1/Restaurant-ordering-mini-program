@@ -74,3 +74,30 @@ export interface RevenueSummary {
   month: number;
   year: number;
 }
+
+export interface RevenueReportSummary {
+  averageOrderValue: number;
+  itemCount: number;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface DishSalesReportItem {
+  id: string;
+  name: string;
+  quantity: number;
+  revenue: number;
+}
+
+export interface StaffSalesReportItem {
+  name: string;
+  orderCount: number;
+  revenue: number;
+  staffId?: number | null;
+}
+
+export interface RevenueReport {
+  dishSales: DishSalesReportItem[];
+  staffSales: StaffSalesReportItem[];
+  summary: RevenueReportSummary;
+}

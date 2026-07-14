@@ -90,6 +90,7 @@ VITE_RESTAURANT_SLUG=harbour-demo
 - `20260702010000_guest_table_open_orders_rpc.sql`：顾客端读取本桌未结账订单。
 - `20260702012000_staff_account_service_role_grants.sql`：员工账号管理的服务端权限。
 - `20260702013000_order_settlement_staff.sql`：结账员工、结账时间，以及经理/收银员结账权限。
+- `20260702014000_revenue_report_rpc.sql`：经理专用营收报表 RPC，按已结账订单和结账时间聚合营业额、菜品销量和员工结账汇总。
 
 若未应用最新结账 migration，后台可能无法读取新增的结账字段；请先运行 migration 再验证订单流程。
 

@@ -136,3 +136,8 @@
 .save-message:empty {
   visibility: hidden;
 }
+
+.save-message.error {
+  background: #fff1f1;
+  color: #a33a2f;
+}
