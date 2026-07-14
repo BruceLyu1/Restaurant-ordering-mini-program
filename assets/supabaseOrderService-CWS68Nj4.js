@@ -1,4 +1,4 @@
-import { s as supabase, g as getRestaurantSlug } from './index-Da5keMvf.js';
+import { s as supabase, g as getRestaurantSlug } from './index-D4soc4s-.js';
 
 function assertSupabaseClient(client) {
     if (!client)
@@ -47,6 +47,8 @@ function mapOrder(row) {
         id: typeof row.id === "string" && row.id.startsWith("HO-") ? row.id : `HO-${sequence}`,
         items: lines.map(mapOrderLine),
         sequence,
+        settledAt: row.settled_at || undefined,
+        settledByName: row.settled_by_name || undefined,
         status: getOrderStatus(row.status),
         table: getTableNumber(row),
     };
@@ -74,7 +76,7 @@ async function loadSupabaseOrders(client = supabase) {
         throw new Error("Supabase is not configured");
     const { data, error } = await db
         .from("orders")
-        .select("order_number,status,created_at,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents)")
+        .select("order_number,status,created_at,settled_at,settled_by_name,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents)")
         .order("created_at", { ascending: true });
     if (error)
         throw error;

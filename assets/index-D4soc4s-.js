@@ -17444,7 +17444,7 @@ async function loadRestaurantSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadRestaurantSettings();
     try {
-        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseRestaurantSettings();
     }
     catch {
@@ -17459,7 +17459,7 @@ async function saveRestaurantSettingsAsync(settings) {
         saveRestaurantSettings(settings);
         return;
     }
-    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-BvvyHVam.js');return { saveSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-DKIZV5Gg.js');return { saveSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseRestaurantSettings(settings);
 }
 function loadPrinterSettings() {
@@ -17472,7 +17472,7 @@ async function loadPrinterSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadPrinterSettings();
     try {
-        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
         return await loadSupabasePrinterSettings();
     }
     catch {
@@ -17487,7 +17487,7 @@ async function savePrinterSettingsAsync(settings) {
         savePrinterSettings(settings);
         return;
     }
-    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-BvvyHVam.js');return { saveSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-DKIZV5Gg.js');return { saveSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
     await saveSupabasePrinterSettings(settings);
 }
 function timeToMinutes(time) {
@@ -17587,6 +17587,7 @@ const translations = {
             stockUnavailable: "這款菜品已售罄，暫時不能加入購物車。",
             stockSubmitFailed: "部分菜品已售罄，請重新確認購物車。",
             orderSubmitFailed: "提交訂單失敗，請重試",
+            ordersSettled: "本桌訂單已結帳，可繼續點餐。",
             submittingOrder: "送出中",
             confirmation: {
                 continueOrdering: "繼續加菜",
@@ -17629,6 +17630,15 @@ const translations = {
                 removedDish: "已移除菜品",
                 reprint: "補印",
                 settle: "結帳",
+                confirmSettlement: "確認結帳",
+                localOperator: "本機管理員",
+                settledAt: "結帳時間：{time}",
+                settledBy: "結帳員工：{name}",
+                settlementConfirmDescription: "請確認已完成收款。結帳後，顧客端將不再顯示這筆訂單。",
+                settlementConfirmTitle: "確認結帳",
+                settlementOperator: "操作員工",
+                settlementOrder: "訂單",
+                settling: "結帳中",
             },
             pin: {
                 description: "請輸入 6 位數字密碼以進入後台",
@@ -17947,6 +17957,7 @@ const translations = {
             stockUnavailable: "This dish is sold out and cannot be added.",
             stockSubmitFailed: "Some dishes are sold out. Please check your cart again.",
             orderSubmitFailed: "Order submission failed, please try again",
+            ordersSettled: "This table order has been settled. You can continue ordering.",
             submittingOrder: "Submitting",
             confirmation: {
                 continueOrdering: "Add more items",
@@ -17989,6 +18000,15 @@ const translations = {
                 removedDish: "Removed dish",
                 reprint: "Reprint",
                 settle: "Settle",
+                confirmSettlement: "Confirm settlement",
+                localOperator: "Local admin",
+                settledAt: "Settled at: {time}",
+                settledBy: "Settled by: {name}",
+                settlementConfirmDescription: "Confirm payment has been received. The guest view will no longer show this order.",
+                settlementConfirmTitle: "Confirm settlement",
+                settlementOperator: "Operator",
+                settlementOrder: "Order",
+                settling: "Settling",
             },
             pin: {
                 description: "Enter the 6-digit PIN to access the dashboard",
@@ -18407,7 +18427,7 @@ async function loadStaffAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadStaff();
     try {
-        const { loadSupabaseStaffMembers } = await __vitePreload(async () => { const { loadSupabaseStaffMembers } = await import('./supabaseStaffService-CKPOXUlx.js');return { loadSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseStaffMembers } = await __vitePreload(async () => { const { loadSupabaseStaffMembers } = await import('./supabaseStaffService-CMOgJqsr.js');return { loadSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseStaffMembers();
     }
     catch {
@@ -18423,7 +18443,7 @@ async function saveStaffAsync(staff) {
         saveStaff(normalized);
         return normalized;
     }
-    const { saveSupabaseStaffMembers } = await __vitePreload(async () => { const { saveSupabaseStaffMembers } = await import('./supabaseStaffService-CKPOXUlx.js');return { saveSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseStaffMembers } = await __vitePreload(async () => { const { saveSupabaseStaffMembers } = await import('./supabaseStaffService-CMOgJqsr.js');return { saveSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
     return await saveSupabaseStaffMembers(normalized);
 }
 function createStaffMember(staff, member) {
@@ -40864,12 +40884,12 @@ function getOrderCount(order) {
     return order.items.reduce((total, item) => total + item.quantity, 0);
 }
 
-function OrderCard({ menuItems, order, onPrint, onSettle }) {
+function OrderCard({ canSettle = true, isSettling = false, menuItems, order, onPrint, onSettle }) {
     const { t } = useTranslation();
     return (jsxs("article", { className: `order-card ${order.status}`, children: [jsxs("header", { children: [jsxs("div", { children: [jsxs("span", { className: "order-sequence", children: ["#", order.sequence] }), jsx("h3", { children: t("common.table.tableLabel", { number: order.table }) })] }), jsxs("div", { className: "order-time", children: [jsx("strong", { children: formatTime(order.createdAt) }), jsx("span", { children: t("adminApp.orders.itemCount", { count: getOrderCount(order) }) })] })] }), jsx("div", { className: "order-lines", children: order.items.map((line) => {
                     const item = getMenuItem(line.id, menuItems);
                     return (jsxs("div", { children: [jsxs("span", { children: [line.name || item?.name || t("adminApp.orders.removedDish"), line.notes && jsx("small", { className: "order-line-notes", children: line.notes })] }), jsxs("strong", { children: ["x ", line.quantity] })] }, line.id));
-                }) }), jsxs("div", { className: "order-total", children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(getOrderTotal(order, menuItems)) })] }), jsxs("footer", { children: [jsx(StatusBadge, { status: order.status }), jsxs("div", { children: [order.status !== "settled" && (jsxs("button", { className: "outline-button", onClick: () => onPrint(order.id), type: "button", children: [jsx(Icon, { name: "printer", size: 15 }), order.status === "printed" ? t("adminApp.orders.reprint") : t("common.print")] })), order.status !== "settled" && (jsxs("button", { className: "settle-button", onClick: () => onSettle(order.id), type: "button", children: [jsx(Icon, { name: "check", size: 15 }), t("adminApp.orders.settle")] }))] })] })] }));
+                }) }), jsxs("div", { className: "order-total", children: [jsx("span", { children: t("common.table.total") }), jsx("strong", { children: money(getOrderTotal(order, menuItems)) })] }), jsxs("footer", { children: [jsx(StatusBadge, { status: order.status }), jsxs("div", { children: [order.status !== "settled" && (jsxs("button", { className: "outline-button", onClick: () => onPrint(order.id), type: "button", children: [jsx(Icon, { name: "printer", size: 15 }), order.status === "printed" ? t("adminApp.orders.reprint") : t("common.print")] })), order.status !== "settled" && canSettle && (jsxs("button", { className: "settle-button", disabled: isSettling, onClick: () => onSettle(order.id), type: "button", children: [jsx(Icon, { name: "check", size: 15 }), t("adminApp.orders.settle")] }))] })] }), order.status === "settled" && (order.settledAt || order.settledByName) && (jsxs("p", { className: "settlement-record", children: [order.settledByName && jsx("span", { children: t("adminApp.orders.settledBy", { name: order.settledByName }) }), order.settledAt && jsx("time", { dateTime: order.settledAt, children: t("adminApp.orders.settledAt", { time: formatTime(order.settledAt) }) })] }))] }));
 }
 
 const DishImage = commonjsExports$4.memo(function DishImage({ item, size = "normal" }) {
@@ -40902,6 +40922,11 @@ function PopularDishes({ menuItems, onOpenReports, orders }) {
             .sort((a, b) => b.quantity - a.quantity);
     }, [menuItems, orders]);
     return (jsxs("aside", { className: "ranking-panel", children: [jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("popularDishes.title") }), jsx("p", { children: t("popularDishes.subtitle") })] }), jsx(Icon, { name: "chart", size: 21 })] }), jsx("div", { className: "ranking-list", children: ranked.length > 0 ? (ranked.map((item, index) => (jsxs("article", { className: "ranking-item", children: [jsx("strong", { className: index < 3 ? "top-three" : "", children: index + 1 }), jsx(DishImage, { item: item, size: "tiny" }), jsxs("div", { children: [jsx("h3", { children: item.name }), jsx("span", { children: t("popularDishes.sales", { count: item.quantity }) })] })] }, item.id)))) : (jsxs("div", { className: "ranking-empty", children: [jsx(Icon, { name: "orders", size: 26 }), jsx("strong", { children: t("common.empty.noPopularDishes") }), jsx("span", { children: t("common.empty.noPopularDishesDesc") })] })) }), ranked.length > 0 && (jsx("button", { className: "ranking-button", onClick: onOpenReports, type: "button", children: t("popularDishes.viewReports") }))] }));
+}
+
+function SettlementConfirmDialog({ isSubmitting, menuItems, onCancel, onConfirm, operatorName, order, }) {
+    const { t } = useTranslation();
+    return (jsx("div", { className: "admin-modal-backdrop", children: jsxs("section", { "aria-labelledby": "settlement-confirm-title", "aria-modal": "true", className: "settlement-modal", role: "dialog", children: [jsx("h2", { id: "settlement-confirm-title", children: t("adminApp.orders.settlementConfirmTitle") }), jsx("p", { children: t("adminApp.orders.settlementConfirmDescription") }), jsxs("dl", { children: [jsxs("div", { children: [jsx("dt", { children: t("adminApp.orders.settlementOrder") }), jsx("dd", { children: order.id })] }), jsxs("div", { children: [jsx("dt", { children: t("common.table.tableLabel", { number: order.table }) }), jsx("dd", { children: money(getOrderTotal(order, menuItems)) })] }), jsxs("div", { children: [jsx("dt", { children: t("adminApp.orders.settlementOperator") }), jsx("dd", { children: operatorName })] })] }), jsxs("div", { className: "settlement-modal-actions", children: [jsx("button", { className: "management-secondary", disabled: isSubmitting, onClick: onCancel, type: "button", children: t("common.cancel") }), jsx("button", { className: "settle-button", disabled: isSubmitting, onClick: onConfirm, type: "button", children: isSubmitting ? t("adminApp.orders.settling") : t("adminApp.orders.confirmSettlement") })] })] }) }));
 }
 
 function Sidebar({ activeSection, onNavigate, orderBadgeCount, restaurantName, navItemsOverride = navItems }) {
@@ -41007,15 +41032,10 @@ function loadOrders(menuItems) {
 async function loadOrdersAsync(menuItems, options = {}) {
     if (getDataSourceMode() !== "supabase")
         return loadOrders(menuItems);
-    try {
-        const { loadSupabaseOrders, loadSupabaseTableOrders } = await __vitePreload(async () => { const { loadSupabaseOrders, loadSupabaseTableOrders } = await import('./supabaseOrderService-C8miLlKb.js');return { loadSupabaseOrders, loadSupabaseTableOrders }},true              ?[]:void 0,import.meta.url);
-        return options.tableNumber
-            ? await loadSupabaseTableOrders(options.tableNumber)
-            : await loadSupabaseOrders();
-    }
-    catch {
-        return loadOrders(menuItems);
-    }
+    const { loadSupabaseOrders, loadSupabaseTableOrders } = await __vitePreload(async () => { const { loadSupabaseOrders, loadSupabaseTableOrders } = await import('./supabaseOrderService-CWS68Nj4.js');return { loadSupabaseOrders, loadSupabaseTableOrders }},true              ?[]:void 0,import.meta.url);
+    return options.tableNumber
+        ? await loadSupabaseTableOrders(options.tableNumber)
+        : await loadSupabaseOrders();
 }
 function saveOrders(orders) {
     writeStorage(ORDER_STORAGE_KEY, orders, ORDER_CHANGE_EVENT);
@@ -41041,13 +41061,8 @@ async function placeOrderAsync(params) {
         return null;
     if (getDataSourceMode() !== "supabase")
         return placeOrder(params);
-    try {
-        const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-C8miLlKb.js');return { placeSupabaseOrder }},true              ?[]:void 0,import.meta.url);
-        return await placeSupabaseOrder(params);
-    }
-    catch {
-        return placeOrder(params);
-    }
+    const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-CWS68Nj4.js');return { placeSupabaseOrder }},true              ?[]:void 0,import.meta.url);
+    return placeSupabaseOrder(params);
 }
 function updateOrderStatus(id, status, menuItems) {
     saveOrders(loadOrders(menuItems).map((order) => (order.id === id ? { ...order, status } : order)));
@@ -41057,13 +41072,8 @@ async function updateOrderStatusAsync(id, status, menuItems) {
         updateOrderStatus(id, status, menuItems);
         return;
     }
-    try {
-        const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-C8miLlKb.js');return { updateSupabaseOrderStatus }},true              ?[]:void 0,import.meta.url);
-        await updateSupabaseOrderStatus(id, status);
-    }
-    catch {
-        updateOrderStatus(id, status, menuItems);
-    }
+    const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-CWS68Nj4.js');return { updateSupabaseOrderStatus }},true              ?[]:void 0,import.meta.url);
+    await updateSupabaseOrderStatus(id, status);
 }
 function listActiveOrders(orders) {
     return orders
@@ -41215,7 +41225,7 @@ async function loadMenuItemsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadMenuItems();
     try {
-        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseMenuItems();
     }
     catch {
@@ -41230,13 +41240,13 @@ async function saveMenuItemsAsync(items) {
         saveMenuItems(items);
         return;
     }
-    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-DBmnZbNA.js');return { saveSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-GznQb2uZ.js');return { saveSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseMenuItems(items);
 }
 async function uploadDishPhotoAsync(dataUrl) {
     if (getDataSourceMode() !== "supabase")
         return dataUrl;
-    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-DBmnZbNA.js');return { uploadSupabaseDishPhoto }},true              ?[]:void 0,import.meta.url);
+    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-GznQb2uZ.js');return { uploadSupabaseDishPhoto }},true              ?[]:void 0,import.meta.url);
     return uploadSupabaseDishPhoto(dataUrl);
 }
 function toggleSoldOut(items, id) {
@@ -41393,7 +41403,7 @@ async function loadTablesAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadTables();
     try {
-        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-Cbfaur7s.js');return { loadSupabaseTables }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabaseTables }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseTables();
     }
     catch {
@@ -41408,7 +41418,7 @@ async function saveTablesAsync(tables) {
         saveTables(tables);
         return;
     }
-    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DqZyybZG.js');return { saveSupabaseTables }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DTWFh5re.js');return { saveSupabaseTables }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseTables(tables);
 }
 
@@ -42312,6 +42322,8 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now }) {
     const [activeSection, setActiveSection] = useState("orders");
     const [actionError, setActionError] = useState("");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [settlementOrder, setSettlementOrder] = useState(null);
+    const [settlingOrderId, setSettlingOrderId] = useState(null);
     const isSupabaseMode = getDataSourceMode() === "supabase";
     const permissionProfile = isSupabaseMode
         ? staffProfile
@@ -42319,6 +42331,7 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now }) {
     const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
     const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
     const allowedNavItems = useMemo(() => getAllowedNavItems(permissionProfile), [permissionProfile]);
+    const canSettleOrders = permissionProfile?.role === "manager" || permissionProfile?.role === "cashier";
     useEffect(() => {
         if (!canAccessAdminSection(permissionProfile, activeSection))
             setActiveSection("orders");
@@ -42340,14 +42353,28 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now }) {
             return;
         useOrderStore.getState().resetDemo(useMenuStore.getState().items);
     }
-    async function handleSettle(id) {
+    function handleSettle(id) {
+        const order = orders.find((entry) => entry.id === id);
+        if (!order || !canSettleOrders)
+            return;
         setActionError("");
+        setSettlementOrder(order);
+    }
+    async function confirmSettlement() {
+        if (!settlementOrder || settlingOrderId)
+            return;
+        setActionError("");
+        setSettlingOrderId(settlementOrder.id);
         try {
-            await useOrderStore.getState().updateStatus(id, "settled", useMenuStore.getState().items);
+            await useOrderStore.getState().updateStatus(settlementOrder.id, "settled", useMenuStore.getState().items);
+            setSettlementOrder(null);
         }
         catch (error) {
             console.error("Settle order failed", error);
             setActionError(t("adminApp.settleFailed"));
+        }
+        finally {
+            setSettlingOrderId(null);
         }
     }
     async function handleSignOut() {
@@ -42380,7 +42407,7 @@ function AdminApp({ activeMealPeriod, guestBaseUrl, now }) {
             return jsx(PrinterSettings, {});
         return jsx(RestaurantSettings, {});
     }
-    return (jsx(AdminAuthGuard, { children: jsxs("main", { className: "admin-shell", children: [jsx(Sidebar, { activeSection: activeSection, navItemsOverride: allowedNavItems, onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName }), mobileMenuOpen && (jsx(MobileAdminNav, { activeSection: activeSection, navItemsOverride: allowedNavItems, onClose: () => setMobileMenuOpen(false), onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName })), jsxs("section", { className: "admin-workspace", children: [jsxs("header", { className: "admin-topbar", children: [jsxs("button", { className: "mobile-nav-trigger", onClick: () => setMobileMenuOpen(true), type: "button", children: [jsx(Icon, { name: "menu", size: 18 }), t("adminApp.managementMenu")] }), jsxs("div", { children: [jsx("span", { children: formatAdminDate(now) }), jsx("strong", { children: activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed") })] }), jsxs("div", { className: "admin-topbar-actions", children: [jsxs("button", { "aria-label": t("adminApp.notification"), className: "topbar-icon", type: "button", children: [jsx(Icon, { name: "bell", size: 18 }), pendingOrders.some((order) => order.status === "pending") && jsx("small", {})] }), isSupabaseMode && staffProfile && (jsxs("div", { className: "admin-session", children: [jsx("span", { children: t("adminApp.signedInAs") }), jsx("strong", { children: staffProfile.name }), jsx("small", { children: getStaffRoleLabel() }), jsxs("button", { className: "sign-out-button", onClick: handleSignOut, type: "button", children: [jsx(Icon, { name: "log-out", size: 16 }), t("adminApp.signOut")] })] }))] })] }), activeSection !== "orders" ? renderAdminSection() : (jsxs("div", { className: "admin-layout", children: [jsxs("section", { className: "orders-panel", children: [jsxs("header", { className: "orders-header", children: [jsxs("div", { children: [jsx("p", { children: t("adminApp.orders.label") }), jsxs("h1", { children: [t("adminApp.orders.heading"), jsx("span", { children: pendingOrders.length })] })] }), !isSupabaseMode && (jsx("div", { className: "admin-actions", children: jsxs("button", { className: "reset-button", onClick: handleReset, type: "button", children: [jsx(Icon, { name: "rotate", size: 15 }), t("adminApp.actions.resetDemo")] }) }))] }), jsxs("div", { className: "orders-tabs", children: [jsxs("button", { className: filter === "pending" ? "active" : "", onClick: () => setFilter("pending"), type: "button", children: [t("adminApp.orders.activeTab"), jsx("span", { children: pendingOrders.length })] }), jsxs("button", { className: filter === "settled" ? "active" : "", onClick: () => setFilter("settled"), type: "button", children: [t("adminApp.orders.completedTab"), jsx("span", { children: completedOrders.length })] })] }), actionError && jsx("p", { className: "management-error", children: actionError }), jsxs("div", { className: "queue-note", children: [jsx("span", { children: t("adminApp.orders.flowTitle") }), jsx("p", { children: t("adminApp.orders.flowDescription") })] }), jsx("div", { className: "orders-grid", children: visibleOrders.length ? (visibleOrders.map((order) => (jsx(OrderCard, { menuItems: menuItems, onPrint: handlePrint, onSettle: handleSettle, order: order }, order.id)))) : (jsxs("div", { className: "empty-state", children: [jsx(Icon, { name: "orders", size: 30 }), jsx("h3", { children: t("common.empty.noOrders") }), jsx("p", { children: t("common.empty.noOrdersDesc") })] })) })] }), jsx(PopularDishes, { menuItems: menuItems, onOpenReports: () => setActiveSection("reports"), orders: orders })] }))] })] }) }));
+    return (jsx(AdminAuthGuard, { children: jsxs("main", { className: "admin-shell", children: [jsx(Sidebar, { activeSection: activeSection, navItemsOverride: allowedNavItems, onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName }), mobileMenuOpen && (jsx(MobileAdminNav, { activeSection: activeSection, navItemsOverride: allowedNavItems, onClose: () => setMobileMenuOpen(false), onNavigate: setActiveSection, orderBadgeCount: newOrderCount, restaurantName: restaurantName })), jsxs("section", { className: "admin-workspace", children: [jsxs("header", { className: "admin-topbar", children: [jsxs("button", { className: "mobile-nav-trigger", onClick: () => setMobileMenuOpen(true), type: "button", children: [jsx(Icon, { name: "menu", size: 18 }), t("adminApp.managementMenu")] }), jsxs("div", { children: [jsx("span", { children: formatAdminDate(now) }), jsx("strong", { children: activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed") })] }), jsxs("div", { className: "admin-topbar-actions", children: [jsxs("button", { "aria-label": t("adminApp.notification"), className: "topbar-icon", type: "button", children: [jsx(Icon, { name: "bell", size: 18 }), pendingOrders.some((order) => order.status === "pending") && jsx("small", {})] }), isSupabaseMode && staffProfile && (jsxs("div", { className: "admin-session", children: [jsx("span", { children: t("adminApp.signedInAs") }), jsx("strong", { children: staffProfile.name }), jsx("small", { children: getStaffRoleLabel() }), jsxs("button", { className: "sign-out-button", onClick: handleSignOut, type: "button", children: [jsx(Icon, { name: "log-out", size: 16 }), t("adminApp.signOut")] })] }))] })] }), activeSection !== "orders" ? renderAdminSection() : (jsxs("div", { className: "admin-layout", children: [jsxs("section", { className: "orders-panel", children: [jsxs("header", { className: "orders-header", children: [jsxs("div", { children: [jsx("p", { children: t("adminApp.orders.label") }), jsxs("h1", { children: [t("adminApp.orders.heading"), jsx("span", { children: pendingOrders.length })] })] }), !isSupabaseMode && (jsx("div", { className: "admin-actions", children: jsxs("button", { className: "reset-button", onClick: handleReset, type: "button", children: [jsx(Icon, { name: "rotate", size: 15 }), t("adminApp.actions.resetDemo")] }) }))] }), jsxs("div", { className: "orders-tabs", children: [jsxs("button", { className: filter === "pending" ? "active" : "", onClick: () => setFilter("pending"), type: "button", children: [t("adminApp.orders.activeTab"), jsx("span", { children: pendingOrders.length })] }), jsxs("button", { className: filter === "settled" ? "active" : "", onClick: () => setFilter("settled"), type: "button", children: [t("adminApp.orders.completedTab"), jsx("span", { children: completedOrders.length })] })] }), actionError && jsx("p", { className: "management-error", children: actionError }), jsxs("div", { className: "queue-note", children: [jsx("span", { children: t("adminApp.orders.flowTitle") }), jsx("p", { children: t("adminApp.orders.flowDescription") })] }), jsx("div", { className: "orders-grid", children: visibleOrders.length ? (visibleOrders.map((order) => (jsx(OrderCard, { canSettle: canSettleOrders, isSettling: settlingOrderId === order.id, menuItems: menuItems, onPrint: handlePrint, onSettle: handleSettle, order: order }, order.id)))) : (jsxs("div", { className: "empty-state", children: [jsx(Icon, { name: "orders", size: 30 }), jsx("h3", { children: t("common.empty.noOrders") }), jsx("p", { children: t("common.empty.noOrdersDesc") })] })) }), settlementOrder && (jsx(SettlementConfirmDialog, { isSubmitting: settlingOrderId === settlementOrder.id, menuItems: menuItems, onCancel: () => setSettlementOrder(null), onConfirm: () => void confirmSettlement(), operatorName: staffProfile?.name || t("adminApp.orders.localOperator"), order: settlementOrder }))] }), jsx(PopularDishes, { menuItems: menuItems, onOpenReports: () => setActiveSection("reports"), orders: orders })] }))] })] }) }));
 }
 
 function CartBar({ cartItems, itemCount, onOpen, total }) {
@@ -42403,7 +42430,7 @@ function ConfirmationCard({ menuItems, onClose, onViewOrderHistory, order, table
 function GuestOrderHistory({ menuItems, onClose, orders, tableNumber }) {
     const { t } = useTranslation();
     const tableTotal = orders.reduce((sum, order) => sum + getOrderTotal(order, menuItems), 0);
-    return (jsx("div", { className: "modal-backdrop", children: jsxs("section", { className: "cart-sheet order-history-sheet", "aria-label": t("guestApp.history.label"), children: [jsx("div", { className: "sheet-handle" }), jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("guestApp.history.title") }), jsx("p", { children: t("guestApp.history.summary", { count: orders.length, number: tableNumber }) })] }), jsx("button", { className: "text-button", onClick: onClose, type: "button", children: t("common.close") })] }), orders.length ? (jsxs(Fragment, { children: [jsx("div", { className: "guest-order-list", children: orders.map((order) => (jsxs("article", { className: "guest-order-card", children: [jsxs("header", { children: [jsxs("div", { children: [jsx("span", { className: "order-sequence", children: order.id }), jsx("h3", { children: formatTime(order.createdAt) })] }), jsx(StatusBadge, { status: order.status })] }), jsx("div", { className: "guest-order-lines", children: order.items.map((line, index) => {
+    return (jsx("div", { className: "modal-backdrop", children: jsxs("section", { "aria-label": t("guestApp.history.label"), "aria-modal": "true", className: "cart-sheet order-history-sheet", role: "dialog", children: [jsx("div", { className: "sheet-handle" }), jsxs("header", { children: [jsxs("div", { children: [jsx("h2", { children: t("guestApp.history.title") }), jsx("p", { children: t("guestApp.history.summary", { count: orders.length, number: tableNumber }) })] }), jsx("button", { className: "text-button", onClick: onClose, type: "button", children: t("common.close") })] }), orders.length ? (jsxs(Fragment, { children: [jsx("div", { className: "guest-order-list", children: orders.map((order) => (jsxs("article", { className: "guest-order-card", children: [jsxs("header", { children: [jsxs("div", { children: [jsx("span", { className: "order-sequence", children: order.id }), jsx("h3", { children: formatTime(order.createdAt) })] }), jsx(StatusBadge, { status: order.status })] }), jsx("div", { className: "guest-order-lines", children: order.items.map((line, index) => {
                                             const item = getMenuItem(line.id, menuItems);
                                             const unitPrice = line.unitPrice ?? item?.price ?? 0;
                                             return (jsxs("div", { children: [jsxs("span", { children: [line.name || item?.name || t("guestApp.history.removedDish"), line.notes && jsx("small", { className: "order-line-notes", children: line.notes })] }), jsxs("strong", { children: ["x ", line.quantity] }), jsx("em", { children: money(unitPrice * line.quantity) })] }, `${line.id}-${index}`));
@@ -42424,6 +42451,7 @@ function GuestApp({ activeMealPeriod, tableNumber }) {
     const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
     const [confirmation, setConfirmation] = useState(null);
     const [stockNotice, setStockNotice] = useState("");
+    const hadOpenTableOrders = useRef(false);
     const tableOrders = useMemo(() => listOrdersByTable(orders, tableNumber), [orders, tableNumber]);
     const periodMenuItems = useMemo(() => menuItems.filter((item) => !item.deleted && isItemAvailableForMealPeriod(item, activeMealPeriod)), [activeMealPeriod, menuItems]);
     const categories = useMemo(() => [ALL_CATEGORY, ...new Set(periodMenuItems.map((item) => item.category).filter(Boolean))], [periodMenuItems]);
@@ -42468,6 +42496,17 @@ function GuestApp({ activeMealPeriod, tableNumber }) {
         if (!categories.includes(activeCategory))
             setActiveCategory(ALL_CATEGORY);
     }, [activeCategory, categories]);
+    useEffect(() => {
+        if (tableOrders.length > 0) {
+            hadOpenTableOrders.current = true;
+            return;
+        }
+        if (!hadOpenTableOrders.current || !isOrderHistoryOpen)
+            return;
+        hadOpenTableOrders.current = false;
+        setOrderHistoryOpen(false);
+        setStockNotice(t("guestApp.ordersSettled"));
+    }, [isOrderHistoryOpen, t, tableOrders.length]);
     useEffect(() => {
         const unavailableIds = new Set(menuItems
             .filter((item) => item.soldOut || item.deleted || !isItemAvailableForMealPeriod(item, activeMealPeriod))
@@ -42615,7 +42654,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-C8miLlKb.js');return { subscribeSupabaseOrderChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-CWS68Nj4.js');return { subscribeSupabaseOrderChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseOrderChanges(() => {
@@ -42668,7 +42707,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-BvvyHVam.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
+        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-DKIZV5Gg.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
             if (cancelled)
                 return;
             const cleanupRestaurantSettings = subscribeSupabaseRestaurantSettingsChanges(() => {
@@ -42701,7 +42740,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-DBmnZbNA.js');return { subscribeSupabaseMenuChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-GznQb2uZ.js');return { subscribeSupabaseMenuChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseMenuChanges(() => {
@@ -42731,7 +42770,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseStaffChanges} = await import('./supabaseStaffService-CKPOXUlx.js');return { subscribeSupabaseStaffChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseStaffChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseStaffChanges} = await import('./supabaseStaffService-CMOgJqsr.js');return { subscribeSupabaseStaffChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseStaffChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseStaffChanges(() => {
@@ -42755,7 +42794,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DqZyybZG.js');return { subscribeSupabaseTableChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DTWFh5re.js');return { subscribeSupabaseTableChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseTableChanges(() => {
