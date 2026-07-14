@@ -17444,7 +17444,7 @@ async function loadRestaurantSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadRestaurantSettings();
     try {
-        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseRestaurantSettings } = await __vitePreload(async () => { const { loadSupabaseRestaurantSettings } = await import('./supabaseReadService-D_nVqn8G.js');return { loadSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseRestaurantSettings();
     }
     catch {
@@ -17459,7 +17459,7 @@ async function saveRestaurantSettingsAsync(settings) {
         saveRestaurantSettings(settings);
         return;
     }
-    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-DKIZV5Gg.js');return { saveSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseRestaurantSettings } = await __vitePreload(async () => { const { saveSupabaseRestaurantSettings } = await import('./supabaseSettingsService-BhBlNnmg.js');return { saveSupabaseRestaurantSettings }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseRestaurantSettings(settings);
 }
 function loadPrinterSettings() {
@@ -17472,7 +17472,7 @@ async function loadPrinterSettingsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadPrinterSettings();
     try {
-        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabasePrinterSettings } = await __vitePreload(async () => { const { loadSupabasePrinterSettings } = await import('./supabaseReadService-D_nVqn8G.js');return { loadSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
         return await loadSupabasePrinterSettings();
     }
     catch {
@@ -17487,7 +17487,7 @@ async function savePrinterSettingsAsync(settings) {
         savePrinterSettings(settings);
         return;
     }
-    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-DKIZV5Gg.js');return { saveSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabasePrinterSettings } = await __vitePreload(async () => { const { saveSupabasePrinterSettings } = await import('./supabaseSettingsService-BhBlNnmg.js');return { saveSupabasePrinterSettings }},true              ?[]:void 0,import.meta.url);
     await saveSupabasePrinterSettings(settings);
 }
 function timeToMinutes(time) {
@@ -17769,26 +17769,46 @@ const translations = {
             title: "打印設定",
         },
         reports: {
-            description: "按銷量排序，快速了解最受歡迎的菜品。",
+            description: "按已結帳訂單和結帳時間統計營業額、菜品銷售和員工收銀表現。",
+            empty: {
+                dishes: "此日期範圍內暫無已結帳菜品銷售。",
+                staff: "此日期範圍內暫無員工結帳記錄。",
+            },
+            errors: {
+                invalidRange: "請選擇有效的開始和結束日期。",
+                loadFailed: "報表載入失敗，請稍後再試。",
+            },
+            filters: {
+                end: "結束日期",
+                month: "本月",
+                quickRanges: "快速日期範圍",
+                start: "開始日期",
+                today: "今日",
+                week: "本週",
+                year: "本年",
+            },
+            loading: "正在載入報表...",
             metrics: {
-                day: "今日營業額",
-                dayNote: "按今天訂單統計",
-                month: "本月營業額",
-                monthNote: "按本月所有訂單統計",
-                orders: "訂單總數",
-                ordersNote: "包含已結帳訂單",
+                averageOrder: "平均客單價",
+                averageOrderNote: "營業額除以已結帳訂單數",
+                orders: "已結帳訂單",
+                ordersNote: "按結帳時間統計",
                 portions: "售出餐點",
-                portionsNote: "按餐點數量統計",
-                week: "本週營業額",
-                weekNote: "由星期一開始統計",
-                year: "本年營業額",
-                yearNote: "按本年所有訂單統計",
+                portionsNote: "按已結帳訂單餐點數量統計",
+                revenue: "營業額",
+                revenueNote: "只包含已結帳訂單",
+            },
+            sections: {
+                dishes: "菜品銷售排行",
+                staff: "員工結帳匯總",
             },
             table: {
                 dish: "菜品",
+                orders: "訂單數",
                 quantity: "售出數量",
                 rank: "排名",
                 revenue: "銷售額",
+                staff: "員工",
             },
             title: "報表分析",
             values: {
@@ -18139,26 +18159,46 @@ const translations = {
             title: "Printer settings",
         },
         reports: {
-            description: "Rank dishes by sales to understand what guests order most.",
+            description: "Track revenue, dish sales, and staff settlement performance from settled orders.",
+            empty: {
+                dishes: "No settled dish sales in this date range.",
+                staff: "No staff settlements in this date range.",
+            },
+            errors: {
+                invalidRange: "Choose a valid start and end date.",
+                loadFailed: "Report failed to load. Please try again later.",
+            },
+            filters: {
+                end: "End date",
+                month: "This month",
+                quickRanges: "Quick date ranges",
+                start: "Start date",
+                today: "Today",
+                week: "This week",
+                year: "This year",
+            },
+            loading: "Loading report...",
             metrics: {
-                day: "Today's revenue",
-                dayNote: "Based on today's orders",
-                month: "Monthly revenue",
-                monthNote: "Based on all orders this month",
-                orders: "Total orders",
-                ordersNote: "Includes settled orders",
+                averageOrder: "Average order",
+                averageOrderNote: "Revenue divided by settled orders",
+                orders: "Settled orders",
+                ordersNote: "Based on settlement time",
                 portions: "Items sold",
-                portionsNote: "Based on item quantities",
-                week: "Weekly revenue",
-                weekNote: "Counted from Monday",
-                year: "Yearly revenue",
-                yearNote: "Based on all orders this year",
+                portionsNote: "Based on settled order quantities",
+                revenue: "Revenue",
+                revenueNote: "Settled orders only",
+            },
+            sections: {
+                dishes: "Dish sales ranking",
+                staff: "Staff settlement summary",
             },
             table: {
                 dish: "Dish",
+                orders: "Orders",
                 quantity: "Quantity sold",
                 rank: "Rank",
                 revenue: "Revenue",
+                staff: "Staff",
             },
             title: "Reports",
             values: {
@@ -18427,7 +18467,7 @@ async function loadStaffAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadStaff();
     try {
-        const { loadSupabaseStaffMembers } = await __vitePreload(async () => { const { loadSupabaseStaffMembers } = await import('./supabaseStaffService-CMOgJqsr.js');return { loadSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseStaffMembers } = await __vitePreload(async () => { const { loadSupabaseStaffMembers } = await import('./supabaseStaffService-DxHVgrct.js');return { loadSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseStaffMembers();
     }
     catch {
@@ -18443,7 +18483,7 @@ async function saveStaffAsync(staff) {
         saveStaff(normalized);
         return normalized;
     }
-    const { saveSupabaseStaffMembers } = await __vitePreload(async () => { const { saveSupabaseStaffMembers } = await import('./supabaseStaffService-CMOgJqsr.js');return { saveSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseStaffMembers } = await __vitePreload(async () => { const { saveSupabaseStaffMembers } = await import('./supabaseStaffService-DxHVgrct.js');return { saveSupabaseStaffMembers }},true              ?[]:void 0,import.meta.url);
     return await saveSupabaseStaffMembers(normalized);
 }
 function createStaffMember(staff, member) {
@@ -40335,7 +40375,7 @@ function assertAuthClient(client) {
         throw new Error("Supabase Auth is not configured");
     return client;
 }
-function assertRpcClient(client) {
+function assertRpcClient$1(client) {
     if (!client?.rpc)
         throw new Error("Supabase is not configured");
     return client;
@@ -40373,7 +40413,7 @@ async function signOut(client = supabase) {
         throw new Error(error.message);
 }
 async function claimStaffProfile(client = supabase) {
-    const { data, error } = await assertRpcClient(client).rpc("claim_staff_profile", {
+    const { data, error } = await assertRpcClient$1(client).rpc("claim_staff_profile", {
         target_restaurant_slug: getRestaurantSlug(),
     });
     if (error)
@@ -41032,7 +41072,7 @@ function loadOrders(menuItems) {
 async function loadOrdersAsync(menuItems, options = {}) {
     if (getDataSourceMode() !== "supabase")
         return loadOrders(menuItems);
-    const { loadSupabaseOrders, loadSupabaseTableOrders } = await __vitePreload(async () => { const { loadSupabaseOrders, loadSupabaseTableOrders } = await import('./supabaseOrderService-CWS68Nj4.js');return { loadSupabaseOrders, loadSupabaseTableOrders }},true              ?[]:void 0,import.meta.url);
+    const { loadSupabaseOrders, loadSupabaseTableOrders } = await __vitePreload(async () => { const { loadSupabaseOrders, loadSupabaseTableOrders } = await import('./supabaseOrderService-HC_U7Tni.js');return { loadSupabaseOrders, loadSupabaseTableOrders }},true              ?[]:void 0,import.meta.url);
     return options.tableNumber
         ? await loadSupabaseTableOrders(options.tableNumber)
         : await loadSupabaseOrders();
@@ -41061,7 +41101,7 @@ async function placeOrderAsync(params) {
         return null;
     if (getDataSourceMode() !== "supabase")
         return placeOrder(params);
-    const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-CWS68Nj4.js');return { placeSupabaseOrder }},true              ?[]:void 0,import.meta.url);
+    const { placeSupabaseOrder } = await __vitePreload(async () => { const { placeSupabaseOrder } = await import('./supabaseOrderService-HC_U7Tni.js');return { placeSupabaseOrder }},true              ?[]:void 0,import.meta.url);
     return placeSupabaseOrder(params);
 }
 function updateOrderStatus(id, status, menuItems) {
@@ -41072,7 +41112,7 @@ async function updateOrderStatusAsync(id, status, menuItems) {
         updateOrderStatus(id, status, menuItems);
         return;
     }
-    const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-CWS68Nj4.js');return { updateSupabaseOrderStatus }},true              ?[]:void 0,import.meta.url);
+    const { updateSupabaseOrderStatus } = await __vitePreload(async () => { const { updateSupabaseOrderStatus } = await import('./supabaseOrderService-HC_U7Tni.js');return { updateSupabaseOrderStatus }},true              ?[]:void 0,import.meta.url);
     await updateSupabaseOrderStatus(id, status);
 }
 function listActiveOrders(orders) {
@@ -41225,7 +41265,7 @@ async function loadMenuItemsAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadMenuItems();
     try {
-        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseMenuItems } = await __vitePreload(async () => { const { loadSupabaseMenuItems } = await import('./supabaseReadService-D_nVqn8G.js');return { loadSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseMenuItems();
     }
     catch {
@@ -41240,13 +41280,13 @@ async function saveMenuItemsAsync(items) {
         saveMenuItems(items);
         return;
     }
-    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-GznQb2uZ.js');return { saveSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseMenuItems } = await __vitePreload(async () => { const { saveSupabaseMenuItems } = await import('./supabaseMenuService-bLckSios.js');return { saveSupabaseMenuItems }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseMenuItems(items);
 }
 async function uploadDishPhotoAsync(dataUrl) {
     if (getDataSourceMode() !== "supabase")
         return dataUrl;
-    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-GznQb2uZ.js');return { uploadSupabaseDishPhoto }},true              ?[]:void 0,import.meta.url);
+    const { uploadSupabaseDishPhoto } = await __vitePreload(async () => { const { uploadSupabaseDishPhoto } = await import('./supabaseMenuService-bLckSios.js');return { uploadSupabaseDishPhoto }},true              ?[]:void 0,import.meta.url);
     return uploadSupabaseDishPhoto(dataUrl);
 }
 function toggleSoldOut(items, id) {
@@ -41403,7 +41443,7 @@ async function loadTablesAsync() {
     if (getDataSourceMode() !== "supabase")
         return loadTables();
     try {
-        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-CMjMMcgR.js');return { loadSupabaseTables }},true              ?[]:void 0,import.meta.url);
+        const { loadSupabaseTables } = await __vitePreload(async () => { const { loadSupabaseTables } = await import('./supabaseReadService-D_nVqn8G.js');return { loadSupabaseTables }},true              ?[]:void 0,import.meta.url);
         return await loadSupabaseTables();
     }
     catch {
@@ -41418,7 +41458,7 @@ async function saveTablesAsync(tables) {
         saveTables(tables);
         return;
     }
-    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-DTWFh5re.js');return { saveSupabaseTables }},true              ?[]:void 0,import.meta.url);
+    const { saveSupabaseTables } = await __vitePreload(async () => { const { saveSupabaseTables } = await import('./supabaseTableService-BaVA2Mfr.js');return { saveSupabaseTables }},true              ?[]:void 0,import.meta.url);
     await saveSupabaseTables(tables);
 }
 
@@ -41495,31 +41535,6 @@ function SectionHeader({ title, description, action }) {
 
 function getStartOfDay(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-function getStartOfWeek(date) {
-    const start = getStartOfDay(date);
-    const day = start.getDay() || 7;
-    start.setDate(start.getDate() - day + 1);
-    return start;
-}
-function getPeriodRevenue(orders, items) {
-    const now = new Date();
-    const starts = {
-        day: getStartOfDay(now),
-        week: getStartOfWeek(now),
-        month: new Date(now.getFullYear(), now.getMonth(), 1),
-        year: new Date(now.getFullYear(), 0, 1),
-    };
-    const totals = { day: 0, week: 0, month: 0, year: 0 };
-    orders.forEach((order) => {
-        const createdAt = new Date(order.createdAt);
-        const total = getOrderTotal(order, items);
-        Object.entries(starts).forEach(([period, start]) => {
-            if (createdAt >= start)
-                totals[period] += total;
-        });
-    });
-    return totals;
 }
 
 function Dashboard({ menuItems, onNavigate, orders, tables }) {
@@ -41892,29 +41907,223 @@ function PrinterSettings() {
     return (jsxs("section", { className: "management-page printer-settings-page", children: [jsx(SectionHeader, { description: t("printerSettings.description"), title: t("printerSettings.title") }), jsx("div", { "aria-live": "polite", className: "save-message", role: "status", children: message }), jsxs("section", { className: "settings-panel", children: [jsxs("label", { children: [jsx("span", { children: t("printerSettings.printer") }), jsxs("select", { onChange: (event) => update({ printer: event.target.value }), value: settings.printer, children: [jsx("option", { children: t("printerSettings.kitchenPrinter") }), jsx("option", { children: t("printerSettings.cashierPrinter") })] })] }), jsxs("label", { children: [jsx("span", { children: t("printerSettings.copies") }), jsxs("select", { onChange: (event) => update({ copies: event.target.value }), value: settings.copies, children: [jsx("option", { children: "1" }), jsx("option", { children: "2" }), jsx("option", { children: "3" })] })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.autoPrint") }), jsx("p", { children: t("printerSettings.autoPrintDesc") })] }), jsx(Toggle, { checked: settings.autoPrint, label: t("printerSettings.autoPrint"), onChange: () => update({ autoPrint: !useSettingsStore.getState().printer.autoPrint }) })] }), jsxs("div", { className: "setting-row", children: [jsxs("div", { children: [jsx("strong", { children: t("printerSettings.sound") }), jsx("p", { children: t("printerSettings.soundDesc") })] }), jsx(Toggle, { checked: settings.sound, label: t("printerSettings.sound"), onChange: () => update({ sound: !useSettingsStore.getState().printer.sound }) })] }), jsxs("footer", { children: [jsx("button", { className: "management-secondary", onClick: () => save(t("printerSettings.testQueued")), type: "button", children: t("printerSettings.printTest") }), jsx("button", { className: "management-primary", onClick: () => save(t("printerSettings.saved")), type: "button", children: t("printerSettings.save") })] })] })] }));
 }
 
-function getSalesRanking(orders, menuItems) {
-    const quantities = new Map(menuItems.map((item) => [item.id, 0]));
-    const revenue = new Map(menuItems.map((item) => [item.id, 0]));
-    orders.forEach((order) => order.items.forEach((item) => {
-        const menuItem = menuItems.find((entry) => entry.id === item.id);
-        quantities.set(item.id, (quantities.get(item.id) || 0) + item.quantity);
-        revenue.set(item.id, (revenue.get(item.id) || 0) + (item.unitPrice ?? menuItem?.price ?? 0) * item.quantity);
-    }));
-    return menuItems
-        .map((item) => ({ ...item, quantity: quantities.get(item.id) || 0, revenue: revenue.get(item.id) || 0 }))
-        .filter((item) => item.quantity > 0)
-        .sort((a, b) => b.quantity - a.quantity);
+const EMPTY_REPORT = {
+    dishSales: [],
+    staffSales: [],
+    summary: {
+        averageOrderValue: 0,
+        itemCount: 0,
+        orderCount: 0,
+        revenue: 0,
+    },
+};
+function assertRpcClient(client) {
+    if (!client?.rpc)
+        throw new Error("Supabase is not configured");
+    return client;
 }
-function getRevenueSummary(orders, menuItems) {
-    return getPeriodRevenue(orders, menuItems);
+function isSettledInRange(order, { end, start }) {
+    if (order.status !== "settled" || !order.settledAt)
+        return false;
+    const settledAt = new Date(order.settledAt);
+    return settledAt >= start && settledAt < end;
+}
+function toMoneyValue(value) {
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : 0;
+}
+function toCount(value) {
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? Math.max(0, Math.trunc(numberValue)) : 0;
+}
+function getReportOrders(orders, range) {
+    return orders.filter((order) => isSettledInRange(order, range));
+}
+function getLocalRevenueReport(orders, menuItems, range) {
+    const reportOrders = getReportOrders(orders, range);
+    const dishMap = new Map();
+    const staffMap = new Map();
+    let revenue = 0;
+    let itemCount = 0;
+    reportOrders.forEach((order) => {
+        const orderTotal = getOrderTotal(order, menuItems);
+        revenue += orderTotal;
+        const staffName = order.settledByName || "Unknown";
+        const staffEntry = staffMap.get(staffName) || {
+            name: staffName,
+            orderCount: 0,
+            revenue: 0,
+            staffId: null,
+        };
+        staffEntry.orderCount += 1;
+        staffEntry.revenue += orderTotal;
+        staffMap.set(staffName, staffEntry);
+        order.items.forEach((line) => {
+            const menuItem = menuItems.find((entry) => entry.id === line.id);
+            const unitPrice = line.unitPrice ?? menuItem?.price ?? 0;
+            const lineRevenue = unitPrice * line.quantity;
+            const entry = dishMap.get(line.id) || {
+                id: line.id,
+                name: line.name || menuItem?.name || line.id,
+                quantity: 0,
+                revenue: 0,
+            };
+            entry.quantity += line.quantity;
+            entry.revenue += lineRevenue;
+            itemCount += line.quantity;
+            dishMap.set(line.id, entry);
+        });
+    });
+    return {
+        dishSales: Array.from(dishMap.values()).sort((a, b) => (b.quantity - a.quantity || b.revenue - a.revenue || a.name.localeCompare(b.name))),
+        staffSales: Array.from(staffMap.values()).sort((a, b) => (b.revenue - a.revenue || b.orderCount - a.orderCount || a.name.localeCompare(b.name))),
+        summary: {
+            averageOrderValue: reportOrders.length ? revenue / reportOrders.length : 0,
+            itemCount,
+            orderCount: reportOrders.length,
+            revenue,
+        },
+    };
+}
+function mapRemoteReport(value) {
+    const report = (value || {});
+    const summary = report.summary || {};
+    return {
+        dishSales: (report.dishSales || []).map((item) => ({
+            id: String(item.id || ""),
+            name: item.name || "",
+            quantity: toCount(item.quantity),
+            revenue: toMoneyValue(item.revenue),
+        })).filter((item) => item.id && item.name),
+        staffSales: (report.staffSales || []).map((item) => ({
+            name: item.name || "Unknown",
+            orderCount: toCount(item.orderCount),
+            revenue: toMoneyValue(item.revenue),
+            staffId: item.staffId ?? null,
+        })),
+        summary: {
+            averageOrderValue: toMoneyValue(summary.averageOrderValue),
+            itemCount: toCount(summary.itemCount),
+            orderCount: toCount(summary.orderCount),
+            revenue: toMoneyValue(summary.revenue),
+        },
+    };
+}
+async function loadSupabaseRevenueReport(range, client = supabase) {
+    const { data, error } = await assertRpcClient(client).rpc("get_revenue_report", {
+        range_end: range.end.toISOString(),
+        range_start: range.start.toISOString(),
+        target_restaurant_slug: getRestaurantSlug(),
+    });
+    if (error)
+        throw error;
+    return mapRemoteReport(data);
+}
+async function loadRevenueReport(orders, menuItems, range) {
+    if (getDataSourceMode() === "supabase")
+        return loadSupabaseRevenueReport(range);
+    return getLocalRevenueReport(orders, menuItems, range);
+}
+function getEmptyRevenueReport() {
+    return {
+        dishSales: [...EMPTY_REPORT.dishSales],
+        staffSales: [...EMPTY_REPORT.staffSales],
+        summary: { ...EMPTY_REPORT.summary },
+    };
 }
 
+function getStartOfLocalDay(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function getStartOfLocalWeek(date) {
+    const start = getStartOfLocalDay(date);
+    const day = start.getDay() || 7;
+    start.setDate(start.getDate() - day + 1);
+    return start;
+}
+function addDays(date, days) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+function formatDateInput(date) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${month}-${day}`;
+}
+function parseDateInput(value) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+function isValidDate(date) {
+    return Number.isFinite(date.getTime());
+}
+function getQuickRange(range, now = new Date()) {
+    const today = getStartOfLocalDay(now);
+    const starts = {
+        month: new Date(today.getFullYear(), today.getMonth(), 1),
+        today,
+        week: getStartOfLocalWeek(today),
+        year: new Date(today.getFullYear(), 0, 1),
+    };
+    return {
+        endInput: formatDateInput(today),
+        startInput: formatDateInput(starts[range]),
+    };
+}
 function Reports({ menuItems, orders }) {
     const { t } = useTranslation();
-    const ranked = useMemo(() => getSalesRanking(orders, menuItems), [menuItems, orders]);
-    const periodRevenue = getRevenueSummary(orders, menuItems);
-    const portions = ranked.reduce((sum, item) => sum + item.quantity, 0);
-    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("reports.description"), title: t("reports.title") }), jsxs("div", { className: "metrics-row", children: [jsx(Metric, { label: t("reports.metrics.day"), note: t("reports.metrics.dayNote"), value: money(periodRevenue.day) }), jsx(Metric, { label: t("reports.metrics.week"), note: t("reports.metrics.weekNote"), value: money(periodRevenue.week) }), jsx(Metric, { label: t("reports.metrics.month"), note: t("reports.metrics.monthNote"), value: money(periodRevenue.month) }), jsx(Metric, { label: t("reports.metrics.year"), note: t("reports.metrics.yearNote"), value: money(periodRevenue.year) }), jsx(Metric, { label: t("reports.metrics.orders"), note: t("reports.metrics.ordersNote"), value: t("dashboard.values.orders", { count: orders.length }) }), jsx(Metric, { label: t("reports.metrics.portions"), note: t("reports.metrics.portionsNote"), value: t("reports.values.portions", { count: portions }) })] }), jsx("div", { className: "management-panel table-panel", children: jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("reports.table.rank") }), jsx("th", { children: t("reports.table.dish") }), jsx("th", { children: t("reports.table.quantity") }), jsx("th", { children: t("reports.table.revenue") })] }) }), jsx("tbody", { children: ranked.map((item, index) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { className: "report-rank", children: index + 1 }) }), jsx("td", { children: item.name }), jsx("td", { children: t("reports.values.portions", { count: item.quantity }) }), jsx("td", { children: money(item.revenue) })] }, item.id))) })] }) })] }));
+    const defaultRange = useMemo(() => getQuickRange("today"), []);
+    const [startInput, setStartInput] = useState(defaultRange.startInput);
+    const [endInput, setEndInput] = useState(defaultRange.endInput);
+    const [activeQuickRange, setActiveQuickRange] = useState("today");
+    const [report, setReport] = useState(getEmptyRevenueReport);
+    const [isLoading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState("");
+    const reportRange = useMemo(() => ({
+        end: addDays(parseDateInput(endInput), 1),
+        start: parseDateInput(startInput),
+    }), [endInput, startInput]);
+    const isInvalidRange = !isValidDate(reportRange.start) || !isValidDate(reportRange.end) || reportRange.end <= reportRange.start;
+    useEffect(() => {
+        if (isInvalidRange) {
+            setLoadError(t("reports.errors.invalidRange"));
+            return;
+        }
+        let cancelled = false;
+        setLoading(true);
+        setLoadError("");
+        void loadRevenueReport(orders, menuItems, reportRange)
+            .then((nextReport) => {
+            if (!cancelled)
+                setReport(nextReport);
+        })
+            .catch((error) => {
+            console.error("Load revenue report failed", error);
+            if (!cancelled)
+                setLoadError(t("reports.errors.loadFailed"));
+        })
+            .finally(() => {
+            if (!cancelled)
+                setLoading(false);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [isInvalidRange, menuItems, orders, reportRange, t]);
+    function applyQuickRange(range) {
+        const nextRange = getQuickRange(range);
+        setActiveQuickRange(range);
+        setStartInput(nextRange.startInput);
+        setEndInput(nextRange.endInput);
+    }
+    function updateStartInput(value) {
+        setActiveQuickRange("custom");
+        setStartInput(value);
+    }
+    function updateEndInput(value) {
+        setActiveQuickRange("custom");
+        setEndInput(value);
+    }
+    return (jsxs("section", { className: "management-page", children: [jsx(SectionHeader, { description: t("reports.description"), title: t("reports.title") }), jsxs("div", { className: "report-filters", children: [jsx("div", { className: "report-quick-ranges", "aria-label": t("reports.filters.quickRanges"), children: ["today", "week", "month", "year"].map((range) => (jsx("button", { className: activeQuickRange === range ? "active" : "", onClick: () => applyQuickRange(range), type: "button", children: t(`reports.filters.${range}`) }, range))) }), jsxs("label", { children: [jsx("span", { children: t("reports.filters.start") }), jsx("input", { "aria-label": t("reports.filters.start"), onChange: (event) => updateStartInput(event.target.value), type: "date", value: startInput })] }), jsxs("label", { children: [jsx("span", { children: t("reports.filters.end") }), jsx("input", { "aria-label": t("reports.filters.end"), onChange: (event) => updateEndInput(event.target.value), type: "date", value: endInput })] })] }), isLoading && jsx("p", { className: "save-message", role: "status", children: t("reports.loading") }), loadError && jsx("p", { className: "save-message error", role: "alert", children: loadError }), jsxs("div", { className: "metrics-row", children: [jsx(Metric, { label: t("reports.metrics.revenue"), note: t("reports.metrics.revenueNote"), value: money(report.summary.revenue) }), jsx(Metric, { label: t("reports.metrics.orders"), note: t("reports.metrics.ordersNote"), value: t("dashboard.values.orders", { count: report.summary.orderCount }) }), jsx(Metric, { label: t("reports.metrics.portions"), note: t("reports.metrics.portionsNote"), value: t("reports.values.portions", { count: report.summary.itemCount }) }), jsx(Metric, { label: t("reports.metrics.averageOrder"), note: t("reports.metrics.averageOrderNote"), value: money(report.summary.averageOrderValue) })] }), jsxs("div", { className: "management-panel table-panel", children: [jsx("header", { children: jsx("h2", { children: t("reports.sections.dishes") }) }), jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("reports.table.rank") }), jsx("th", { children: t("reports.table.dish") }), jsx("th", { children: t("reports.table.quantity") }), jsx("th", { children: t("reports.table.revenue") })] }) }), jsx("tbody", { children: report.dishSales.map((item, index) => (jsxs("tr", { children: [jsx("td", { children: jsx("strong", { className: "report-rank", children: index + 1 }) }), jsx("td", { children: item.name }), jsx("td", { children: t("reports.values.portions", { count: item.quantity }) }), jsx("td", { children: money(item.revenue) })] }, item.id))) })] }), !report.dishSales.length && jsx("p", { className: "report-empty", children: t("reports.empty.dishes") })] }), jsxs("div", { className: "management-panel table-panel", children: [jsx("header", { children: jsx("h2", { children: t("reports.sections.staff") }) }), jsxs("table", { className: "management-table", children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t("reports.table.staff") }), jsx("th", { children: t("reports.table.orders") }), jsx("th", { children: t("reports.table.revenue") })] }) }), jsx("tbody", { children: report.staffSales.map((item) => (jsxs("tr", { children: [jsx("td", { children: item.name }), jsx("td", { children: t("dashboard.values.orders", { count: item.orderCount }) }), jsx("td", { children: money(item.revenue) })] }, `${item.staffId ?? "unknown"}-${item.name}`))) })] }), !report.staffSales.length && jsx("p", { className: "report-empty", children: t("reports.empty.staff") })] })] }));
 }
 
 function RestaurantSettings() {
@@ -42654,7 +42863,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-CWS68Nj4.js');return { subscribeSupabaseOrderChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseOrderChanges} = await import('./supabaseOrderService-HC_U7Tni.js');return { subscribeSupabaseOrderChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseOrderChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseOrderChanges(() => {
@@ -42707,7 +42916,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-DKIZV5Gg.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
+        void __vitePreload(async () => { const {subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges,} = await import('./supabaseSettingsService-BhBlNnmg.js');return { subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabasePrinterSettingsChanges, subscribeSupabaseRestaurantSettingsChanges, }) => {
             if (cancelled)
                 return;
             const cleanupRestaurantSettings = subscribeSupabaseRestaurantSettingsChanges(() => {
@@ -42740,7 +42949,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-GznQb2uZ.js');return { subscribeSupabaseMenuChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseMenuChanges} = await import('./supabaseMenuService-bLckSios.js');return { subscribeSupabaseMenuChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseMenuChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseMenuChanges(() => {
@@ -42770,7 +42979,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseStaffChanges} = await import('./supabaseStaffService-CMOgJqsr.js');return { subscribeSupabaseStaffChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseStaffChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseStaffChanges} = await import('./supabaseStaffService-DxHVgrct.js');return { subscribeSupabaseStaffChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseStaffChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseStaffChanges(() => {
@@ -42794,7 +43003,7 @@ function App() {
             return undefined;
         let cleanup;
         let cancelled = false;
-        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-DTWFh5re.js');return { subscribeSupabaseTableChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
+        void __vitePreload(async () => { const {subscribeSupabaseTableChanges} = await import('./supabaseTableService-BaVA2Mfr.js');return { subscribeSupabaseTableChanges }},true              ?[]:void 0,import.meta.url).then(({ subscribeSupabaseTableChanges }) => {
             if (cancelled)
                 return;
             cleanup = subscribeSupabaseTableChanges(() => {
