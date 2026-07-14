@@ -8,6 +8,8 @@ import {
   loadOrdersAsync,
   placeOrder,
   placeOrderAsync,
+  settleOrder,
+  settleOrderAsync,
   updateOrderStatus,
   updateOrderStatusAsync,
 } from "../orderService";
@@ -15,6 +17,7 @@ import {
   loadSupabaseOrders,
   loadSupabaseTableOrders,
   placeSupabaseOrder,
+  settleSupabaseOrder,
   updateSupabaseOrderStatus,
 } from "../supabaseOrderService";
 
@@ -30,6 +33,12 @@ vi.mock("../supabaseOrderService", () => ({
     table: "12",
   })),
   updateSupabaseOrderStatus: vi.fn(async () => undefined),
+  settleSupabaseOrder: vi.fn(async () => ({
+    paymentMethod: "cash",
+    settledAt: "2026-07-02T07:20:00.000Z",
+    settledByName: "Cashier",
+    status: "settled",
+  })),
 }));
 
 const menuItems: MenuItem[] = [
@@ -72,8 +81,13 @@ describe("orderService", () => {
     updateOrderStatus(order!.id, "printed", menuItems);
     expect(loadOrders(menuItems)[0].status).toBe("printed");
 
-    updateOrderStatus(order!.id, "settled", menuItems);
-    expect(loadOrders(menuItems)[0].status).toBe("settled");
+    settleOrder(order!.id, { operatorName: "Local Admin", paymentMethod: "cash", settlementNote: "Cash paid" }, menuItems);
+    expect(loadOrders(menuItems)[0]).toMatchObject({
+      paymentMethod: "cash",
+      settlementNote: "Cash paid",
+      settledByName: "Local Admin",
+      status: "settled",
+    });
   });
 
   it("deduplicates orders with the same id when loading from storage", () => {
@@ -189,7 +203,7 @@ describe("orderService", () => {
     expect(loadOrders(menuItems)).toEqual([]);
   });
 
-  it("does not write local storage when Supabase rejects an order status update", async () => {
+  it("does not write local storage when Supabase rejects a settlement", async () => {
     vi.stubEnv("VITE_DATA_SOURCE", "supabase");
     window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify([{
       createdAt: "2026-07-02T07:00:00.000Z",
@@ -199,9 +213,9 @@ describe("orderService", () => {
       status: "pending",
       table: "02",
     }]));
-    vi.mocked(updateSupabaseOrderStatus).mockRejectedValueOnce(new Error("staff permission denied"));
+    vi.mocked(settleSupabaseOrder).mockRejectedValueOnce(new Error("staff permission denied"));
 
-    await expect(updateOrderStatusAsync("HO-1002", "settled", menuItems)).rejects.toThrow("staff permission denied");
+    await expect(settleOrderAsync("HO-1002", { operatorName: "Cashier", paymentMethod: "cash" }, menuItems)).rejects.toThrow("staff permission denied");
 
     expect(loadOrders(menuItems)[0].status).toBe("pending");
   });

@@ -50,10 +50,18 @@ describe("OrderCard", () => {
   });
 
   it("shows settlement audit details for settled orders", () => {
-    const order = { ...makeOrder("settled"), settledAt: "2026-06-24T10:30:00.000Z", settledByName: "Alex" };
+    const order = {
+      ...makeOrder("settled"),
+      paymentMethod: "octopus" as const,
+      settledAt: "2026-06-24T10:30:00.000Z",
+      settledByName: "Alex",
+      settlementNote: "Terminal 1",
+    };
     renderWithLanguage(<OrderCard menuItems={menuItems} onPrint={vi.fn()} onSettle={vi.fn()} order={order} />);
 
     expect(screen.getByText("Settled by: Alex")).toBeTruthy();
     expect(screen.getByText(/Settled at:/)).toBeTruthy();
+    expect(screen.getByText("Octopus")).toBeTruthy();
+    expect(screen.getByText("Note: Terminal 1")).toBeTruthy();
   });
 });

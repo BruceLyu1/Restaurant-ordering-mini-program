@@ -182,6 +182,22 @@ export function Reports({ menuItems, orders }: ReportsProps) {
         {!report.dishSales.length && <p className="report-empty">{t("reports.empty.dishes")}</p>}
       </div>
       <div className="management-panel table-panel">
+        <header><h2>{t("reports.sections.payment")}</h2></header>
+        <table className="management-table">
+          <thead><tr><th>{t("reports.table.paymentMethod")}</th><th>{t("reports.table.orders")}</th><th>{t("reports.table.revenue")}</th></tr></thead>
+          <tbody>
+            {report.paymentSales.map((item) => (
+              <tr key={item.method}>
+                <td>{t(`adminApp.orders.paymentMethods.${item.method}`)}</td>
+                <td>{t("dashboard.values.orders", { count: item.orderCount })}</td>
+                <td>{money(item.revenue)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!report.paymentSales.length && <p className="report-empty">{t("reports.empty.payment")}</p>}
+      </div>
+      <div className="management-panel table-panel">
         <header><h2>{t("reports.sections.staff")}</h2></header>
         <table className="management-table">
           <thead><tr><th>{t("reports.table.staff")}</th><th>{t("reports.table.orders")}</th><th>{t("reports.table.revenue")}</th></tr></thead>

@@ -1,14 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "../../i18n/useTranslation";
 import { money } from "../../utils/money";
 import { getOrderTotal } from "../../utils/order";
-import type { MenuItem, Order } from "../../types";
+import { PAYMENT_METHODS, type MenuItem, type PaymentMethod, type Order, type SettlementInput } from "../../types";
 
 interface SettlementConfirmDialogProps {
   isSubmitting: boolean;
   menuItems: MenuItem[];
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: (input: SettlementInput) => void;
   operatorName: string;
   order: Order;
 }
@@ -22,6 +22,17 @@ export function SettlementConfirmDialog({
   order,
 }: SettlementConfirmDialogProps) {
   const { t } = useTranslation();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
+  const [paymentMethodError, setPaymentMethodError] = useState(false);
+  const [settlementNote, setSettlementNote] = useState("");
+
+  function confirm(): void {
+    if (!paymentMethod) {
+      setPaymentMethodError(true);
+      return;
+    }
+    onConfirm({ paymentMethod, settlementNote });
+  }
 
   return (
     <div className="admin-modal-backdrop">
@@ -42,11 +53,41 @@ export function SettlementConfirmDialog({
             <dd>{operatorName}</dd>
           </div>
         </dl>
+        <label className="settlement-field">
+          <span>{t("adminApp.orders.paymentMethod")}</span>
+          <select
+            aria-label={t("adminApp.orders.paymentMethod")}
+            aria-describedby={paymentMethodError ? "payment-method-error" : undefined}
+            aria-invalid={paymentMethodError}
+            disabled={isSubmitting}
+            onChange={(event) => {
+              setPaymentMethod(event.target.value as PaymentMethod | "");
+              setPaymentMethodError(false);
+            }}
+            required
+            value={paymentMethod}
+          >
+            <option value="">{t("adminApp.orders.paymentMethodPlaceholder")}</option>
+            {PAYMENT_METHODS.map((method) => <option key={method} value={method}>{t(`adminApp.orders.paymentMethods.${method}`)}</option>)}
+          </select>
+          {paymentMethodError && <small className="settlement-field-error" id="payment-method-error" role="alert">{t("adminApp.orders.paymentMethodRequired")}</small>}
+        </label>
+        <label className="settlement-field">
+          <span>{t("adminApp.orders.settlementNote")}</span>
+          <textarea
+            aria-label={t("adminApp.orders.settlementNote")}
+            disabled={isSubmitting}
+            maxLength={500}
+            onChange={(event) => setSettlementNote(event.target.value)}
+            placeholder={t("adminApp.orders.settlementNotePlaceholder")}
+            value={settlementNote}
+          />
+        </label>
         <div className="settlement-modal-actions">
           <button className="management-secondary" disabled={isSubmitting} onClick={onCancel} type="button">
             {t("common.cancel")}
           </button>
-          <button className="settle-button" disabled={isSubmitting} onClick={onConfirm} type="button">
+          <button className="settle-button" disabled={isSubmitting} onClick={confirm} type="button">
             {isSubmitting ? t("adminApp.orders.settling") : t("adminApp.orders.confirmSettlement")}
           </button>
         </div>

@@ -5,10 +5,13 @@ import type {
   DishSalesReportItem,
   MenuItem,
   Order,
+  PaymentReportMethod,
+  PaymentSalesReportItem,
   RevenueReport,
   RevenueSummary,
   StaffSalesReportItem,
 } from "../types";
+import { PAYMENT_METHODS } from "../types";
 import { getDataSourceMode } from "./dataSource";
 import { getRestaurantSlug, supabase } from "./supabaseClient";
 
@@ -35,6 +38,7 @@ interface SupabaseLike {
 
 interface RemoteRevenueReport {
   dishSales?: RemoteDishSalesItem[];
+  paymentSales?: RemotePaymentSalesItem[];
   staffSales?: RemoteStaffSalesItem[];
   summary?: Partial<RevenueReport["summary"]>;
 }
@@ -43,6 +47,12 @@ interface RemoteDishSalesItem {
   id?: string;
   name?: string;
   quantity?: number;
+  revenue?: number;
+}
+
+interface RemotePaymentSalesItem {
+  method?: string;
+  orderCount?: number;
   revenue?: number;
 }
 
@@ -55,6 +65,7 @@ interface RemoteStaffSalesItem {
 
 const EMPTY_REPORT: RevenueReport = {
   dishSales: [],
+  paymentSales: [],
   staffSales: [],
   summary: {
     averageOrderValue: 0,
@@ -83,6 +94,12 @@ function toMoneyValue(value: unknown): number {
 function toCount(value: unknown): number {
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? Math.max(0, Math.trunc(numberValue)) : 0;
+}
+
+function toPaymentReportMethod(value: unknown): PaymentReportMethod {
+  return value === "unrecorded" || PAYMENT_METHODS.some((method) => method === value)
+    ? value as PaymentReportMethod
+    : "unrecorded";
 }
 
 function getReportOrders(orders: Order[], range: ReportRange): Order[] {
@@ -120,6 +137,7 @@ export function getLocalRevenueReport(
 ): RevenueReport {
   const reportOrders = getReportOrders(orders, range);
   const dishMap = new Map<string, DishSalesReportItem>();
+  const paymentMap = new Map<PaymentReportMethod, PaymentSalesReportItem>();
   const staffMap = new Map<string, StaffSalesReportItem>();
   let revenue = 0;
   let itemCount = 0;
@@ -127,6 +145,11 @@ export function getLocalRevenueReport(
   reportOrders.forEach((order) => {
     const orderTotal = getOrderTotal(order, menuItems);
     revenue += orderTotal;
+    const paymentMethod = order.paymentMethod || "unrecorded";
+    const paymentEntry = paymentMap.get(paymentMethod) || { method: paymentMethod, orderCount: 0, revenue: 0 };
+    paymentEntry.orderCount += 1;
+    paymentEntry.revenue += orderTotal;
+    paymentMap.set(paymentMethod, paymentEntry);
     const staffName = order.settledByName || "Unknown";
     const staffEntry = staffMap.get(staffName) || {
       name: staffName,
@@ -159,6 +182,9 @@ export function getLocalRevenueReport(
     dishSales: Array.from(dishMap.values()).sort((a, b) => (
       b.quantity - a.quantity || b.revenue - a.revenue || a.name.localeCompare(b.name)
     )),
+    paymentSales: Array.from(paymentMap.values()).sort((a, b) => (
+      b.revenue - a.revenue || b.orderCount - a.orderCount || a.method.localeCompare(b.method)
+    )),
     staffSales: Array.from(staffMap.values()).sort((a, b) => (
       b.revenue - a.revenue || b.orderCount - a.orderCount || a.name.localeCompare(b.name)
     )),
@@ -182,6 +208,11 @@ function mapRemoteReport(value: unknown): RevenueReport {
       quantity: toCount(item.quantity),
       revenue: toMoneyValue(item.revenue),
     })).filter((item) => item.id && item.name),
+    paymentSales: (report.paymentSales || []).map((item) => ({
+      method: toPaymentReportMethod(item.method),
+      orderCount: toCount(item.orderCount),
+      revenue: toMoneyValue(item.revenue),
+    })),
     staffSales: (report.staffSales || []).map((item) => ({
       name: item.name || "Unknown",
       orderCount: toCount(item.orderCount),
@@ -222,6 +253,7 @@ export async function loadRevenueReport(
 export function getEmptyRevenueReport(): RevenueReport {
   return {
     dishSales: [...EMPTY_REPORT.dishSales],
+    paymentSales: [...EMPTY_REPORT.paymentSales],
     staffSales: [...EMPTY_REPORT.staffSales],
     summary: { ...EMPTY_REPORT.summary },
   };

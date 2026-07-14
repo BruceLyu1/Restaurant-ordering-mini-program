@@ -84,7 +84,7 @@ describe("orderStore", () => {
     expect(useOrderStore.getState().orders).toEqual([]);
   });
 
-  it("updates order status and resets demo orders without reading another store", async () => {
+  it("settles an order and resets demo orders without reading another store", async () => {
     const order = await useOrderStore.getState().placeOrder({
       activeMealPeriod,
       items: [{ id: "store-rice", name: "Store Rice", quantity: 1, unitPrice: 68 }],
@@ -93,8 +93,8 @@ describe("orderStore", () => {
       table: "12",
     });
 
-    await useOrderStore.getState().updateStatus(order!.id, "settled", menuItems);
-    expect(useOrderStore.getState().orders[0].status).toBe("settled");
+    await useOrderStore.getState().settle(order!.id, { operatorName: "Local Admin", paymentMethod: "cash" }, menuItems);
+    expect(useOrderStore.getState().orders[0]).toMatchObject({ paymentMethod: "cash", status: "settled" });
 
     useOrderStore.getState().resetDemo(menuItems);
     expect(useOrderStore.getState().orders).toHaveLength(seedOrders.length);

@@ -71,6 +71,10 @@
     gap: 3px;
   }
 
+  .settlement-modal-actions {
+    grid-template-columns: 1fr;
+  }
+
   .ranking-panel {
     padding: 20px 12px;
   }

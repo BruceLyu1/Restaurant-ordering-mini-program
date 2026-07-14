@@ -7,6 +7,8 @@ import {
   placeOrder as placeOrderService,
   placeOrderAsync as placeOrderServiceAsync,
   resetDemoOrders,
+  settleOrderAsync,
+  type SettleOrderInput,
   updateOrderStatus,
   updateOrderStatusAsync,
 } from "../services/orderService";
@@ -25,7 +27,8 @@ interface OrderStore {
   load: (menuItems: MenuItem[], options?: LoadOrdersOptions) => Promise<void>;
   placeOrder: (params: PlaceOrderInput) => Promise<Order | null>;
   resetDemo: (menuItems: MenuItem[]) => void;
-  updateStatus: (id: string, status: Order["status"], menuItems: MenuItem[]) => Promise<void>;
+  settle: (id: string, input: SettleOrderInput, menuItems: MenuItem[]) => Promise<void>;
+  updateStatus: (id: string, status: "printed", menuItems: MenuItem[]) => Promise<void>;
 }
 
 export const useOrderStore = create<OrderStore>((set) => ({
@@ -60,6 +63,15 @@ export const useOrderStore = create<OrderStore>((set) => ({
     set((state) => ({
       orders: state.orders.map((order) => (
         order.id === id ? { ...order, status } : order
+      )),
+    }));
+  },
+
+  settle: async (id, input, menuItems) => {
+    const settlement = await settleOrderAsync(id, input, menuItems);
+    set((state) => ({
+      orders: state.orders.map((order) => (
+        order.id === id ? { ...order, ...settlement } : order
       )),
     }));
   },

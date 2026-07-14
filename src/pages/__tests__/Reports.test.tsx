@@ -42,6 +42,7 @@ describe("Reports", () => {
         id: "HO-1",
         items: [{ id: "soup", quantity: 2, unitPrice: 40 }],
         sequence: 1,
+        paymentMethod: "cash",
         settledAt: new Date(2026, 5, 24, 10, 30).toISOString(),
         settledByName: "Alex",
         status: "settled",
@@ -63,6 +64,7 @@ describe("Reports", () => {
     expect(screen.getAllByText("Revenue").length).toBeGreaterThan(0);
     expect(screen.getAllByText("HK$ 80").length).toBeGreaterThan(0);
     expect(screen.getByText("Alex")).toBeTruthy();
+    expect(screen.getByText("Cash")).toBeTruthy();
     const rows = screen.getAllByRole("row");
     expect(within(rows[1]).getByText("Soup")).toBeTruthy();
     expect(screen.queryByText("Tea")).toBeNull();
@@ -99,6 +101,7 @@ describe("Reports", () => {
     await flushReportLoad();
 
     expect(screen.getByText("No settled dish sales in this date range.")).toBeTruthy();
+    expect(screen.getByText("No settled payment method records in this date range.")).toBeTruthy();
     expect(screen.getByText("No staff settlements in this date range.")).toBeTruthy();
   });
 });

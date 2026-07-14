@@ -24,7 +24,7 @@ import { Reports } from "./Reports";
 import { RestaurantSettings } from "./RestaurantSettings";
 import { StaffManagement } from "./StaffManagement";
 import { TableManagement } from "./TableManagement";
-import type { MealPeriod, Order } from "../types";
+import type { MealPeriod, Order, SettlementInput } from "../types";
 
 interface AdminAppProps {
   activeMealPeriod: MealPeriod | null;
@@ -86,12 +86,15 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
     setSettlementOrder(order);
   }
 
-  async function confirmSettlement(): Promise<void> {
+  async function confirmSettlement(input: SettlementInput): Promise<void> {
     if (!settlementOrder || settlingOrderId) return;
     setActionError("");
     setSettlingOrderId(settlementOrder.id);
     try {
-      await useOrderStore.getState().updateStatus(settlementOrder.id, "settled", useMenuStore.getState().items);
+      await useOrderStore.getState().settle(settlementOrder.id, {
+        ...input,
+        operatorName: staffProfile?.name || t("adminApp.orders.localOperator"),
+      }, useMenuStore.getState().items);
       setSettlementOrder(null);
     } catch (error) {
       console.error("Settle order failed", error);
@@ -226,7 +229,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
                   isSubmitting={settlingOrderId === settlementOrder.id}
                   menuItems={menuItems}
                   onCancel={() => setSettlementOrder(null)}
-                  onConfirm={() => void confirmSettlement()}
+                  onConfirm={(input) => void confirmSettlement(input)}
                   operatorName={staffProfile?.name || t("adminApp.orders.localOperator")}
                   order={settlementOrder}
                 />

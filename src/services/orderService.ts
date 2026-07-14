@@ -1,6 +1,6 @@
 
 import { ORDER_STORAGE_KEY, seedOrders } from "../data/orders";
-import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings } from "../types";
+import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings, SettlementInput } from "../types";
 import { getMenuItem } from "../utils/order";
 import { getDataSourceMode } from "./dataSource";
 import { isItemAvailableForMealPeriod } from "./settingsService";
@@ -18,6 +18,18 @@ export interface PlaceOrderInput {
 
 export interface LoadOrdersOptions {
   tableNumber?: string;
+}
+
+export interface SettleOrderInput extends SettlementInput {
+  operatorName: string;
+}
+
+export interface SettlementRecord {
+  paymentMethod: SettlementInput["paymentMethod"];
+  settledAt: string;
+  settledByName: string;
+  settlementNote?: string;
+  status: "settled";
 }
 
 function byCreatedAtAsc(a: Order, b: Order): number {
@@ -99,11 +111,11 @@ export async function placeOrderAsync(params: PlaceOrderInput): Promise<Order | 
   return placeSupabaseOrder(params);
 }
 
-export function updateOrderStatus(id: string, status: Order["status"], menuItems: MenuItem[]): void {
+export function updateOrderStatus(id: string, status: "printed", menuItems: MenuItem[]): void {
   saveOrders(loadOrders(menuItems).map((order) => (order.id === id ? { ...order, status } : order)));
 }
 
-export async function updateOrderStatusAsync(id: string, status: Order["status"], menuItems: MenuItem[]): Promise<void> {
+export async function updateOrderStatusAsync(id: string, status: "printed", menuItems: MenuItem[]): Promise<void> {
   if (getDataSourceMode() !== "supabase") {
     updateOrderStatus(id, status, menuItems);
     return;
@@ -111,6 +123,33 @@ export async function updateOrderStatusAsync(id: string, status: Order["status"]
 
   const { updateSupabaseOrderStatus } = await import("./supabaseOrderService");
   await updateSupabaseOrderStatus(id, status);
+}
+
+function getSettlementNote(value: string | undefined): string | undefined {
+  const note = value?.trim().slice(0, 500);
+  return note || undefined;
+}
+
+export function settleOrder(id: string, input: SettleOrderInput, menuItems: MenuItem[]): SettlementRecord {
+  const currentOrder = loadOrders(menuItems).find((order) => order.id === id);
+  if (!currentOrder || currentOrder.status === "settled") throw new Error("Order not found or already settled");
+
+  const settlement: SettlementRecord = {
+    paymentMethod: input.paymentMethod,
+    settledAt: new Date().toISOString(),
+    settledByName: input.operatorName,
+    settlementNote: getSettlementNote(input.settlementNote),
+    status: "settled",
+  };
+  saveOrders(loadOrders(menuItems).map((order) => (order.id === id ? { ...order, ...settlement } : order)));
+  return settlement;
+}
+
+export async function settleOrderAsync(id: string, input: SettleOrderInput, menuItems: MenuItem[]): Promise<SettlementRecord> {
+  if (getDataSourceMode() !== "supabase") return settleOrder(id, input, menuItems);
+
+  const { settleSupabaseOrder } = await import("./supabaseOrderService");
+  return settleSupabaseOrder(id, input);
 }
 
 export function listActiveOrders(orders: Order[]): Order[] {

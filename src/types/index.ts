@@ -33,7 +33,27 @@ export interface Order {
   status: "pending" | "printed" | "settled";
   settledAt?: string;
   settledByName?: string;
+  paymentMethod?: PaymentMethod;
+  settlementNote?: string;
   items: OrderLine[];
+}
+
+export const PAYMENT_METHODS = [
+  "cash",
+  "octopus",
+  "credit_card",
+  "wechat_pay",
+  "alipay_hk",
+  "fps",
+  "other",
+] as const;
+
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+export type PaymentReportMethod = PaymentMethod | "unrecorded";
+
+export interface SettlementInput {
+  paymentMethod: PaymentMethod;
+  settlementNote?: string;
 }
 
 export interface TableInfo {
@@ -96,8 +116,15 @@ export interface StaffSalesReportItem {
   staffId?: number | null;
 }
 
+export interface PaymentSalesReportItem {
+  method: PaymentReportMethod;
+  orderCount: number;
+  revenue: number;
+}
+
 export interface RevenueReport {
   dishSales: DishSalesReportItem[];
+  paymentSales: PaymentSalesReportItem[];
   staffSales: StaffSalesReportItem[];
   summary: RevenueReportSummary;
 }

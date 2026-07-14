@@ -19,6 +19,7 @@ const orders: Order[] = [
     id: "HO-1",
     items: [{ id: "tea", quantity: 3, unitPrice: 12 }, { id: "soup", quantity: 1, unitPrice: 40 }],
     sequence: 1,
+    paymentMethod: "cash",
     settledAt: new Date(2026, 5, 24, 10, 30).toISOString(),
     settledByName: "Alex",
     status: "settled",
@@ -69,6 +70,9 @@ describe("reportService", () => {
     expect(report.staffSales).toEqual([
       { name: "Alex", orderCount: 1, revenue: 76, staffId: null },
     ]);
+    expect(report.paymentSales).toEqual([
+      { method: "cash", orderCount: 1, revenue: 76 },
+    ]);
   });
 
   it("excludes settled orders outside the settlement range", () => {
@@ -79,13 +83,24 @@ describe("reportService", () => {
 
     expect(report.summary.orderCount).toBe(0);
     expect(report.dishSales).toEqual([]);
+    expect(report.paymentSales).toEqual([]);
     expect(report.staffSales).toEqual([]);
+  });
+
+  it("groups historical settled orders without a payment method as unrecorded", () => {
+    const report = getLocalRevenueReport([{ ...orders[0], id: "HO-history", paymentMethod: undefined }], menuItems, {
+      end: new Date(2026, 5, 25),
+      start: new Date(2026, 5, 24),
+    });
+
+    expect(report.paymentSales).toEqual([{ method: "unrecorded", orderCount: 1, revenue: 76 }]);
   });
 
   it("loads and maps the Supabase revenue report RPC", async () => {
     const rpc = async () => ({
       data: {
         dishSales: [{ id: "soup", name: "Soup", quantity: 2, revenue: 80 }],
+        paymentSales: [{ method: "octopus", orderCount: 1, revenue: 80 }],
         staffSales: [{ name: "Alex", orderCount: 1, revenue: 80, staffId: 7 }],
         summary: { averageOrderValue: 80, itemCount: 2, orderCount: 1, revenue: 80 },
       },
@@ -99,6 +114,7 @@ describe("reportService", () => {
 
     await expect(loadSupabaseRevenueReport(range, client)).resolves.toEqual({
       dishSales: [{ id: "soup", name: "Soup", quantity: 2, revenue: 80 }],
+      paymentSales: [{ method: "octopus", orderCount: 1, revenue: 80 }],
       staffSales: [{ name: "Alex", orderCount: 1, revenue: 80, staffId: 7 }],
       summary: { averageOrderValue: 80, itemCount: 2, orderCount: 1, revenue: 80 },
     });

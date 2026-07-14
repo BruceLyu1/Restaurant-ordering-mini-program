@@ -66,10 +66,12 @@ export function OrderCard({ canSettle = true, isSettling = false, menuItems, ord
           )}
         </div>
       </footer>
-      {order.status === "settled" && (order.settledAt || order.settledByName) && (
+      {order.status === "settled" && (order.settledAt || order.settledByName || order.paymentMethod || order.settlementNote) && (
         <p className="settlement-record">
+          <span>{t(`adminApp.orders.paymentMethods.${order.paymentMethod || "unrecorded"}`)}</span>
           {order.settledByName && <span>{t("adminApp.orders.settledBy", { name: order.settledByName })}</span>}
           {order.settledAt && <time dateTime={order.settledAt}>{t("adminApp.orders.settledAt", { time: formatTime(order.settledAt) })}</time>}
+          {order.settlementNote && <span className="settlement-note">{t("adminApp.orders.settlementNoteRecord", { note: order.settlementNote })}</span>}
         </p>
       )}
     </article>

@@ -1,5 +1,6 @@
 import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings } from "../types";
 import { getRestaurantSlug, supabase } from "./supabaseClient";
+import type { SettlementRecord, SettleOrderInput } from "./orderService";
 
 interface PlaceSupabaseOrderInput {
   activeMealPeriod: MealPeriod | null;
@@ -40,6 +41,8 @@ interface RemoteOrderRow {
   sequence?: number;
   settled_at?: string | null;
   settled_by_name?: string | null;
+  payment_method?: string | null;
+  settlement_note?: string | null;
   status?: string;
   table?: string;
   tables?: { number?: string } | { number?: string }[];
@@ -107,6 +110,8 @@ function mapOrder(row: RemoteOrderRow): Order {
     sequence,
     settledAt: row.settled_at || undefined,
     settledByName: row.settled_by_name || undefined,
+    ...(row.payment_method ? { paymentMethod: row.payment_method as Order["paymentMethod"] } : {}),
+    ...(row.settlement_note ? { settlementNote: row.settlement_note } : {}),
     status: getOrderStatus(row.status),
     table: getTableNumber(row),
   };
@@ -141,7 +146,7 @@ export async function loadSupabaseOrders(
 
   const { data, error } = await db
     .from("orders")
-    .select("order_number,status,created_at,settled_at,settled_by_name,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents)")
+    .select("order_number,status,created_at,settled_at,settled_by_name,payment_method,settlement_note,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents)")
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -163,7 +168,7 @@ export async function loadSupabaseTableOrders(
 
 export async function updateSupabaseOrderStatus(
   id: string,
-  status: Order["status"],
+  status: "printed",
   client: SupabaseLike | null = supabase as SupabaseLike | null,
 ): Promise<void> {
   const { error } = await assertRpcClient(client).rpc("update_order_status", {
@@ -172,6 +177,32 @@ export async function updateSupabaseOrderStatus(
     target_restaurant_slug: getRestaurantSlug(),
   });
   if (error) throw error;
+}
+
+export async function settleSupabaseOrder(
+  id: string,
+  input: SettleOrderInput,
+  client: SupabaseLike | null = supabase as SupabaseLike | null,
+): Promise<SettlementRecord> {
+  const { data, error } = await assertRpcClient(client).rpc("settle_order", {
+    target_order_id: id,
+    target_payment_method: input.paymentMethod,
+    target_restaurant_slug: getRestaurantSlug(),
+    target_settlement_note: input.settlementNote?.trim() || null,
+  });
+  if (error) throw error;
+
+  const settledOrder = mapOrder(data as RemoteOrderRow);
+  if (settledOrder.status !== "settled" || !settledOrder.settledAt || !settledOrder.settledByName || !settledOrder.paymentMethod) {
+    throw new Error("Settlement response is invalid");
+  }
+  return {
+    paymentMethod: settledOrder.paymentMethod,
+    settledAt: settledOrder.settledAt,
+    settledByName: settledOrder.settledByName,
+    settlementNote: settledOrder.settlementNote,
+    status: "settled",
+  };
 }
 
 export function subscribeSupabaseOrderChanges(

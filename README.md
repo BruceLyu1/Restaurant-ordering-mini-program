@@ -91,6 +91,7 @@ VITE_RESTAURANT_SLUG=harbour-demo
 - `20260702012000_staff_account_service_role_grants.sql`：员工账号管理的服务端权限。
 - `20260702013000_order_settlement_staff.sql`：结账员工、结账时间，以及经理/收银员结账权限。
 - `20260702014000_revenue_report_rpc.sql`：经理专用营收报表 RPC，按已结账订单和结账时间聚合营业额、菜品销量和员工结账汇总。
+- `20260702015000_payment_settlement.sql`：付款方式、收银备注、专用结账 RPC，以及按付款方式汇总的营收报表。
 
 若未应用最新结账 migration，后台可能无法读取新增的结账字段；请先运行 migration 再验证订单流程。
 

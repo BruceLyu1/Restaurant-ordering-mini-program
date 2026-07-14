@@ -116,10 +116,10 @@ describe("AdminApp store integration", () => {
     expect(await screen.findByText("Print failed, please check printer")).toBeTruthy();
   });
 
-  it("confirms settlement before updating the order status", async () => {
+  it("confirms settlement with a payment method before updating the order", async () => {
     window.localStorage.setItem("harbour-language", "en");
-    const updateStatus = vi.fn(async () => undefined);
-    useOrderStore.setState({ updateStatus });
+    const settle = vi.fn(async () => undefined);
+    useOrderStore.setState({ settle });
 
     render(
       <LanguageProvider>
@@ -130,20 +130,25 @@ describe("AdminApp store integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "Settle" }));
 
     expect(screen.getByRole("dialog", { name: "Confirm settlement" })).toBeTruthy();
-    expect(updateStatus).not.toHaveBeenCalled();
+    expect(settle).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("Payment method"), { target: { value: "cash" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm settlement" }));
 
     await vi.waitFor(() => {
-      expect(updateStatus).toHaveBeenCalledWith("HO-2001", "settled", []);
+      expect(settle).toHaveBeenCalledWith("HO-2001", {
+        operatorName: "Local admin",
+        paymentMethod: "cash",
+        settlementNote: "",
+      }, []);
     });
   });
 
-  it("shows an error when settlement status update fails", async () => {
+  it("shows an error when settlement fails", async () => {
     window.localStorage.setItem("harbour-language", "en");
-    const updateStatus = vi.fn(async () => {
+    const settle = vi.fn(async () => {
       throw new Error("remote failed");
     });
-    useOrderStore.setState({ updateStatus });
+    useOrderStore.setState({ settle });
 
     render(
       <LanguageProvider>
@@ -152,6 +157,7 @@ describe("AdminApp store integration", () => {
     );
 
     fireEvent.click(screen.getAllByRole("button", { name: /Settle/ }).at(-1)!);
+    fireEvent.change(screen.getByLabelText("Payment method"), { target: { value: "cash" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm settlement" }));
 
     expect(await screen.findByText("Settlement failed, please retry")).toBeTruthy();

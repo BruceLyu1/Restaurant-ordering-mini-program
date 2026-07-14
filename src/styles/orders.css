@@ -217,6 +217,10 @@
   margin-top: 9px;
 }
 
+.settlement-note {
+  flex-basis: 100%;
+}
+
 .settlement-modal {
   background: #fff;
   border-radius: 8px;
@@ -269,6 +273,35 @@
   display: grid;
   gap: 8px;
   grid-template-columns: 1fr 1fr;
+}
+
+.settlement-field {
+  color: var(--muted);
+  display: grid;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 5px;
+  margin: 12px 0;
+}
+
+.settlement-field select,
+.settlement-field textarea {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--green-dark);
+  font: inherit;
+  padding: 9px 10px;
+}
+
+.settlement-field textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.settlement-field-error {
+  color: #b42318;
+  font-size: 11px;
 }
 
 .settlement-modal-actions button {

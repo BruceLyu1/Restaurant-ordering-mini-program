@@ -4,6 +4,7 @@ import {
   loadSupabaseTableOrders,
   loadSupabaseOrders,
   placeSupabaseOrder,
+  settleSupabaseOrder,
   subscribeSupabaseOrderChanges,
   updateSupabaseOrderStatus,
 } from "../supabaseOrderService";
@@ -148,23 +149,54 @@ describe("supabaseOrderService", () => {
     });
   });
 
-  it("updates order status through the status RPC", async () => {
+  it("updates printed order status through the status RPC", async () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
     const client = { rpc };
 
-    await updateSupabaseOrderStatus("HO-1002", "settled", client);
+    await updateSupabaseOrderStatus("HO-1002", "printed", client);
 
     expect(rpc).toHaveBeenCalledWith("update_order_status", {
-      next_status: "settled",
+      next_status: "printed",
       target_order_id: "HO-1002",
       target_restaurant_slug: "harbour-demo",
     });
   });
 
-  it("rejects when the status RPC denies an order action", async () => {
+  it("settles orders through the dedicated RPC", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: {
+        payment_method: "octopus",
+        settled_at: "2026-07-02T07:20:00.000Z",
+        settled_by_name: "Alex",
+        settlement_note: "Terminal 1",
+        status: "settled",
+      },
+      error: null,
+    });
+
+    await expect(settleSupabaseOrder("HO-1002", {
+      operatorName: "Ignored by Supabase",
+      paymentMethod: "octopus",
+      settlementNote: "Terminal 1",
+    }, { rpc })).resolves.toEqual({
+      paymentMethod: "octopus",
+      settledAt: "2026-07-02T07:20:00.000Z",
+      settledByName: "Alex",
+      settlementNote: "Terminal 1",
+      status: "settled",
+    });
+    expect(rpc).toHaveBeenCalledWith("settle_order", {
+      target_order_id: "HO-1002",
+      target_payment_method: "octopus",
+      target_restaurant_slug: "harbour-demo",
+      target_settlement_note: "Terminal 1",
+    });
+  });
+
+  it("rejects when the settlement RPC denies an order action", async () => {
     const rpc = vi.fn().mockResolvedValue({ data: null, error: new Error("staff permission denied") });
 
-    await expect(updateSupabaseOrderStatus("HO-1002", "settled", { rpc })).rejects.toThrow("staff permission denied");
+    await expect(settleSupabaseOrder("HO-1002", { operatorName: "Cashier", paymentMethod: "cash" }, { rpc })).rejects.toThrow("staff permission denied");
   });
 
   it("rejects empty orders and missing Supabase configuration", async () => {
