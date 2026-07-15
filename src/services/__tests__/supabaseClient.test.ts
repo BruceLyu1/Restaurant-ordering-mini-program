@@ -69,6 +69,7 @@ describe("supabase client configuration", () => {
           autoRefreshToken: true,
           detectSessionInUrl: true,
           persistSession: true,
+          storage: window.sessionStorage,
         },
       },
       url: "https://example.supabase.co",
@@ -81,6 +82,7 @@ describe("supabase client configuration", () => {
           autoRefreshToken: true,
           detectSessionInUrl: true,
           persistSession: true,
+          storage: window.sessionStorage,
         },
       },
     );

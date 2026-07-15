@@ -210,15 +210,22 @@
 }
 
 .settlement-record {
+  align-items: start;
   color: var(--muted);
-  display: flex;
+  display: grid;
   font-size: 10px;
-  gap: 8px;
+  gap: 5px 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 9px;
 }
 
+.settlement-record > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .settlement-note {
-  flex-basis: 100%;
+  grid-column: 1 / -1;
 }
 
 .settlement-modal {

@@ -27,7 +27,7 @@ interface SupabaseAuthLike {
     callback: (event: string, session: SupabaseSession | null) => void,
   ) => { data: { subscription: SupabaseAuthSubscription } };
   signInWithPassword: (credentials: { email: string; password: string }) => Promise<SupabaseAuthResult<{ session?: SupabaseSession | null; user?: SupabaseUser | null }>>;
-  signOut: () => Promise<{ error: SupabaseAuthError | null }>;
+  signOut: (options?: { scope?: "global" | "local" | "others" }) => Promise<{ error: SupabaseAuthError | null }>;
 }
 
 interface SupabaseLike {
@@ -214,7 +214,7 @@ export async function signInWithPassword(
 }
 
 export async function signOut(client: SupabaseLike | null = supabase as SupabaseLike | null): Promise<void> {
-  const { error } = await assertAuthClient(client).signOut();
+  const { error } = await assertAuthClient(client).signOut({ scope: "local" });
   if (error) throw createAuthServiceError(error, "service-unavailable");
 }
 

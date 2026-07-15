@@ -47,7 +47,9 @@ export function createHarbourSupabaseClient(
     auth: {
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Each staff screen keeps its own login instead of sharing one browser-wide session.
       persistSession: true,
+      storage: window.sessionStorage,
     },
   });
 }

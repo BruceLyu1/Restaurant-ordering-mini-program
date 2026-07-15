@@ -161,7 +161,7 @@ describe("authService", () => {
     const cleanup = subscribeAuthChanges(vi.fn(), client);
     cleanup();
 
-    expect(client.auth.signOut).toHaveBeenCalled();
+    expect(client.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(unsubscribe).toHaveBeenCalled();
   });
 });

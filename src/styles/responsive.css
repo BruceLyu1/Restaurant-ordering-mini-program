@@ -67,8 +67,8 @@
   }
 
   .settlement-record {
-    flex-direction: column;
-    gap: 3px;
+    gap: 4px;
+    grid-template-columns: 1fr;
   }
 
   .settlement-modal-actions {
