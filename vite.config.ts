@@ -217,11 +217,6 @@ ${exportLines([...mod.exports], "commonjsExports")}
 
 export default defineConfig(({ command }) => ({
   base: "./",
-  build: {
-    cssMinify: false,
-    minify: false,
-  },
-  esbuild: false,
   optimizeDeps: {
     include: [],
     noDiscovery: true,

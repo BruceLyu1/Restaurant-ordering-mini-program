@@ -11,11 +11,11 @@ interface AdminAuthGuardProps {
 export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const { t } = useTranslation();
   const status = useAuthStore((state) => state.status);
+  const authError = useAuthStore((state) => state.error);
   const loadSession = useAuthStore((state) => state.loadSession);
   const signIn = useAuthStore((state) => state.signIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isSubmitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -30,14 +30,30 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
 
   if (status === "signed-in") return <>{children}</>;
 
+  if (status === "loading") {
+    return (
+      <main className="pin-guard">
+        <section aria-busy="true" className="pin-card admin-auth-card">
+          <h1>{t("adminAuth.title")}</h1>
+          <p role="status">{t("adminAuth.loading")}</p>
+        </section>
+      </main>
+    );
+  }
+
+  const errorMessage = authError
+    ? t(`adminAuth.errors.${authError}`)
+    : status === "unauthorized"
+      ? t("adminAuth.errors.unauthorized")
+      : "";
+
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
-    setError("");
     setSubmitting(true);
     try {
       await signIn(email.trim(), password);
     } catch {
-      setError(t("adminAuth.errors.signInFailed"));
+      // authStore exposes a safe, localized category for the failed request.
     } finally {
       setSubmitting(false);
     }
@@ -69,8 +85,8 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
               value={password}
             />
           </label>
-          <span className="pin-error" role={error || status === "unauthorized" ? "alert" : undefined}>
-            {error || status === "unauthorized" ? error || t("adminAuth.errors.unauthorized") : ""}
+          <span className="pin-error" role={errorMessage ? "alert" : undefined}>
+            {errorMessage}
           </span>
           <button className="management-primary" disabled={isSubmitting} type="submit">
             {isSubmitting ? t("adminAuth.signingIn") : t("adminAuth.signIn")}

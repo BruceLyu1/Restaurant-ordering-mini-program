@@ -60,6 +60,26 @@ describe("StaffManagement", () => {
     await waitFor(() => expect(screen.getByLabelText("Toggle account status for Casey").getAttribute("aria-pressed")).toBe("false"));
   });
 
+  it("prevents duplicate status changes and shows an error when saving fails", async () => {
+    let rejectToggle: (error: Error) => void = () => undefined;
+    const toggleActive = vi.fn(() => new Promise<void>((_, reject) => {
+      rejectToggle = reject;
+    }));
+    useStaffStore.setState({ toggleActive } as Partial<ReturnType<typeof useStaffStore.getState>>);
+    renderWithLanguage(<StaffManagement />);
+
+    const toggle = screen.getByLabelText("Toggle account status for Casey");
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+
+    expect(toggleActive).toHaveBeenCalledTimes(1);
+    expect(toggle.getAttribute("disabled")).toBe("");
+    rejectToggle(new Error("save failed"));
+
+    expect((await screen.findByRole("alert")).textContent).toContain("Staff save failed. Please check the details and try again.");
+    expect(toggle.getAttribute("disabled")).toBeNull();
+  });
+
   it("uses inactive styling for every disabled staff status", () => {
     renderWithLanguage(<StaffManagement />);
 

@@ -31,6 +31,7 @@ export function StaffManagement() {
   const [accountError, setAccountError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [creatingAccount, setCreatingAccount] = useState(false);
+  const [togglingStaffIds, setTogglingStaffIds] = useState<Set<number>>(() => new Set());
   const isSupabaseMode = getDataSourceMode() === "supabase";
 
   async function addStaff(event: React.FormEvent): Promise<void> {
@@ -83,7 +84,9 @@ export function StaffManagement() {
     return member.authUserId === null || member.authUserId === undefined ? "inactive" : "active";
   }
 
-  function toggleStaffActive(member: StaffMember): void {
+  async function toggleStaffActive(member: StaffMember): Promise<void> {
+    if (togglingStaffIds.has(member.id)) return;
+
     const isManager = normalizeStaffRole(member.role) === "manager";
     if (member.active && isManager && isCurrentStaff(member)) {
       setSaveError(t("staffManagement.cannotDisableCurrentManager"));
@@ -95,7 +98,19 @@ export function StaffManagement() {
     }
 
     setSaveError("");
-    void toggleActive(member.id).catch((error) => console.error("Save staff status failed", error));
+    setTogglingStaffIds((current) => new Set(current).add(member.id));
+    try {
+      await toggleActive(member.id);
+    } catch (error) {
+      console.error("Save staff status failed", error);
+      setSaveError(t("staffManagement.saveFailed"));
+    } finally {
+      setTogglingStaffIds((current) => {
+        const next = new Set(current);
+        next.delete(member.id);
+        return next;
+      });
+    }
   }
 
   function getAccountStatus(member: { active: boolean; authUserId?: string | null }): string {
@@ -151,7 +166,7 @@ export function StaffManagement() {
                 {isSupabaseMode && (
                   <td><span className={`list-status ${getStaffStatusClass(member)}`}>{getAccountStatus(member)}</span></td>
                 )}
-                <td><Toggle checked={member.active} label={t("staffManagement.toggle", { name: member.name })} onChange={() => toggleStaffActive(member)} /></td>
+                <td><Toggle checked={member.active} disabled={togglingStaffIds.has(member.id)} label={t("staffManagement.toggle", { name: member.name })} onChange={() => void toggleStaffActive(member)} /></td>
               </tr>
             ))}
           </tbody>

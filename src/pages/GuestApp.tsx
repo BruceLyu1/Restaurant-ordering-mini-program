@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { CartBar } from "../components/guest/CartBar";
 import { CartSheet } from "../components/guest/CartSheet";
 import { ConfirmationCard } from "../components/guest/ConfirmationCard";
@@ -23,14 +23,58 @@ interface GuestAppProps {
 
 const ALL_CATEGORY = "__all";
 
+interface CartState {
+  cart: Record<string, number>;
+  itemNotes: Record<string, string>;
+}
+
+type CartAction =
+  | { delta: number; id: string; type: "changeQuantity" }
+  | { id: string; notes: string; type: "setNote" }
+  | { ids: string[]; type: "removeUnavailable" }
+  | { type: "reset" };
+
+const EMPTY_CART_STATE: CartState = { cart: {}, itemNotes: {} };
+
+function cartReducer(state: CartState, action: CartAction): CartState {
+  switch (action.type) {
+    case "changeQuantity": {
+      const quantity = Math.max(0, (state.cart[action.id] || 0) + action.delta);
+      const cart = { ...state.cart, [action.id]: quantity };
+      if (quantity > 0) return { ...state, cart };
+
+      const { [action.id]: _, ...itemNotes } = state.itemNotes;
+      return { cart, itemNotes };
+    }
+    case "setNote": {
+      const notes = action.notes.trimStart();
+      if (notes) return { ...state, itemNotes: { ...state.itemNotes, [action.id]: notes } };
+
+      const { [action.id]: _, ...itemNotes } = state.itemNotes;
+      return { ...state, itemNotes };
+    }
+    case "removeUnavailable": {
+      const unavailableIds = new Set(action.ids);
+      const cart = Object.fromEntries(
+        Object.entries(state.cart).filter(([id]) => !unavailableIds.has(id)),
+      );
+      const itemNotes = Object.fromEntries(
+        Object.entries(state.itemNotes).filter(([id]) => !unavailableIds.has(id)),
+      );
+      return { cart, itemNotes };
+    }
+    case "reset":
+      return EMPTY_CART_STATE;
+  }
+}
+
 export function GuestApp({ activeMealPeriod, tableNumber }: GuestAppProps) {
   const { language, setLanguage, t } = useTranslation();
   const menuItems = useMenuStore((state) => state.items);
   const orders = useOrderStore((state) => state.orders);
   const restaurantName = useSettingsStore((state) => state.restaurant?.name ?? "");
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY);
-  const [cart, setCart] = useState<Record<string, number>>({});
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [{ cart, itemNotes }, dispatchCart] = useReducer(cartReducer, EMPTY_CART_STATE);
   const [isCartOpen, setCartOpen] = useState(false);
   const [isSubmittingOrder, setSubmittingOrder] = useState(false);
   const [isOrderHistoryOpen, setOrderHistoryOpen] = useState(false);
@@ -120,9 +164,7 @@ export function GuestApp({ activeMealPeriod, tableNumber }: GuestAppProps) {
     const hasUnavailableItem = Object.entries(cart).some(([id, quantity]) => quantity > 0 && unavailableIds.has(id));
     if (!hasUnavailableItem) return;
 
-    setCart((current) => Object.fromEntries(
-      Object.entries(current).filter(([id]) => !unavailableIds.has(id)),
-    ));
+    dispatchCart({ ids: [...unavailableIds], type: "removeUnavailable" });
     setStockNotice(t("guestApp.stockRemoved"));
   }, [activeMealPeriod, cart, menuItems, t]);
 
@@ -133,23 +175,11 @@ export function GuestApp({ activeMealPeriod, tableNumber }: GuestAppProps) {
       return;
     }
 
-    setCart((current) => {
-      const nextQuantity = Math.max(0, (current[id] || 0) + delta);
-      if (nextQuantity === 0) {
-        setItemNotes((notes) => Object.fromEntries(Object.entries(notes).filter(([key]) => key !== id)));
-      }
-      return { ...current, [id]: nextQuantity };
-    });
+    dispatchCart({ delta, id, type: "changeQuantity" });
   }
 
   function updateItemNote(id: string, notes: string): void {
-    setItemNotes((current) => {
-      const trimmedNotes = notes.trimStart();
-      if (!trimmedNotes) {
-        return Object.fromEntries(Object.entries(current).filter(([key]) => key !== id));
-      }
-      return { ...current, [id]: trimmedNotes };
-    });
+    dispatchCart({ id, notes, type: "setNote" });
   }
 
   async function submitOrder(): Promise<void> {
@@ -174,8 +204,7 @@ export function GuestApp({ activeMealPeriod, tableNumber }: GuestAppProps) {
         return;
       }
       setConfirmation(order);
-      setCart({});
-      setItemNotes({});
+      dispatchCart({ type: "reset" });
       setCartOpen(false);
     } catch (error) {
       console.error("Order submission failed", error);

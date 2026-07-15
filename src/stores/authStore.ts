@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { StaffMember } from "../types";
 import {
+  AuthServiceError,
+  type AuthFailureReason,
   claimStaffProfile,
   loadCurrentStaffProfile,
   signInWithPassword,
@@ -9,9 +11,10 @@ import {
 } from "../services/authService";
 import { getDataSourceMode } from "../services/dataSource";
 
-export type AuthStatus = "loading" | "signed-out" | "signed-in" | "unauthorized";
+export type AuthStatus = "error" | "loading" | "signed-out" | "signed-in" | "unauthorized";
 
 interface AuthStore {
+  error: AuthFailureReason | null;
   loadSession: () => Promise<void>;
   session: unknown | null;
   signIn: (email: string, password: string) => Promise<void>;
@@ -21,58 +24,71 @@ interface AuthStore {
   subscribe: () => () => void;
 }
 
+function getFailureReason(error: unknown): AuthFailureReason {
+  return error instanceof AuthServiceError ? error.reason : "service-unavailable";
+}
+
+function getFailureStatus(reason: AuthFailureReason): AuthStatus {
+  return reason === "service-unavailable" ? "error" : "unauthorized";
+}
+
 function assertActiveStaff(profile: StaffMember | null): StaffMember {
-  if (!profile) throw new Error("Staff profile not found");
-  if (!profile.active) throw new Error("Staff account is not active");
+  if (!profile) throw new AuthServiceError("no-access", "Staff profile not found");
+  if (!profile.active) throw new AuthServiceError("inactive", "Staff account is not active");
   return profile;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
+  error: null,
   session: null,
   staffProfile: null,
   status: getDataSourceMode() === "supabase" ? "loading" : "signed-in",
 
   loadSession: async () => {
     if (getDataSourceMode() !== "supabase") {
-      set({ session: null, staffProfile: null, status: "signed-in" });
+      set({ error: null, session: null, staffProfile: null, status: "signed-in" });
       return;
     }
 
     try {
       const profile = await loadCurrentStaffProfile();
       if (!profile) {
-        set({ session: null, staffProfile: null, status: "signed-out" });
+        set({ error: null, session: null, staffProfile: null, status: "signed-out" });
         return;
       }
-      set({ session: null, staffProfile: assertActiveStaff(profile), status: "signed-in" });
+      set({ error: null, session: null, staffProfile: assertActiveStaff(profile), status: "signed-in" });
     } catch (error) {
-      set({ session: null, staffProfile: null, status: "unauthorized" });
+      const reason = getFailureReason(error);
+      if (reason !== "service-unavailable") await signOutService().catch(() => undefined);
+      set({ error: reason, session: null, staffProfile: null, status: getFailureStatus(reason) });
       throw error;
     }
   },
 
   signIn: async (email, password) => {
+    set({ error: null });
     try {
       const session = await signInWithPassword(email, password);
       const profile = assertActiveStaff(await claimStaffProfile());
-      set({ session, staffProfile: profile, status: "signed-in" });
+      set({ error: null, session, staffProfile: profile, status: "signed-in" });
     } catch (error) {
+      const reason = getFailureReason(error);
       await signOutService().catch(() => undefined);
-      set({ session: null, staffProfile: null, status: "unauthorized" });
+      set({ error: reason, session: null, staffProfile: null, status: getFailureStatus(reason) });
       throw error;
     }
   },
 
   signOut: async () => {
     await signOutService();
-    set({ session: null, staffProfile: null, status: "signed-out" });
+    set({ error: null, session: null, staffProfile: null, status: "signed-out" });
   },
 
   subscribe: () => subscribeAuthChanges((session) => {
     if (!session) {
-      set({ session: null, staffProfile: null, status: "signed-out" });
+      set({ error: null, session: null, staffProfile: null, status: "signed-out" });
       return;
     }
-    void get().loadSession().catch(() => undefined);
+    void get().loadSession().catch((error) => console.error("Session validation failed", error));
   }),
 }));

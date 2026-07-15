@@ -24,6 +24,7 @@ describe("AdminAuthGuard", () => {
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
     useAuthStore.setState({
+      error: null,
       session: null,
       staffProfile: null,
       status: "signed-out",
@@ -49,6 +50,33 @@ describe("AdminAuthGuard", () => {
     expect(screen.getByLabelText("Email")).toBeTruthy();
     expect(screen.getByLabelText("Password")).toBeTruthy();
     expect(screen.queryByText("Protected Admin")).toBeNull();
+  });
+
+  it("shows a loading state while restoring a Supabase session", () => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    useAuthStore.setState({ status: "loading" });
+
+    renderGuard();
+
+    expect(screen.getByRole("status").textContent).toContain("Verifying sign-in status...");
+    expect(screen.queryByLabelText("Email")).toBeNull();
+  });
+
+  it.each([
+    ["invalid-credentials", "Email or password is incorrect."],
+    ["inactive", "This staff account is disabled. Contact a manager."],
+    ["no-access", "This staff account is not allowed to access the dashboard."],
+    ["service-unavailable", "Service is temporarily unavailable. Please try again."],
+  ] as const)("shows the %s authentication error", (error, message) => {
+    vi.stubEnv("VITE_DATA_SOURCE", "supabase");
+    useAuthStore.setState({
+      error,
+      status: error === "service-unavailable" ? "error" : "unauthorized",
+    });
+
+    renderGuard();
+
+    expect(screen.getByRole("alert").textContent).toContain(message);
   });
 
   it("submits email and password through auth store", async () => {

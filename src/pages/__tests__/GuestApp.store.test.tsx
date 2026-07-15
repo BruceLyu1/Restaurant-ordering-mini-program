@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GuestApp } from "../GuestApp";
 import { LanguageProvider } from "../../i18n/LanguageContext";
@@ -153,6 +153,24 @@ describe("GuestApp store integration", () => {
 
     expect(await screen.findByText("Order submission failed, please try again")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: /Place order/ }).length).toBeGreaterThan(0);
+  });
+
+  it("removes an item note when its quantity reaches zero", () => {
+    window.localStorage.setItem("harbour-language", "en");
+    render(
+      <LanguageProvider>
+        <GuestApp activeMealPeriod={{ id: "lunch", name: "Lunch", start: "11:00", end: "17:00" }} tableNumber="12" />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByLabelText("Add Store Rice"));
+    fireEvent.click(screen.getByRole("button", { name: /Place order/ }));
+    fireEvent.change(screen.getByLabelText("Store Rice Less sweet / No ice / Extra base..."), { target: { value: "No onion" } });
+    fireEvent.click(within(screen.getByLabelText("Cart")).getAllByRole("button")[1]);
+
+    fireEvent.click(screen.getByLabelText("Add Store Rice"));
+
+    expect(screen.getByLabelText("Store Rice Less sweet / No ice / Extra base...").getAttribute("value")).toBe("");
   });
 
   it("closes the open table order sheet when all table orders are settled", async () => {

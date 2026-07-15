@@ -27,13 +27,23 @@ function createAuthClient(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function createQuery(row: unknown, error: Error | null = null) {
-  const query = {
-    eq: vi.fn(() => query),
-    maybeSingle: vi.fn(async () => ({ data: row, error })),
-    select: vi.fn(() => query),
+function createProfile(overrides: Record<string, unknown> = {}) {
+  return {
+    active: true,
+    auth_user_id: "auth-1",
+    client_id: "201",
+    email: "alex@example.com",
+    id: 1,
+    name: "Alex",
+    role: "cashier",
+    ...overrides,
   };
-  return query;
+}
+
+function createRpcClient(data: unknown = createProfile(), error: { code?: string; message: string; status?: number } | null = null) {
+  return {
+    rpc: vi.fn(async () => ({ data, error })),
+  };
 }
 
 describe("authService", () => {
@@ -55,22 +65,21 @@ describe("authService", () => {
     });
   });
 
+  it("classifies invalid login credentials without exposing a raw service error", async () => {
+    const client = createAuthClient({
+      signInWithPassword: vi.fn(async () => ({
+        data: { session: null, user: null },
+        error: { code: "invalid_credentials", message: "Invalid login credentials", status: 400 },
+      })),
+    });
+
+    await expect(signInWithPassword("alex@example.com", "wrong-password", client))
+      .rejects.toMatchObject({ reason: "invalid-credentials" });
+  });
+
   it("claims the staff profile for the configured restaurant slug", async () => {
     vi.stubEnv("VITE_RESTAURANT_SLUG", "harbour-branch");
-    const client = {
-      rpc: vi.fn(async () => ({
-        data: {
-          active: true,
-          auth_user_id: "auth-1",
-          client_id: "101",
-          email: "alex@example.com",
-          id: 1,
-          name: "Alex",
-          role: "manager",
-        },
-        error: null,
-      })),
-    };
+    const client = createRpcClient(createProfile({ client_id: "101", role: "manager" }));
 
     await expect(claimStaffProfile(client)).resolves.toEqual({
       active: true,
@@ -85,19 +94,10 @@ describe("authService", () => {
     });
   });
 
-  it("loads the current staff profile by auth user id", async () => {
-    const query = createQuery({
-      active: true,
-      auth_user_id: "auth-1",
-      client_id: "201",
-      email: "alex@example.com",
-      id: 1,
-      name: "Alex",
-      role: "cashier",
-    });
+  it("restores a cashier session through the self-profile RPC", async () => {
     const client = {
       ...createAuthClient(),
-      from: vi.fn(() => query),
+      ...createRpcClient(),
     };
 
     await expect(loadCurrentStaffProfile(client)).resolves.toEqual({
@@ -108,16 +108,47 @@ describe("authService", () => {
       name: "Alex",
       role: "cashier",
     });
-    expect(client.from).toHaveBeenCalledWith("staff_members");
-    expect(query.eq).toHaveBeenCalledWith("auth_user_id", "auth-1");
+    expect(client.rpc).toHaveBeenCalledWith("get_current_staff_profile", {
+      target_restaurant_slug: "harbour-demo",
+    });
+  });
+
+  it("keeps the Supabase client context when invoking RPC methods", async () => {
+    const client = {
+      restaurantSlug: "harbour-demo",
+      rpc(this: { restaurantSlug: string }, _functionName: string, _args: Record<string, unknown>) {
+        return Promise.resolve({ data: createProfile({ client_id: this.restaurantSlug === "harbour-demo" ? "201" : "0" }), error: null });
+      },
+    };
+
+    await expect(claimStaffProfile(client)).resolves.toMatchObject({ id: 201 });
   });
 
   it("returns null when there is no current session", async () => {
-    const client = createAuthClient({
-      getSession: vi.fn(async () => ({ data: { session: null }, error: null })),
-    });
+    const client = {
+      ...createAuthClient({
+        getSession: vi.fn(async () => ({ data: { session: null }, error: null })),
+      }),
+      ...createRpcClient(),
+    };
 
     await expect(loadCurrentStaffProfile(client)).resolves.toBeNull();
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
+
+  it("classifies inactive and missing staff profile RPC failures", async () => {
+    const inactiveClient = createRpcClient(null, { message: "staff account is inactive" });
+    const noAccessClient = createRpcClient(null, { message: "staff profile not found" });
+
+    await expect(claimStaffProfile(inactiveClient)).rejects.toMatchObject({ reason: "inactive" });
+    await expect(claimStaffProfile(noAccessClient)).rejects.toMatchObject({ reason: "no-access" });
+  });
+
+  it("rejects malformed staff profile responses and incomplete auth clients", async () => {
+    await expect(claimStaffProfile(createRpcClient({ active: true, id: "not-a-number" })))
+      .rejects.toMatchObject({ reason: "service-unavailable" });
+    await expect(signInWithPassword("alex@example.com", "secret123", { auth: {} } as never))
+      .rejects.toMatchObject({ reason: "service-unavailable" });
   });
 
   it("signs out and unsubscribes auth listeners", async () => {
