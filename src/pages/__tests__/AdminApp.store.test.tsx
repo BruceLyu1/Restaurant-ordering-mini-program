@@ -116,6 +116,19 @@ describe("AdminApp store integration", () => {
     expect(await screen.findByText("Print failed, please check printer")).toBeTruthy();
   });
 
+  it("shows a load error instead of treating a failed order query as an empty queue", () => {
+    window.localStorage.setItem("harbour-language", "en");
+    useOrderStore.setState({ loadError: "order-load-failed", orders: [] });
+
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByText("Orders failed to load. Please refresh and try again.")).toBeTruthy();
+  });
+
   it("confirms settlement with a payment method before updating the order", async () => {
     window.localStorage.setItem("harbour-language", "en");
     const settle = vi.fn(async () => undefined);

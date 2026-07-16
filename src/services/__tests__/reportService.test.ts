@@ -75,6 +75,22 @@ describe("reportService", () => {
     ]);
   });
 
+  it("excludes reversed orders from every local revenue metric", () => {
+    const report = getLocalRevenueReport([{
+      ...orders[0],
+      settlementReversals: [{ reason: "Wrong payment method", restoredStatus: "printed", reversedAt: "2026-06-24T11:00:00.000Z", reversedByName: "Manager" }],
+      status: "printed",
+    }], menuItems, {
+      end: new Date(2026, 5, 25),
+      start: new Date(2026, 5, 24),
+    });
+
+    expect(report.summary).toEqual({ averageOrderValue: 0, itemCount: 0, orderCount: 0, revenue: 0 });
+    expect(report.dishSales).toEqual([]);
+    expect(report.paymentSales).toEqual([]);
+    expect(report.staffSales).toEqual([]);
+  });
+
   it("excludes settled orders outside the settlement range", () => {
     const report = getLocalRevenueReport(orders, menuItems, {
       end: new Date(2026, 5, 26),

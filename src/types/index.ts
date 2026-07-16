@@ -35,6 +35,8 @@ export interface Order {
   settledByName?: string;
   paymentMethod?: PaymentMethod;
   settlementNote?: string;
+  statusBeforeSettlement?: "pending" | "printed";
+  settlementReversals?: SettlementReversal[];
   items: OrderLine[];
 }
 
@@ -54,6 +56,21 @@ export type PaymentReportMethod = PaymentMethod | "unrecorded";
 export interface SettlementInput {
   paymentMethod: PaymentMethod;
   settlementNote?: string;
+}
+
+export interface SettlementReversalInput {
+  reason: string;
+}
+
+export interface SettlementReversal {
+  originalPaymentMethod?: PaymentMethod;
+  originalSettledAt?: string;
+  originalSettledByName?: string;
+  originalSettlementNote?: string;
+  reason: string;
+  restoredStatus: "pending" | "printed";
+  reversedAt: string;
+  reversedByName: string;
 }
 
 export interface TableInfo {

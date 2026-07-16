@@ -1,6 +1,6 @@
-import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings } from "../types";
+import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings, SettlementReversal } from "../types";
 import { getRestaurantSlug, supabase } from "./supabaseClient";
-import type { SettlementRecord, SettleOrderInput } from "./orderService";
+import type { ReverseSettlementInput, SettlementRecord, SettleOrderInput } from "./orderService";
 
 interface PlaceSupabaseOrderInput {
   activeMealPeriod: MealPeriod | null;
@@ -43,9 +43,22 @@ interface RemoteOrderRow {
   settled_by_name?: string | null;
   payment_method?: string | null;
   settlement_note?: string | null;
+  status_before_settlement?: string | null;
+  order_settlement_reversals?: RemoteSettlementReversalRow[];
   status?: string;
   table?: string;
   tables?: { number?: string } | { number?: string }[];
+}
+
+interface RemoteSettlementReversalRow {
+  original_payment_method?: string | null;
+  original_settled_at?: string | null;
+  original_settled_by_name?: string | null;
+  original_settlement_note?: string | null;
+  reason?: string;
+  restored_status?: string;
+  reversed_at?: string;
+  reversed_by_name?: string;
 }
 
 interface RemoteOrderLineRow {
@@ -99,9 +112,35 @@ function mapOrderLine(row: RemoteOrderLineRow): OrderLine {
   };
 }
 
+function mapSettlementReversal(row: RemoteSettlementReversalRow): SettlementReversal | null {
+  if (
+    typeof row.reason !== "string"
+    || !row.reason.trim()
+    || (row.restored_status !== "pending" && row.restored_status !== "printed")
+    || typeof row.reversed_at !== "string"
+    || typeof row.reversed_by_name !== "string"
+    || !row.reversed_by_name.trim()
+  ) return null;
+
+  return {
+    ...(row.original_payment_method ? { originalPaymentMethod: row.original_payment_method as SettlementReversal["originalPaymentMethod"] } : {}),
+    ...(row.original_settled_at ? { originalSettledAt: row.original_settled_at } : {}),
+    ...(row.original_settled_by_name ? { originalSettledByName: row.original_settled_by_name } : {}),
+    ...(row.original_settlement_note ? { originalSettlementNote: row.original_settlement_note } : {}),
+    reason: row.reason,
+    restoredStatus: row.restored_status,
+    reversedAt: row.reversed_at,
+    reversedByName: row.reversed_by_name,
+  };
+}
+
 function mapOrder(row: RemoteOrderRow): Order {
   const sequence = getOrderSequence(row);
   const lines = row.items || row.order_lines || [];
+  const reversals = (row.order_settlement_reversals || [])
+    .map(mapSettlementReversal)
+    .filter((entry): entry is SettlementReversal => entry !== null)
+    .sort((a, b) => new Date(a.reversedAt).getTime() - new Date(b.reversedAt).getTime());
 
   return {
     createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
@@ -112,6 +151,8 @@ function mapOrder(row: RemoteOrderRow): Order {
     settledByName: row.settled_by_name || undefined,
     ...(row.payment_method ? { paymentMethod: row.payment_method as Order["paymentMethod"] } : {}),
     ...(row.settlement_note ? { settlementNote: row.settlement_note } : {}),
+    ...(row.status_before_settlement === "pending" || row.status_before_settlement === "printed" ? { statusBeforeSettlement: row.status_before_settlement } : {}),
+    ...(reversals.length ? { settlementReversals: reversals } : {}),
     status: getOrderStatus(row.status),
     table: getTableNumber(row),
   };
@@ -146,7 +187,7 @@ export async function loadSupabaseOrders(
 
   const { data, error } = await db
     .from("orders")
-    .select("order_number,status,created_at,settled_at,settled_by_name,payment_method,settlement_note,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents)")
+    .select("order_number,status,created_at,settled_at,settled_by_name,payment_method,settlement_note,status_before_settlement,tables(number),order_lines(menu_item_client_id,name,notes,quantity,unit_price_cents),order_settlement_reversals(original_payment_method,original_settled_at,original_settled_by_name,original_settlement_note,reason,restored_status,reversed_at,reversed_by_name)")
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -193,7 +234,7 @@ export async function settleSupabaseOrder(
   if (error) throw error;
 
   const settledOrder = mapOrder(data as RemoteOrderRow);
-  if (settledOrder.status !== "settled" || !settledOrder.settledAt || !settledOrder.settledByName || !settledOrder.paymentMethod) {
+  if (settledOrder.status !== "settled" || !settledOrder.settledAt || !settledOrder.settledByName || !settledOrder.paymentMethod || !settledOrder.statusBeforeSettlement) {
     throw new Error("Settlement response is invalid");
   }
   return {
@@ -201,8 +242,27 @@ export async function settleSupabaseOrder(
     settledAt: settledOrder.settledAt,
     settledByName: settledOrder.settledByName,
     settlementNote: settledOrder.settlementNote,
+    statusBeforeSettlement: settledOrder.statusBeforeSettlement,
     status: "settled",
   };
+}
+
+export async function reverseSupabaseSettlement(
+  id: string,
+  input: ReverseSettlementInput,
+  client: SupabaseLike | null = supabase as SupabaseLike | null,
+): Promise<SettlementReversal> {
+  const { data, error } = await assertRpcClient(client).rpc("reverse_order_settlement", {
+    target_order_id: id,
+    target_reason: input.reason.trim(),
+    target_restaurant_slug: getRestaurantSlug(),
+  });
+  if (error) throw error;
+
+  const response = data as { settlement_reversal?: RemoteSettlementReversalRow; status?: string };
+  const reversal = response?.settlement_reversal ? mapSettlementReversal(response.settlement_reversal) : null;
+  if (!reversal || response.status !== reversal.restoredStatus) throw new Error("Settlement reversal response is invalid");
+  return reversal;
 }
 
 export function subscribeSupabaseOrderChanges(

@@ -4,6 +4,7 @@ import {
   loadSupabaseTableOrders,
   loadSupabaseOrders,
   placeSupabaseOrder,
+  reverseSupabaseSettlement,
   settleSupabaseOrder,
   subscribeSupabaseOrderChanges,
   updateSupabaseOrderStatus,
@@ -169,6 +170,7 @@ describe("supabaseOrderService", () => {
         settled_at: "2026-07-02T07:20:00.000Z",
         settled_by_name: "Alex",
         settlement_note: "Terminal 1",
+        status_before_settlement: "printed",
         status: "settled",
       },
       error: null,
@@ -183,6 +185,7 @@ describe("supabaseOrderService", () => {
       settledAt: "2026-07-02T07:20:00.000Z",
       settledByName: "Alex",
       settlementNote: "Terminal 1",
+      statusBeforeSettlement: "printed",
       status: "settled",
     });
     expect(rpc).toHaveBeenCalledWith("settle_order", {
@@ -190,6 +193,40 @@ describe("supabaseOrderService", () => {
       target_payment_method: "octopus",
       target_restaurant_slug: "harbour-demo",
       target_settlement_note: "Terminal 1",
+    });
+  });
+
+  it("reverses settlement through the manager-only RPC", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: {
+        status: "printed",
+        settlement_reversal: {
+          original_payment_method: "cash",
+          original_settled_at: "2026-07-02T07:20:00.000Z",
+          original_settled_by_name: "Cashier",
+          original_settlement_note: "Terminal 1",
+          reason: "Wrong payment method",
+          restored_status: "printed",
+          reversed_at: "2026-07-02T07:30:00.000Z",
+          reversed_by_name: "Manager",
+        },
+      },
+      error: null,
+    });
+
+    await expect(reverseSupabaseSettlement("HO-1002", {
+      operatorName: "Ignored by Supabase",
+      reason: "Wrong payment method",
+    }, { rpc })).resolves.toMatchObject({
+      originalPaymentMethod: "cash",
+      reason: "Wrong payment method",
+      restoredStatus: "printed",
+      reversedByName: "Manager",
+    });
+    expect(rpc).toHaveBeenCalledWith("reverse_order_settlement", {
+      target_order_id: "HO-1002",
+      target_reason: "Wrong payment method",
+      target_restaurant_slug: "harbour-demo",
     });
   });
 

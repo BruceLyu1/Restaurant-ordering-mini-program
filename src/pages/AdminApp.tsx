@@ -4,6 +4,7 @@ import { MobileAdminNav } from "../components/admin/MobileAdminNav";
 import { OrderCard } from "../components/admin/OrderCard";
 import { PopularDishes } from "../components/admin/PopularDishes";
 import { SettlementConfirmDialog } from "../components/admin/SettlementConfirmDialog";
+import { SettlementReversalDialog } from "../components/admin/SettlementReversalDialog";
 import { Sidebar } from "../components/admin/Sidebar";
 import { Icon } from "../components/ui/Icon";
 import { useFormatAdminDate } from "../i18n/useFormatAdminDate";
@@ -37,6 +38,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const formatAdminDate = useFormatAdminDate();
   const menuItems = useMenuStore((state) => state.items);
   const orders = useOrderStore((state) => state.orders);
+  const orderLoadError = useOrderStore((state) => state.loadError);
   const tables = useTableStore((state) => state.tables);
   const pendingOrders = useMemo(() => listActiveOrders(orders), [orders]);
   const newOrderCount = useMemo(() => orders.filter((order) => order.status === "pending").length, [orders]);
@@ -50,6 +52,8 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settlementOrder, setSettlementOrder] = useState<Order | null>(null);
   const [settlingOrderId, setSettlingOrderId] = useState<string | null>(null);
+  const [settlementReversalOrder, setSettlementReversalOrder] = useState<Order | null>(null);
+  const [reversingOrderId, setReversingOrderId] = useState<string | null>(null);
   const isSupabaseMode = getDataSourceMode() === "supabase";
   const permissionProfile = isSupabaseMode
     ? staffProfile
@@ -58,6 +62,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
   const allowedNavItems = useMemo(() => getAllowedNavItems(permissionProfile), [permissionProfile]);
   const canSettleOrders = permissionProfile?.role === "manager" || permissionProfile?.role === "cashier";
+  const canReverseSettlements = permissionProfile?.role === "manager";
 
   useEffect(() => {
     if (!canAccessAdminSection(permissionProfile, activeSection)) setActiveSection("orders");
@@ -101,6 +106,32 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
       setActionError(t("adminApp.settleFailed"));
     } finally {
       setSettlingOrderId(null);
+    }
+  }
+
+  function handleSettlementReversal(id: string): void {
+    const order = orders.find((entry) => entry.id === id);
+    if (!order || order.status !== "settled" || !canReverseSettlements) return;
+    setActionError("");
+    setSettlementReversalOrder(order);
+  }
+
+  async function confirmSettlementReversal(reason: string): Promise<void> {
+    if (!settlementReversalOrder || reversingOrderId) return;
+    setActionError("");
+    setReversingOrderId(settlementReversalOrder.id);
+    try {
+      await useOrderStore.getState().reverseSettlement(settlementReversalOrder.id, {
+        operatorName: staffProfile?.name || t("adminApp.orders.localOperator"),
+        reason,
+      }, useMenuStore.getState().items);
+      setSettlementReversalOrder(null);
+      setFilter("pending");
+    } catch (error) {
+      console.error("Settlement reversal failed", error);
+      setActionError(t("adminApp.settleFailed"));
+    } finally {
+      setReversingOrderId(null);
     }
   }
 
@@ -198,7 +229,9 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
                   {t("adminApp.orders.completedTab")}<span>{completedOrders.length}</span>
                 </button>
               </div>
-              {actionError && <p className="management-error">{actionError}</p>}
+              {(actionError || orderLoadError) && (
+                <p className="management-error">{actionError || t("adminApp.orders.loadFailed")}</p>
+              )}
               <div className="queue-note">
                 <span>{t("adminApp.orders.flowTitle")}</span>
                 <p>{t("adminApp.orders.flowDescription")}</p>
@@ -207,13 +240,17 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
                 {visibleOrders.length ? (
                   visibleOrders.map((order) => (
                     <OrderCard
+                      canReverseSettlement={canReverseSettlements}
                       canSettle={canSettleOrders}
+                      isReversingSettlement={reversingOrderId === order.id}
                       isSettling={settlingOrderId === order.id}
                       key={order.id}
                       menuItems={menuItems}
                       onPrint={handlePrint}
+                      onReverseSettlement={handleSettlementReversal}
                       onSettle={handleSettle}
                       order={order}
+                      showSettlementReversal={canReverseSettlements}
                     />
                   ))
                 ) : (
@@ -224,6 +261,15 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
                   </div>
                 )}
               </div>
+              {settlementReversalOrder && (
+                <SettlementReversalDialog
+                  isSubmitting={reversingOrderId === settlementReversalOrder.id}
+                  menuItems={menuItems}
+                  onCancel={() => setSettlementReversalOrder(null)}
+                  onConfirm={({ reason }) => void confirmSettlementReversal(reason)}
+                  order={settlementReversalOrder}
+                />
+              )}
               {settlementOrder && (
                 <SettlementConfirmDialog
                   isSubmitting={settlingOrderId === settlementOrder.id}

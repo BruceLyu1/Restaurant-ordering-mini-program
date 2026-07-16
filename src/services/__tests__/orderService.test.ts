@@ -8,6 +8,7 @@ import {
   loadOrdersAsync,
   placeOrder,
   placeOrderAsync,
+  reverseSettlement,
   settleOrder,
   settleOrderAsync,
   updateOrderStatus,
@@ -88,6 +89,34 @@ describe("orderService", () => {
       settledByName: "Local Admin",
       status: "settled",
     });
+  });
+
+  it("reverses a settlement, restores the original status, and preserves its audit snapshot", () => {
+    const order = placeOrder({
+      activeMealPeriod,
+      items: [{ id: "rice", name: "BBQ Rice", quantity: 1, unitPrice: 68 }],
+      menuItems,
+      printerSettings,
+      table: "02",
+    });
+    updateOrderStatus(order!.id, "printed", menuItems);
+    settleOrder(order!.id, { operatorName: "Cashier", paymentMethod: "octopus", settlementNote: "Terminal 1" }, menuItems);
+
+    reverseSettlement(order!.id, { operatorName: "Manager", reason: "Wrong payment method" }, menuItems);
+
+    expect(loadOrders(menuItems)[0].status).toBe("printed");
+    expect(loadOrders(menuItems)[0]).not.toHaveProperty("paymentMethod");
+    expect(loadOrders(menuItems)[0]).not.toHaveProperty("settledAt");
+    expect(loadOrders(menuItems)[0]).not.toHaveProperty("settledByName");
+    expect(loadOrders(menuItems)[0]).not.toHaveProperty("settlementNote");
+    expect(loadOrders(menuItems)[0].settlementReversals).toMatchObject([{
+      originalPaymentMethod: "octopus",
+      originalSettledByName: "Cashier",
+      originalSettlementNote: "Terminal 1",
+      reason: "Wrong payment method",
+      restoredStatus: "printed",
+      reversedByName: "Manager",
+    }]);
   });
 
   it("deduplicates orders with the same id when loading from storage", () => {

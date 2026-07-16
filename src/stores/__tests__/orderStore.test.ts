@@ -30,7 +30,7 @@ describe("orderStore", () => {
     vi.stubEnv("VITE_DATA_SOURCE", "local");
     window.localStorage.clear();
     window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify([]));
-    useOrderStore.setState({ orders: [] });
+    useOrderStore.setState({ loadError: null, orders: [] });
   });
 
   it("places an order through orderService and refreshes store state", async () => {
@@ -81,6 +81,7 @@ describe("orderStore", () => {
 
     expect(useOrderStore.getState().orders).toEqual([]);
     await expect(result).rejects.toThrow("Supabase is not configured");
+    expect(useOrderStore.getState().loadError).toBe("order-load-failed");
     expect(useOrderStore.getState().orders).toEqual([]);
   });
 
@@ -95,6 +96,13 @@ describe("orderStore", () => {
 
     await useOrderStore.getState().settle(order!.id, { operatorName: "Local Admin", paymentMethod: "cash" }, menuItems);
     expect(useOrderStore.getState().orders[0]).toMatchObject({ paymentMethod: "cash", status: "settled" });
+
+    await useOrderStore.getState().reverseSettlement(order!.id, { operatorName: "Local Manager", reason: "Wrong payment method" }, menuItems);
+    expect(useOrderStore.getState().orders[0]).toMatchObject({ status: "pending" });
+    expect(useOrderStore.getState().orders[0].settlementReversals).toMatchObject([{
+      reason: "Wrong payment method",
+      reversedByName: "Local Manager",
+    }]);
 
     useOrderStore.getState().resetDemo(menuItems);
     expect(useOrderStore.getState().orders).toHaveLength(seedOrders.length);

@@ -49,6 +49,20 @@ describe("OrderCard", () => {
     expect(screen.queryByRole("button", { name: /Settle/ })).toBeNull();
   });
 
+  it("shows the reversal action and latest audit record only when a manager can access them", () => {
+    const order = {
+      ...makeOrder("settled"),
+      paymentMethod: "cash" as const,
+      settlementReversals: [{ reason: "Wrong payment method", restoredStatus: "printed" as const, reversedAt: "2026-06-24T10:35:00.000Z", reversedByName: "Manager" }],
+    };
+    const onReverseSettlement = vi.fn();
+    renderWithLanguage(<OrderCard canReverseSettlement menuItems={menuItems} onPrint={vi.fn()} onReverseSettlement={onReverseSettlement} onSettle={vi.fn()} order={order} showSettlementReversal />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Reverse settlement/ }));
+    expect(onReverseSettlement).toHaveBeenCalledWith("HO-settled");
+    expect(screen.getByText(/Settlement reversed at.*2026-06-24/)).toBeTruthy();
+  });
+
   it("shows settlement audit details for settled orders", () => {
     const order = {
       ...makeOrder("settled"),
@@ -60,7 +74,7 @@ describe("OrderCard", () => {
     renderWithLanguage(<OrderCard menuItems={menuItems} onPrint={vi.fn()} onSettle={vi.fn()} order={order} />);
 
     expect(screen.getByText("Settled by: Alex")).toBeTruthy();
-    expect(screen.getByText(/Settled at:/)).toBeTruthy();
+    expect(screen.getByText(/Settled at:.*2026-06-24/)).toBeTruthy();
     expect(screen.getByText("Octopus")).toBeTruthy();
     expect(screen.getByText("Note: Terminal 1")).toBeTruthy();
   });

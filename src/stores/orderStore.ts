@@ -7,6 +7,8 @@ import {
   placeOrder as placeOrderService,
   placeOrderAsync as placeOrderServiceAsync,
   resetDemoOrders,
+  reverseSettlementAsync,
+  type ReverseSettlementInput,
   settleOrderAsync,
   type SettleOrderInput,
   updateOrderStatus,
@@ -23,22 +25,30 @@ interface PlaceOrderInput {
 }
 
 interface OrderStore {
+  loadError: string | null;
   orders: Order[];
   load: (menuItems: MenuItem[], options?: LoadOrdersOptions) => Promise<void>;
   placeOrder: (params: PlaceOrderInput) => Promise<Order | null>;
   resetDemo: (menuItems: MenuItem[]) => void;
   settle: (id: string, input: SettleOrderInput, menuItems: MenuItem[]) => Promise<void>;
+  reverseSettlement: (id: string, input: ReverseSettlementInput, menuItems: MenuItem[]) => Promise<void>;
   updateStatus: (id: string, status: "printed", menuItems: MenuItem[]) => Promise<void>;
 }
 
 export const useOrderStore = create<OrderStore>((set) => ({
+  loadError: null,
   orders: [],
 
   load: async (menuItems, options = {}) => {
-    const orders = getDataSourceMode() === "supabase"
-      ? await loadOrdersAsync(menuItems, options)
-      : loadOrders(menuItems);
-    set({ orders });
+    try {
+      const orders = getDataSourceMode() === "supabase"
+        ? await loadOrdersAsync(menuItems, options)
+        : loadOrders(menuItems);
+      set({ loadError: null, orders });
+    } catch (error) {
+      set({ loadError: "order-load-failed" });
+      throw error;
+    }
   },
 
   placeOrder: async (params) => {
@@ -72,6 +82,26 @@ export const useOrderStore = create<OrderStore>((set) => ({
     set((state) => ({
       orders: state.orders.map((order) => (
         order.id === id ? { ...order, ...settlement } : order
+      )),
+    }));
+  },
+
+  reverseSettlement: async (id, input, menuItems) => {
+    const reversal = await reverseSettlementAsync(id, input, menuItems);
+    set((state) => ({
+      orders: state.orders.map((order) => (
+        order.id === id
+          ? {
+            ...order,
+            paymentMethod: undefined,
+            settledAt: undefined,
+            settledByName: undefined,
+            settlementNote: undefined,
+            settlementReversals: [...(order.settlementReversals || []), reversal],
+            status: reversal.restoredStatus,
+            statusBeforeSettlement: undefined,
+          }
+          : order
       )),
     }));
   },

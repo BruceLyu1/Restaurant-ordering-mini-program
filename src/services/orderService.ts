@@ -1,6 +1,6 @@
 
 import { ORDER_STORAGE_KEY, seedOrders } from "../data/orders";
-import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings, SettlementInput } from "../types";
+import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings, SettlementInput, SettlementReversal } from "../types";
 import { getMenuItem } from "../utils/order";
 import { getDataSourceMode } from "./dataSource";
 import { isItemAvailableForMealPeriod } from "./settingsService";
@@ -29,7 +29,13 @@ export interface SettlementRecord {
   settledAt: string;
   settledByName: string;
   settlementNote?: string;
+  statusBeforeSettlement: "pending" | "printed";
   status: "settled";
+}
+
+export interface ReverseSettlementInput {
+  operatorName: string;
+  reason: string;
 }
 
 function byCreatedAtAsc(a: Order, b: Order): number {
@@ -130,6 +136,12 @@ function getSettlementNote(value: string | undefined): string | undefined {
   return note || undefined;
 }
 
+function getReversalReason(value: string): string {
+  const reason = value.trim().slice(0, 500);
+  if (!reason) throw new Error("Settlement reversal reason is required");
+  return reason;
+}
+
 export function settleOrder(id: string, input: SettleOrderInput, menuItems: MenuItem[]): SettlementRecord {
   const currentOrder = loadOrders(menuItems).find((order) => order.id === id);
   if (!currentOrder || currentOrder.status === "settled") throw new Error("Order not found or already settled");
@@ -139,6 +151,7 @@ export function settleOrder(id: string, input: SettleOrderInput, menuItems: Menu
     settledAt: new Date().toISOString(),
     settledByName: input.operatorName,
     settlementNote: getSettlementNote(input.settlementNote),
+    statusBeforeSettlement: currentOrder.status === "printed" ? "printed" : "pending",
     status: "settled",
   };
   saveOrders(loadOrders(menuItems).map((order) => (order.id === id ? { ...order, ...settlement } : order)));
@@ -150,6 +163,45 @@ export async function settleOrderAsync(id: string, input: SettleOrderInput, menu
 
   const { settleSupabaseOrder } = await import("./supabaseOrderService");
   return settleSupabaseOrder(id, input);
+}
+
+export function reverseSettlement(id: string, input: ReverseSettlementInput, menuItems: MenuItem[]): SettlementReversal {
+  const currentOrder = loadOrders(menuItems).find((order) => order.id === id);
+  if (!currentOrder || currentOrder.status !== "settled") throw new Error("Order not found or not settled");
+
+  const reversal: SettlementReversal = {
+    originalPaymentMethod: currentOrder.paymentMethod,
+    originalSettledAt: currentOrder.settledAt,
+    originalSettledByName: currentOrder.settledByName,
+    originalSettlementNote: currentOrder.settlementNote,
+    reason: getReversalReason(input.reason),
+    restoredStatus: currentOrder.statusBeforeSettlement || "pending",
+    reversedAt: new Date().toISOString(),
+    reversedByName: input.operatorName,
+  };
+
+  saveOrders(loadOrders(menuItems).map((order) => (
+    order.id === id
+      ? {
+        ...order,
+        paymentMethod: undefined,
+        settledAt: undefined,
+        settledByName: undefined,
+        settlementNote: undefined,
+        settlementReversals: [...(order.settlementReversals || []), reversal],
+        status: reversal.restoredStatus,
+        statusBeforeSettlement: undefined,
+      }
+      : order
+  )));
+  return reversal;
+}
+
+export async function reverseSettlementAsync(id: string, input: ReverseSettlementInput, menuItems: MenuItem[]): Promise<SettlementReversal> {
+  if (getDataSourceMode() !== "supabase") return reverseSettlement(id, input, menuItems);
+
+  const { reverseSupabaseSettlement } = await import("./supabaseOrderService");
+  return reverseSupabaseSettlement(id, input);
 }
 
 export function listActiveOrders(orders: Order[]): Order[] {
