@@ -30,9 +30,16 @@ describe("orderStore", () => {
     vi.stubEnv("VITE_DATA_SOURCE", "local");
     window.localStorage.clear();
     window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify([]));
-    useOrderStore.setState({ loadError: null, orders: [] });
+    useOrderStore.setState({ hasLoaded: false, loadError: null, orders: [] });
   });
 
+  it("marks the order list ready only after a successful load", async () => {
+    expect(useOrderStore.getState().hasLoaded).toBe(false);
+
+    await useOrderStore.getState().load(menuItems);
+
+    expect(useOrderStore.getState().hasLoaded).toBe(true);
+  });
   it("places an order through orderService and refreshes store state", async () => {
     const result = useOrderStore.getState().placeOrder({
       activeMealPeriod,

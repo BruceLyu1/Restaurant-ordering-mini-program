@@ -25,6 +25,7 @@ interface PlaceOrderInput {
 }
 
 interface OrderStore {
+  hasLoaded: boolean;
   loadError: string | null;
   orders: Order[];
   load: (menuItems: MenuItem[], options?: LoadOrdersOptions) => Promise<void>;
@@ -36,6 +37,7 @@ interface OrderStore {
 }
 
 export const useOrderStore = create<OrderStore>((set) => ({
+  hasLoaded: false,
   loadError: null,
   orders: [],
 
@@ -44,7 +46,7 @@ export const useOrderStore = create<OrderStore>((set) => ({
       const orders = getDataSourceMode() === "supabase"
         ? await loadOrdersAsync(menuItems, options)
         : loadOrders(menuItems);
-      set({ loadError: null, orders });
+      set({ hasLoaded: true, loadError: null, orders });
     } catch (error) {
       set({ loadError: "order-load-failed" });
       throw error;

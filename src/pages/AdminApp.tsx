@@ -1,20 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AdminAuthGuard } from "../components/admin/AdminAuthGuard";
 import { MobileAdminNav } from "../components/admin/MobileAdminNav";
+import { NewOrderAlert } from "../components/admin/NewOrderAlert";
 import { OrderCard } from "../components/admin/OrderCard";
 import { PopularDishes } from "../components/admin/PopularDishes";
 import { SettlementConfirmDialog } from "../components/admin/SettlementConfirmDialog";
 import { SettlementReversalDialog } from "../components/admin/SettlementReversalDialog";
 import { Sidebar } from "../components/admin/Sidebar";
 import { Icon } from "../components/ui/Icon";
+import { canReceiveNewOrderAlerts, useNewOrderAlert } from "../hooks/useNewOrderAlert";
 import { useFormatAdminDate } from "../i18n/useFormatAdminDate";
 import { useTranslation } from "../i18n/useTranslation";
 import { getDataSourceMode } from "../services/dataSource";
 import { listActiveOrders, listSettledOrders } from "../services/orderService";
+import { useAuthStore } from "../stores/authStore";
 import { useMenuStore } from "../stores/menuStore";
 import { useOrderStore } from "../stores/orderStore";
 import { useSettingsStore } from "../stores/settingsStore";
-import { useAuthStore } from "../stores/authStore";
 import { useTableStore } from "../stores/tableStore";
 import { canAccessAdminSection, getAllowedNavItems } from "../utils/adminPermissions";
 import { getTablesWithOrderStatus } from "../utils/table";
@@ -26,7 +28,6 @@ import { RestaurantSettings } from "./RestaurantSettings";
 import { StaffManagement } from "./StaffManagement";
 import { TableManagement } from "./TableManagement";
 import type { MealPeriod, Order, SettlementInput } from "../types";
-
 interface AdminAppProps {
   activeMealPeriod: MealPeriod | null;
   guestBaseUrl: string;
@@ -37,12 +38,14 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const { t } = useTranslation();
   const formatAdminDate = useFormatAdminDate();
   const menuItems = useMenuStore((state) => state.items);
+  const hasLoadedOrders = useOrderStore((state) => state.hasLoaded);
   const orders = useOrderStore((state) => state.orders);
   const orderLoadError = useOrderStore((state) => state.loadError);
   const tables = useTableStore((state) => state.tables);
   const pendingOrders = useMemo(() => listActiveOrders(orders), [orders]);
   const newOrderCount = useMemo(() => orders.filter((order) => order.status === "pending").length, [orders]);
   const completedOrders = useMemo(() => listSettledOrders(orders), [orders]);
+  const printerSettings = useSettingsStore((state) => state.printer);
   const restaurantName = useSettingsStore((state) => state.restaurant.name);
   const staffProfile = useAuthStore((state) => state.staffProfile);
   const signOut = useAuthStore((state) => state.signOut);
@@ -63,6 +66,13 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const allowedNavItems = useMemo(() => getAllowedNavItems(permissionProfile), [permissionProfile]);
   const canSettleOrders = permissionProfile?.role === "manager" || permissionProfile?.role === "cashier";
   const canReverseSettlements = permissionProfile?.role === "manager";
+  const canReceiveOrderAlerts = canReceiveNewOrderAlerts(permissionProfile?.role);
+  const { dismissNotice: dismissNewOrderNotice, notice: newOrderNotice } = useNewOrderAlert({
+    enabled: canReceiveOrderAlerts,
+    isReady: hasLoadedOrders,
+    orders,
+    soundEnabled: printerSettings.sound,
+  });
 
   useEffect(() => {
     if (!canAccessAdminSection(permissionProfile, activeSection)) setActiveSection("orders");
@@ -135,6 +145,12 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
     }
   }
 
+  function handleViewNewOrders(): void {
+    dismissNewOrderNotice();
+    setActiveSection("orders");
+    setFilter("pending");
+  }
+
   async function handleSignOut(): Promise<void> {
     try {
       await signOut();
@@ -167,6 +183,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
         <MobileAdminNav activeSection={activeSection} navItemsOverride={allowedNavItems} onClose={() => setMobileMenuOpen(false)} onNavigate={setActiveSection} orderBadgeCount={newOrderCount} restaurantName={restaurantName} />
       )}
       <section className="admin-workspace">
+        <NewOrderAlert notice={newOrderNotice} onDismiss={dismissNewOrderNotice} onViewOrders={handleViewNewOrders} />
         <header className="admin-topbar">
           <button className="mobile-nav-trigger" onClick={() => setMobileMenuOpen(true)} type="button">
             <Icon name="menu" size={18} />
