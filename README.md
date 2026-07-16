@@ -1,105 +1,150 @@
 # 海港小馆扫码点餐系统
 
-更新时间：2026-07-16
+> 面向香港中小型餐厅的轻量化扫码点餐与后台营运系统。顾客用手机点餐，员工在同一套后台完成接单、列印、结账、经营统计与必要的账务修正。
 
-面向香港中小餐厅的扫码点餐 H5。顾客扫码浏览菜单、加购、备注和下单；餐厅后台可接单、列印、结账、维护菜单和桌位，并管理员工账号。
+[在线顾客端](https://brucelyu1.github.io/harbour-ordering-h5/?view=guest) · [后台演示](https://brucelyu1.github.io/harbour-ordering-h5/?view=admin) · [指定 02 号桌](https://brucelyu1.github.io/harbour-ordering-h5/?view=guest&table=02)
 
-## 在线入口
+## 项目定位
 
-- 顾客点餐：[顾客端](https://brucelyu1.github.io/harbour-ordering-h5/?view=guest)
-- 指定桌号示例：[2 号桌](https://brucelyu1.github.io/harbour-ordering-h5/?view=guest&table=02)
-- 餐厅后台：[后台](https://brucelyu1.github.io/harbour-ordering-h5/?view=admin)
+海港小馆不是一套追求功能堆叠的餐饮 ERP，而是围绕小型餐厅日常工作设计的点餐工具：员工可以快速看到新订单、确认厨房列印、完成收款；经理可以在不离开后台的情况下维护菜单、员工、桌位并查看可靠的日结数据。
 
-GitHub Pages 不能使用两个自定义端口，因此线上通过 `?view=guest` 与 `?view=admin` 区分入口。
+系统同时支持本地演示模式和 Supabase 云端模式。前者适合展示与开发，后者提供 Auth、RLS、Realtime、订单审计和跨设备同步。
 
-## 当前能力
+## 核心能力
 
-### 顾客端
+### 顾客点餐
 
-- 按桌号浏览菜单、分类、价格、图片和售罄状态。
-- 购物车支持数量调整与单品备注。
-- 下单后显示订单号与本桌未结账订单。
-- 后台列印、补印或结账后，通过 Realtime 与轮询同步订单状态。
-- 本桌订单结账后自动关闭订单详情，并可继续点餐。
-- 支持繁体中文与英文界面。
+- 根据桌号打开菜单，按分类浏览菜品、售价、图片、供应时段和售罄状态。
+- 购物车支持数量调整及单品备注；提交后显示订单编号与本桌未结账订单。
+- 顾客端通过 Realtime 与轮询同步订单状态；后台列印、结账或撤销结账后，页面状态会同步更新。
+- 支持繁体中文与英文切换，适配手机点餐场景。
 
 ### 餐厅后台
 
-- 订单管理：查看新订单、列印、补印、结账及经理撤销结账。
-- 结账确认：结账时必须选择付款方式，可填写收银备注；记录完整结账日期时间与结账员工。
-- 撤销结账：仅经理可填写原因并撤销当前结账；订单恢复至结账前状态，原付款、员工、时间和原因保留为审计记录。
-- 权限：经理与收银员可列印、补印、结账；楼面可列印、补印，但不能结账。
-- 菜单管理：维护菜品、分类、价格、供应时段、图片与售罄状态。
-- 桌位管理：新增、编辑、停用桌位，复制点餐链接。
-- 打印设置与餐厅设置：支持 Supabase 远端写入和跨窗口同步。
-- 员工管理：经理可直接创建员工邮箱密码账号，并启用或停用员工；停用保留历史资料。
-- 营收报表：按已结账订单及结账时间统计营业额、订单数、售出份数、客单价、菜品、员工和付款方式汇总。
+- 新订单队列、厨房列印/补印，以及经理和收银员的结账流程。
+- 结账时必须选择付款方式：现金、八达通、信用卡、微信支付、支付宝香港、FPS 或其他；可填写最多 500 字的收银备注。
+- 经理可撤销当前已结账订单并填写原因。系统保留原付款方式、原结账员工、原结账时间和撤销操作人的不可覆盖审计记录，订单恢复到结账前的待处理或已列印状态。
+- 新订单提醒：经理和收银员会在后台收到页面提示、可选声音提示和浏览器标签未读数量；首次载入历史订单不会误提醒。
+- 菜单、桌位、员工、餐厅资料和打印设置均可在后台维护。
 
-## 数据模式与登录
+### 经理报表与日结
 
-项目支持两种数据模式：
+- 基于**当前有效的已结账订单**和结账时间统计营业额、订单数、售出份数与客单价。
+- 支持今日、本周、本月、本年及自定义日期范围；结束日期按包含当天处理。
+- 展示菜品销售排行、付款方式汇总、员工结账汇总和撤销结账次数。
+- 可导出 UTF-8 BOM CSV，适合使用 Excel 查看；导出包含结算汇总、付款方式、员工、菜品及撤销次数，不包含收银备注、撤销原因或逐笔订单明细。
 
-- `local`：使用浏览器 `localStorage`，用于演示；后台使用本地 PIN。
-- `supabase`：使用 Supabase 数据库、Realtime、Auth 和 RLS；后台使用员工邮箱密码登录。
+## 角色与权限
 
-Supabase 模式下，顾客端匿名浏览菜单并下单；后台操作需要已登录且启用中的员工。经理拥有完整管理权限，收银员和楼面只能访问订单与仪表盘。
+| 角色 | 可用范围 |
+| --- | --- |
+| 经理 | 全部后台模块、菜单/桌位/员工/设置管理、报表、撤销结账 |
+| 收银员 | 仪表盘和订单处理，可列印及完成结账，可接收新订单提醒 |
+| 楼面员工 | 仪表盘和订单处理，可列印及补印；不提供结账、报表或提醒权限 |
 
-员工账号流程：经理账号在 Supabase Dashboard 创建并绑定员工资料；其他员工由经理在后台创建账号，经理线下提供邮箱与初始密码。密码不会保存到员工资料或前端。
+权限在 Supabase 模式中由 Supabase Auth、RLS 和受控 RPC 共同执行，前端导航仅作为体验层限制。
+
+## 订单与账务流程
+
+```text
+顾客扫码点餐
+    -> 后台收到新订单提醒
+    -> 员工列印 / 补印厨房单
+    -> 经理或收银员选择付款方式并结账
+    -> 订单进入有效营收与日结报表
+    -> 如需修正，经理撤销结账并重新结账
+```
+
+撤销后的订单不会计入当前营业额、付款方式、员工或菜品销售统计；撤销事件本身会按撤销发生时间进入日结次数。
+
+## 在线访问
+
+GitHub Pages 为静态站点，使用 URL 参数区分页面：
+
+| 用途 | 地址 |
+| --- | --- |
+| 顾客点餐 | `https://brucelyu1.github.io/harbour-ordering-h5/?view=guest` |
+| 指定桌号点餐 | `https://brucelyu1.github.io/harbour-ordering-h5/?view=guest&table=02` |
+| 餐厅后台 | `https://brucelyu1.github.io/harbour-ordering-h5/?view=admin` |
+
+## 技术架构
+
+- **前端**：React 19、TypeScript、Vite
+- **状态管理**：Zustand
+- **云端数据**：Supabase Postgres、Realtime、Auth、RLS、Edge Functions
+- **测试**：Vitest、Testing Library
+- **部署**：GitHub Pages（发布 `dist/` 到 `gh-pages` 分支）
+
+```text
+src/
+  components/    页面组件与可复用 UI
+  pages/         顾客端、订单后台、报表和管理页面
+  services/      本地/Supabase 数据服务与 RPC 调用
+  stores/        Zustand 状态与同步逻辑
+  utils/         订单、营收、CSV 等纯计算工具
+supabase/
+  migrations/    数据库结构、RLS 与业务 RPC
+  functions/     staff-account 员工账号 Edge Function
+```
+
+## 数据模式
+
+### `local`：本地演示
+
+使用浏览器 `localStorage` 保存菜单、订单和设置，适合演示、界面开发和自动化测试。后台使用本地 PIN 登录，不依赖 Supabase。
+
+### `supabase`：云端运行
+
+订单、菜单、桌位、员工和设置存储在 Supabase；后台员工使用邮箱与密码登录。顾客端可以匿名浏览菜单和提交订单，后台写入与报表操作通过 RLS 和 RPC 受限。
 
 ## 本地运行
 
-安装依赖：
+### 1. 安装依赖
 
 ```bash
 npm install
 ```
 
-分别启动顾客端与后台：
+### 2. 配置环境变量
 
-```bash
-npm run dev:guest
-npm run dev:admin
-```
-
-访问地址：
-
-```text
-顾客端：http://127.0.0.1:5173/?table=02
-后台：http://127.0.0.1:5174/
-```
-
-URL 参数的优先级更高，例如 `http://127.0.0.1:5173/?view=admin` 可强制进入后台。
-
-## Supabase 配置
-
-在 `.env.local` 配置以下公开前端变量：
+复制 `.env.example` 为 `.env.local`。
 
 ```env
-VITE_DATA_SOURCE=supabase
-VITE_SUPABASE_URL=你的 Supabase Project URL
-VITE_SUPABASE_PUBLISHABLE_KEY=你的 publishable key
+# local：本地演示；supabase：云端数据模式
+VITE_DATA_SOURCE=local
+
+# 仅在 supabase 模式下需要
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_RESTAURANT_SLUG=harbour-demo
 ```
 
-不要把 service role key、员工密码或其他密钥写入前端环境变量或提交到 Git。
+### 3. 启动页面
 
-### 应用数据库 migration
+```bash
+# 顾客端：http://127.0.0.1:5173/?table=02
+npm run dev:guest
 
-新增 Supabase 功能后，需要在 Supabase Dashboard 的 SQL Editor 运行对应的 `supabase/migrations/` SQL 文件。当前必须应用的后续 migration 包括：
+# 后台：http://127.0.0.1:5174/?view=admin
+npm run dev:admin
+```
 
-- `20260702009000_auth_rls_staff_security.sql`：员工登录与 RLS 权限。
-- `20260702010000_guest_table_open_orders_rpc.sql`：顾客端读取本桌未结账订单。
-- `20260702012000_staff_account_service_role_grants.sql`：员工账号管理的服务端权限。
-- `20260702013000_order_settlement_staff.sql`：结账员工、结账时间，以及经理/收银员结账权限。
-- `20260702014000_revenue_report_rpc.sql`：经理专用营收报表 RPC，按已结账订单和结账时间聚合营业额、菜品销量和员工结账汇总。
-- `20260702015000_payment_settlement.sql`：付款方式、收银备注、专用结账 RPC，以及按付款方式汇总的营收报表。
-- `20260702016000_auth_session_profile_rpc.sql`：员工会话恢复和具体、安全的登录错误提示。
-- `20260702017000_order_settlement_reversal.sql`：经理撤销结账、结账前状态及不可覆盖的审计记录。
-- `20260702017100_grant_settlement_reversal_read_access.sql`：已部署项目的撤销审计读取权限修复；应在 `20260702017000` 后执行。
+也可以使用 `npm run dev` 启动 Vite 默认服务。URL 中的 `view` 与 `table` 参数优先于页面默认入口。
 
-若未应用最新结账 migration，后台可能无法读取新增的结账字段；请先运行 migration 再验证订单流程。
+## Supabase 部署
 
-## 验证命令
+首次接入 Supabase 时，请先阅读 [supabase/README.md](supabase/README.md)，并按其中顺序初始化 schema、权限、Realtime、种子资料和员工账号能力。
+
+对于已有项目：
+
+1. 在 Supabase SQL Editor 按文件名顺序应用 `supabase/migrations/` 中尚未执行的 migration。
+2. 若要由经理在后台创建员工登录账号，部署 `supabase/functions/staff-account`，并仅在 Supabase Edge Function Secret 中设置 service role key。
+3. 本次日结报表升级必须应用 `20260702018000_daily_settlement_report.sql`；它会扩展 `get_revenue_report`，按 `reversed_at` 返回撤销结账次数。
+4. 将 `VITE_DATA_SOURCE` 改为 `supabase`，填入项目 URL、publishable key 与餐厅 slug 后重新构建前端。
+
+> 不要将 service role key、员工密码或任何私钥写入 `.env.local` 的 `VITE_` 变量、GitHub Pages 构建产物或 Git 仓库。浏览器只应使用 Supabase publishable key。
+
+## 验证与质量检查
 
 ```bash
 npm test
@@ -107,23 +152,21 @@ npx tsc --noEmit
 npm run build
 ```
 
-推荐联调流程：顾客端下单 -> 后台自动出现新订单 -> 后台列印 -> 后台选择付款方式并结账 -> 顾客端订单详情自动清空 -> 经理需要修正时撤销结账并重新结账。
+当前测试覆盖订单流、付款方式、撤销结账审计、角色权限、Supabase RPC 映射、新订单提醒、营收报表和 CSV 导出。
 
-## 技术栈
+## 当前边界
 
-- React 19、Vite、TypeScript
-- Zustand 状态管理
-- Supabase JS、Postgres、Auth、RLS、Realtime、Edge Functions
-- Vitest、Testing Library
-- GitHub Pages（`gh-pages` 分支发布）
+- 这是单餐厅版本，默认餐厅 slug 为 `harbour-demo`；不提供多门店总部管理。
+- “结账”记录线下已确认收款，不处理线上支付扣款。
+- 打印流程目前管理订单状态与模拟打印队列，尚未连接真实 ESC/POS 打印机或本地打印代理。
+- 暂不包含库存、会员营销、复杂拆单/并桌/分账、退款审批、完整会计或班次交接体系。
 
-## 发布到 GitHub Pages
+## 发布 GitHub Pages
 
-代码提交到 `main` 后仍需重新构建并发布 `dist/` 到 `gh-pages` 分支，线上页面才会更新。每次功能同步 GitHub 时，均应同步执行此发布步骤。
+每次提交功能后，需要重新构建并将 `dist/` 发布到 `gh-pages` 分支，GitHub Pages 才会更新。生产构建命令为：
 
-## 当前限制与下一步
+```bash
+npm run build
+```
 
-- 当前为单餐厅试点，默认餐厅 slug 为 `harbour-demo`；多门店隔离仍待完善。
-- “结账”表示门店线下已完成收款确认，尚未接入线上支付。
-- 打印功能目前是订单状态与模拟打印流程，尚未接入真实 ESC/POS 打印机或本地打印服务。
-- 下一阶段重点：真实打印机接入，以及手机端/微信浏览器体验优化。
+项目使用相对资源路径，因此可部署在 GitHub Pages 的仓库子路径下。
