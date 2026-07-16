@@ -300,6 +300,17 @@ export const translations: Record<Language, TranslationTree> = {
     },
     reports: {
       description: "按已結帳訂單和結帳時間統計營業額、菜品銷售、付款方式和員工收銀表現。",
+      actions: {
+        exportCsv: "匯出 CSV",
+        exportUnavailable: "報表載入完成後才可匯出。",
+      },
+      csv: {
+        amount: "金額",
+        count: "數量",
+        dateRange: "日期範圍",
+        item: "項目",
+        section: "分類",
+      },
       empty: {
         dishes: "此日期範圍內暫無已結帳菜品銷售。",
         payment: "此日期範圍內暫無付款方式結帳記錄。",
@@ -320,6 +331,8 @@ export const translations: Record<Language, TranslationTree> = {
       },
       loading: "正在載入報表...",
       metrics: {
+        reversals: "撤銷結賬",
+        reversalsNote: "按撤銷結賬時間統計",
         averageOrder: "平均客單價",
         averageOrderNote: "營業額除以已結帳訂單數",
         orders: "已結帳訂單",
@@ -330,6 +343,8 @@ export const translations: Record<Language, TranslationTree> = {
         revenueNote: "只包含已結帳訂單",
       },
       sections: {
+        reversals: "撤銷結賬",
+        summary: "結算匯總",
         dishes: "菜品銷售排行",
         payment: "付款方式匯總",
         staff: "員工結帳匯總",
@@ -343,8 +358,10 @@ export const translations: Record<Language, TranslationTree> = {
         revenue: "銷售額",
         staff: "員工",
       },
+      summaryRange: "{start} 至 {end}，按結賬與撤銷時間統計。",
       title: "報表分析",
       values: {
+        reversals: "{count} 次",
         portions: "{count} 份",
       },
     },
@@ -730,6 +747,17 @@ export const translations: Record<Language, TranslationTree> = {
     },
     reports: {
       description: "Track revenue, dish sales, payment methods, and staff settlement performance from settled orders.",
+      actions: {
+        exportCsv: "Export CSV",
+        exportUnavailable: "Export is available after the report has loaded.",
+      },
+      csv: {
+        amount: "Amount",
+        count: "Count",
+        dateRange: "Date range",
+        item: "Item",
+        section: "Section",
+      },
       empty: {
         dishes: "No settled dish sales in this date range.",
         payment: "No settled payment method records in this date range.",
@@ -750,6 +778,8 @@ export const translations: Record<Language, TranslationTree> = {
       },
       loading: "Loading report...",
       metrics: {
+        reversals: "Settlement reversals",
+        reversalsNote: "Based on reversal time",
         averageOrder: "Average order",
         averageOrderNote: "Revenue divided by settled orders",
         orders: "Settled orders",
@@ -760,6 +790,8 @@ export const translations: Record<Language, TranslationTree> = {
         revenueNote: "Settled orders only",
       },
       sections: {
+        reversals: "Settlement reversals",
+        summary: "Settlement summary",
         dishes: "Dish sales ranking",
         payment: "Payment method summary",
         staff: "Staff settlement summary",
@@ -773,8 +805,10 @@ export const translations: Record<Language, TranslationTree> = {
         revenue: "Revenue",
         staff: "Staff",
       },
+      summaryRange: "{start} to {end}, based on settlement and reversal times.",
       title: "Reports",
       values: {
+        reversals: "{count} reversals",
         portions: "{count} portions",
       },
     },

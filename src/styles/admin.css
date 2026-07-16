@@ -287,7 +287,7 @@
 .metrics-row {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   margin-bottom: 18px;
 }
 
@@ -299,6 +299,46 @@
   margin-bottom: 14px;
 }
 
+.report-summary-heading {
+  align-items: flex-end;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin: 4px 0 12px;
+}
+
+.report-summary-heading h2 {
+  color: var(--green-dark);
+  font-size: 18px;
+  margin: 0;
+}
+
+.report-summary-heading p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+.report-export-button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  color: var(--green);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.report-export-button:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
 .report-filters label {
   color: var(--muted);
   display: grid;
@@ -837,5 +877,11 @@
     max-width: none;
     right: 12px;
     top: 70px;
+  }
+}
+@media (max-width: 640px) {
+  .report-summary-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

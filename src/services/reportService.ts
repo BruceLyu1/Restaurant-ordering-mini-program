@@ -71,6 +71,7 @@ const EMPTY_REPORT: RevenueReport = {
     averageOrderValue: 0,
     itemCount: 0,
     orderCount: 0,
+    reversalCount: 0,
     revenue: 0,
   },
 };
@@ -104,6 +105,15 @@ function toPaymentReportMethod(value: unknown): PaymentReportMethod {
 
 function getReportOrders(orders: Order[], range: ReportRange): Order[] {
   return orders.filter((order) => isSettledInRange(order, range));
+}
+
+function getReversalCount(orders: Order[], range: ReportRange): number {
+  return orders.reduce((count, order) => (
+    count + (order.settlementReversals || []).filter((reversal) => {
+      const reversedAt = new Date(reversal.reversedAt);
+      return reversedAt >= range.start && reversedAt < range.end;
+    }).length
+  ), 0);
 }
 
 export function getSalesRanking(orders: Order[], menuItems: MenuItem[]): SalesRankingItem[] {
@@ -192,6 +202,7 @@ export function getLocalRevenueReport(
       averageOrderValue: reportOrders.length ? revenue / reportOrders.length : 0,
       itemCount,
       orderCount: reportOrders.length,
+      reversalCount: getReversalCount(orders, range),
       revenue,
     },
   };
@@ -223,6 +234,7 @@ function mapRemoteReport(value: unknown): RevenueReport {
       averageOrderValue: toMoneyValue(summary.averageOrderValue),
       itemCount: toCount(summary.itemCount),
       orderCount: toCount(summary.orderCount),
+      reversalCount: toCount(summary.reversalCount),
       revenue: toMoneyValue(summary.revenue),
     },
   };

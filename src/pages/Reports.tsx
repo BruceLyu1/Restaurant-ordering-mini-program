@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Icon } from "../components/ui/Icon";
 import { Metric } from "../components/ui/Metric";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { useTranslation } from "../i18n/useTranslation";
@@ -7,6 +8,7 @@ import {
   loadRevenueReport,
   type ReportRange,
 } from "../services/reportService";
+import { buildRevenueReportCsv, downloadRevenueReportCsv } from "../utils/reportCsv";
 import { money } from "../utils/money";
 import type { MenuItem, Order } from "../types";
 
@@ -71,11 +73,14 @@ export function Reports({ menuItems, orders }: ReportsProps) {
   const [report, setReport] = useState(getEmptyRevenueReport);
   const [isLoading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [loadedRangeKey, setLoadedRangeKey] = useState("");
   const reportRange = useMemo<ReportRange>(() => ({
     end: addDays(parseDateInput(endInput), 1),
     start: parseDateInput(startInput),
   }), [endInput, startInput]);
+  const reportRangeKey = `${startInput}:${endInput}`;
   const isInvalidRange = !isValidDate(reportRange.start) || !isValidDate(reportRange.end) || reportRange.end <= reportRange.start;
+  const canExport = !isInvalidRange && !isLoading && !loadError && loadedRangeKey === reportRangeKey;
 
   useEffect(() => {
     if (isInvalidRange) {
@@ -89,7 +94,10 @@ export function Reports({ menuItems, orders }: ReportsProps) {
 
     void loadRevenueReport(orders, menuItems, reportRange)
       .then((nextReport) => {
-        if (!cancelled) setReport(nextReport);
+        if (!cancelled) {
+          setReport(nextReport);
+          setLoadedRangeKey(reportRangeKey);
+        }
       })
       .catch((error) => {
         console.error("Load revenue report failed", error);
@@ -102,7 +110,7 @@ export function Reports({ menuItems, orders }: ReportsProps) {
     return () => {
       cancelled = true;
     };
-  }, [isInvalidRange, menuItems, orders, reportRange, t]);
+  }, [isInvalidRange, menuItems, orders, reportRange, reportRangeKey, t]);
 
   function applyQuickRange(range: QuickRange): void {
     const nextRange = getQuickRange(range);
@@ -119,6 +127,41 @@ export function Reports({ menuItems, orders }: ReportsProps) {
   function updateEndInput(value: string): void {
     setActiveQuickRange("custom");
     setEndInput(value);
+  }
+
+  function exportCsv(): void {
+    if (!canExport) return;
+
+    const content = buildRevenueReportCsv({
+      endDate: endInput,
+      labels: {
+        columns: {
+          amount: t("reports.csv.amount"),
+          count: t("reports.csv.count"),
+          item: t("reports.csv.item"),
+          section: t("reports.csv.section"),
+        },
+        metrics: {
+          averageOrderValue: t("reports.metrics.averageOrder"),
+          dateRange: t("reports.csv.dateRange"),
+          itemCount: t("reports.metrics.portions"),
+          orderCount: t("reports.metrics.orders"),
+          revenue: t("reports.metrics.revenue"),
+          reversalCount: t("reports.metrics.reversals"),
+        },
+        sections: {
+          dishes: t("reports.sections.dishes"),
+          payment: t("reports.sections.payment"),
+          reversals: t("reports.sections.reversals"),
+          staff: t("reports.sections.staff"),
+          summary: t("reports.sections.summary"),
+        },
+      },
+      paymentMethodLabel: (method) => t(`adminApp.orders.paymentMethods.${method}`),
+      report,
+      startDate: startInput,
+    });
+    downloadRevenueReportCsv(`harbour-settlement-${startInput}-to-${endInput}.csv`, content);
   }
 
   return (
@@ -156,6 +199,23 @@ export function Reports({ menuItems, orders }: ReportsProps) {
           />
         </label>
       </div>
+      <div className="report-summary-heading">
+        <div>
+          <h2>{t("reports.sections.summary")}</h2>
+          <p>{t("reports.summaryRange", { end: endInput, start: startInput })}</p>
+        </div>
+        <button
+          aria-label={t("reports.actions.exportCsv")}
+          className="report-export-button"
+          disabled={!canExport}
+          onClick={exportCsv}
+          title={canExport ? t("reports.actions.exportCsv") : t("reports.actions.exportUnavailable")}
+          type="button"
+        >
+          <Icon name="download" size={17} />
+          {t("reports.actions.exportCsv")}
+        </button>
+      </div>
       {isLoading && <p className="save-message" role="status">{t("reports.loading")}</p>}
       {loadError && <p className="save-message error" role="alert">{loadError}</p>}
       <div className="metrics-row">
@@ -163,6 +223,7 @@ export function Reports({ menuItems, orders }: ReportsProps) {
         <Metric label={t("reports.metrics.orders")} note={t("reports.metrics.ordersNote")} value={t("dashboard.values.orders", { count: report.summary.orderCount })} />
         <Metric label={t("reports.metrics.portions")} note={t("reports.metrics.portionsNote")} value={t("reports.values.portions", { count: report.summary.itemCount })} />
         <Metric label={t("reports.metrics.averageOrder")} note={t("reports.metrics.averageOrderNote")} value={money(report.summary.averageOrderValue)} />
+        <Metric label={t("reports.metrics.reversals")} note={t("reports.metrics.reversalsNote")} value={t("reports.values.reversals", { count: report.summary.reversalCount })} />
       </div>
       <div className="management-panel table-panel">
         <header><h2>{t("reports.sections.dishes")}</h2></header>

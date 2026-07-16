@@ -61,6 +61,7 @@ describe("reportService", () => {
       averageOrderValue: 76,
       itemCount: 4,
       orderCount: 1,
+      reversalCount: 0,
       revenue: 76,
     });
     expect(report.dishSales.map((item) => [item.id, item.quantity, item.revenue])).toEqual([
@@ -85,12 +86,28 @@ describe("reportService", () => {
       start: new Date(2026, 5, 24),
     });
 
-    expect(report.summary).toEqual({ averageOrderValue: 0, itemCount: 0, orderCount: 0, revenue: 0 });
+    expect(report.summary).toEqual({ averageOrderValue: 0, itemCount: 0, orderCount: 0, reversalCount: 1, revenue: 0 });
     expect(report.dishSales).toEqual([]);
     expect(report.paymentSales).toEqual([]);
     expect(report.staffSales).toEqual([]);
   });
 
+  it("counts every reversal by reversal time, independently of settled revenue", () => {
+    const report = getLocalRevenueReport([{
+      ...orders[0],
+      settlementReversals: [
+        { reason: "First correction", restoredStatus: "printed", reversedAt: "2026-06-24T09:00:00.000Z", reversedByName: "Manager" },
+        { reason: "Second correction", restoredStatus: "pending", reversedAt: "2026-06-24T15:00:00.000Z", reversedByName: "Manager" },
+        { reason: "Outside range", restoredStatus: "pending", reversedAt: "2026-06-25T00:00:00.000Z", reversedByName: "Manager" },
+      ],
+    }], menuItems, {
+      end: new Date(2026, 5, 25),
+      start: new Date(2026, 5, 24),
+    });
+
+    expect(report.summary.reversalCount).toBe(2);
+    expect(report.summary.revenue).toBe(76);
+  });
   it("excludes settled orders outside the settlement range", () => {
     const report = getLocalRevenueReport(orders, menuItems, {
       end: new Date(2026, 5, 26),
@@ -118,7 +135,7 @@ describe("reportService", () => {
         dishSales: [{ id: "soup", name: "Soup", quantity: 2, revenue: 80 }],
         paymentSales: [{ method: "octopus", orderCount: 1, revenue: 80 }],
         staffSales: [{ name: "Alex", orderCount: 1, revenue: 80, staffId: 7 }],
-        summary: { averageOrderValue: 80, itemCount: 2, orderCount: 1, revenue: 80 },
+        summary: { averageOrderValue: 80, itemCount: 2, orderCount: 1, reversalCount: 3, revenue: 80 },
       },
       error: null,
     });
@@ -132,7 +149,7 @@ describe("reportService", () => {
       dishSales: [{ id: "soup", name: "Soup", quantity: 2, revenue: 80 }],
       paymentSales: [{ method: "octopus", orderCount: 1, revenue: 80 }],
       staffSales: [{ name: "Alex", orderCount: 1, revenue: 80, staffId: 7 }],
-      summary: { averageOrderValue: 80, itemCount: 2, orderCount: 1, revenue: 80 },
+      summary: { averageOrderValue: 80, itemCount: 2, orderCount: 1, reversalCount: 3, revenue: 80 },
     });
     expect(client.rpc).toHaveBeenCalledWith("get_revenue_report", {
       range_end: "2026-07-15T00:00:00.000Z",

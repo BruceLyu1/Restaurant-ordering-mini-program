@@ -116,6 +116,7 @@ export interface RevenueReportSummary {
   averageOrderValue: number;
   itemCount: number;
   orderCount: number;
+  reversalCount: number;
   revenue: number;
 }
 
