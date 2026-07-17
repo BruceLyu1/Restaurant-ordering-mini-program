@@ -2,7 +2,7 @@
 
 > 面向香港中小型餐厅的轻量化扫码点餐与后台营运系统。顾客用手机点餐，员工在同一套后台完成接单、列印、结账、经营统计与必要的账务修正。
 
-[在线顾客端](https://brucelyu1.github.io/harbour-ordering-h5/?view=guest) · [后台演示](https://brucelyu1.github.io/harbour-ordering-h5/?view=admin) · [指定 02 号桌](https://brucelyu1.github.io/harbour-ordering-h5/?view=guest&table=02)
+[在线顾客端](https://brucelyu1.github.io/Restaurant-ordering-mini-program/?view=guest) · [后台演示](https://brucelyu1.github.io/Restaurant-ordering-mini-program/?view=admin) · [指定 02 号桌](https://brucelyu1.github.io/Restaurant-ordering-mini-program/?view=guest&table=02)
 
 ## 项目定位
 
@@ -63,9 +63,9 @@ GitHub Pages 为静态站点，使用 URL 参数区分页面：
 
 | 用途 | 地址 |
 | --- | --- |
-| 顾客点餐 | `https://brucelyu1.github.io/harbour-ordering-h5/?view=guest` |
-| 指定桌号点餐 | `https://brucelyu1.github.io/harbour-ordering-h5/?view=guest&table=02` |
-| 餐厅后台 | `https://brucelyu1.github.io/harbour-ordering-h5/?view=admin` |
+| 顾客点餐 | `https://brucelyu1.github.io/Restaurant-ordering-mini-program/?view=guest` |
+| 指定桌号点餐 | `https://brucelyu1.github.io/Restaurant-ordering-mini-program/?view=guest&table=02` |
+| 餐厅后台 | `https://brucelyu1.github.io/Restaurant-ordering-mini-program/?view=admin` |
 
 ## 技术架构
 
