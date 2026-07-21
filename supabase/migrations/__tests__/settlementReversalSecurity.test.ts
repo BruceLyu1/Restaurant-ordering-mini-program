@@ -7,6 +7,10 @@ const accessRepairMigration = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260702017100_grant_settlement_reversal_read_access.sql"),
   "utf8",
 );
+const sameDayMigration = readFileSync(
+  resolve(process.cwd(), "supabase/migrations/20260702019000_same_day_settlement_reversal.sql"),
+  "utf8",
+);
 
 describe("settlement reversal migration", () => {
   it("preserves the pre-settlement status and immutable audit details", () => {
@@ -38,5 +42,17 @@ describe("settlement reversal migration", () => {
   it("includes an idempotent access repair for projects that already applied the reversal migration", () => {
     expect(accessRepairMigration).toContain("grant select on table public.order_settlement_reversals to authenticated");
     expect(accessRepairMigration).toContain("notify pgrst, 'reload schema'");
+  });
+  it("rejects missing and cross-day settlements before changing orders or audit records", () => {
+    expect(sameDayMigration).toContain("locked_order.settled_at is null");
+    expect(sameDayMigration).toContain("locked_order.settled_at at time zone 'Asia/Hong_Kong'");
+    expect(sameDayMigration).toContain("now() at time zone 'Asia/Hong_Kong'");
+    expect(sameDayMigration).toContain("raise exception 'settlement reversal period has expired'");
+    expect(sameDayMigration.indexOf("settlement reversal period has expired")).toBeLessThan(
+      sameDayMigration.indexOf("insert into public.order_settlement_reversals"),
+    );
+    expect(sameDayMigration).toContain("private.is_active_staff(target_restaurant_id, array['manager'])");
+    expect(sameDayMigration).toContain("revoke all on function public.reverse_order_settlement(text, text, text) from public, anon");
+    expect(sameDayMigration).toContain("grant execute on function public.reverse_order_settlement(text, text, text) to authenticated");
   });
 });

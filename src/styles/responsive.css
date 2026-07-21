@@ -62,14 +62,21 @@
     padding: 18px 12px;
   }
 
+  .orders-filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .orders-search-input {
+    flex-basis: 100%;
+  }
+
+  .orders-date-field {
+    flex: 1 1 calc(50% - 22px);
+  }
   .orders-grid {
     grid-template-columns: 1fr;
   }
 
-  .settlement-record {
-    gap: 4px;
-    grid-template-columns: 1fr;
-  }
 
   .settlement-modal-actions {
     grid-template-columns: 1fr;

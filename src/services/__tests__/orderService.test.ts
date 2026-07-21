@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ORDER_STORAGE_KEY } from "../../data/orders";
 import type { MealPeriod, MenuItem, Order, PrinterSettings } from "../../types";
 import {
+  filterOrders,
+  isSettlementReversibleToday,
   listActiveOrders,
   listSettledOrders,
   loadOrders,
@@ -119,6 +121,67 @@ describe("orderService", () => {
     }]);
   });
 
+
+  it("limits local settlement reversals to the Hong Kong settlement date", () => {
+    const now = new Date("2026-07-20T16:01:00.000Z");
+    const orders: Order[] = [
+      {
+        createdAt: "2026-07-20T00:00:00.000Z",
+        id: "HO-1101",
+        items: [],
+        paymentMethod: "cash",
+        sequence: 1101,
+        settledAt: "2026-07-20T16:00:00.000Z",
+        settledByName: "Cashier",
+        status: "settled",
+        statusBeforeSettlement: "pending",
+        table: "02",
+      },
+      {
+        createdAt: "2026-07-19T00:00:00.000Z",
+        id: "HO-1102",
+        items: [],
+        paymentMethod: "cash",
+        sequence: 1102,
+        settledAt: "2026-07-20T15:59:00.000Z",
+        settledByName: "Cashier",
+        status: "settled",
+        statusBeforeSettlement: "printed",
+        table: "03",
+      },
+      {
+        createdAt: "2026-07-20T00:00:00.000Z",
+        id: "HO-1103",
+        items: [],
+        paymentMethod: "cash",
+        sequence: 1103,
+        settledByName: "Cashier",
+        status: "settled",
+        statusBeforeSettlement: "pending",
+        table: "04",
+      },
+    ];
+    window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders));
+
+    expect(isSettlementReversibleToday(orders[0], now)).toBe(true);
+    expect(isSettlementReversibleToday(orders[1], now)).toBe(false);
+    expect(isSettlementReversibleToday(orders[2], now)).toBe(false);
+
+    reverseSettlement("HO-1101", { operatorName: "Manager", reason: "Wrong payment method" }, menuItems, now);
+    expect(loadOrders(menuItems).find((order) => order.id === "HO-1101")?.status).toBe("pending");
+
+    const expiredBefore = loadOrders(menuItems).find((order) => order.id === "HO-1102");
+    expect(() => reverseSettlement("HO-1102", { operatorName: "Manager", reason: "Too late" }, menuItems, now)).toThrow(
+      "Settlement reversal is only available on the settlement date",
+    );
+    expect(loadOrders(menuItems).find((order) => order.id === "HO-1102")).toEqual(expiredBefore);
+
+    const missingTimeBefore = loadOrders(menuItems).find((order) => order.id === "HO-1103");
+    expect(() => reverseSettlement("HO-1103", { operatorName: "Manager", reason: "Missing settlement time" }, menuItems, now)).toThrow(
+      "Settlement reversal is only available on the settlement date",
+    );
+    expect(loadOrders(menuItems).find((order) => order.id === "HO-1103")).toEqual(missingTimeBefore);
+  });
   it("deduplicates orders with the same id when loading from storage", () => {
     const duplicateOrders: Order[] = [
       {
@@ -165,6 +228,22 @@ describe("orderService", () => {
     expect(listSettledOrders(orders).map((order) => order.id)).toEqual(["newer", "older"]);
   });
 
+  it("filters orders by order identifier, table, and inclusive local settlement dates", () => {
+    const orders: Order[] = [
+      { id: "HO-1001", sequence: 1001, status: "settled", table: "12", createdAt: "2026-07-08T08:00:00.000Z", settledAt: "2026-07-08T10:30:00.000Z", items: [] },
+      { id: "custom-order", sequence: 1002, status: "settled", table: "08", createdAt: "2026-07-09T08:00:00.000Z", settledAt: "2026-07-09T10:30:00.000Z", items: [] },
+      { id: "HO-1019", sequence: 1019, status: "settled", table: "12", createdAt: "2026-07-10T08:00:00.000Z", settledAt: "2026-07-10T10:30:00.000Z", items: [] },
+      { id: "HO-1004", sequence: 1004, status: "settled", table: "01", createdAt: "2026-07-10T08:00:00.000Z", settledAt: "2026-07-10T11:30:00.000Z", items: [] },
+      { id: "HO-1003", sequence: 1003, status: "pending", table: "03", createdAt: "2026-07-10T08:00:00.000Z", items: [] },
+    ];
+
+    expect(filterOrders(orders, { query: "  ho-1001 " }).map((order) => order.id)).toEqual(["HO-1001"]);
+    expect(filterOrders(orders, { query: "1002" }).map((order) => order.id)).toEqual(["custom-order"]);
+    expect(filterOrders(orders, { query: "08" }).map((order) => order.id)).toEqual(["custom-order"]);
+    expect(filterOrders(orders, { query: "01" }).map((order) => order.id)).toEqual(["HO-1004"]);
+    expect(filterOrders(orders, { query: "01\u53f7\u684c" }).map((order) => order.id)).toEqual(["HO-1004"]);
+    expect(filterOrders(orders, { endDate: "2026-07-09", startDate: "2026-07-09" }).map((order) => order.id)).toEqual(["custom-order"]);
+  });
   it("loads only the current table orders in Supabase guest mode", async () => {
     vi.stubEnv("VITE_DATA_SOURCE", "supabase");
     const tableOrders: Order[] = [{

@@ -212,10 +212,10 @@
 .settlement-record {
   align-items: baseline;
   color: var(--muted);
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   font-size: 10px;
-  gap: 5px 14px;
+  gap: 4px 14px;
+  grid-template-columns: max-content minmax(0, 1fr);
   margin-top: 9px;
 }
 
@@ -223,14 +223,18 @@
   min-width: 0;
 }
 
+.settlement-record time,
+.settlement-note {
+  grid-column: 1 / -1;
+}
+
 .settlement-record time {
   font-variant-numeric: tabular-nums;
-  margin-left: auto;
   white-space: nowrap;
 }
 
 .settlement-note {
-  flex-basis: 100%;
+  overflow-wrap: anywhere;
 }
 
 .settlement-reversal-record {
@@ -329,4 +333,73 @@
 .settlement-modal-actions button {
   justify-content: center;
   min-height: 38px;
+}
+.orders-filter-bar {
+  align-items: flex-end;
+  display: flex;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.orders-filter-bar input {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--green-dark);
+  font: inherit;
+  min-height: 36px;
+  padding: 0 10px;
+}
+
+.orders-search-input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.orders-date-field {
+  display: flex;
+  flex: 0 1 142px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.orders-date-field span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.orders-date-field input[type="date"] {
+  width: 100%;
+}
+
+.orders-filter-reset {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--green);
+  display: inline-flex;
+  flex: 0 0 36px;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+}
+
+.orders-filter-reset:hover {
+  background: #eef4ef;
+}
+
+.orders-filter-bar input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(31, 98, 70, 0.12);
+  outline: none;
+}
+
+.orders-filter-error {
+  color: #b84d21;
+  font-size: 12px;
+  font-weight: 700;
+  margin: -7px 0 12px;
 }

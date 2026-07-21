@@ -39,7 +39,7 @@ describe("AdminApp store integration", () => {
   });
 
   it("renders admin brand and pending order count from stores", () => {
-    render(
+    const { container } = render(
       <LanguageProvider>
         <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-06-23T11:00:00")} />
       </LanguageProvider>,
@@ -47,9 +47,59 @@ describe("AdminApp store integration", () => {
 
     expect(screen.getAllByText("Store Admin").length).toBeGreaterThan(0);
     expect(screen.getAllByText("1").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "通知" })).toBeNull();
+    expect(container.querySelector(".topbar-icon small")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "返回顧客端" })).toBeNull();
   });
 
+  it("filters settled orders by order query and inclusive settlement date", () => {
+    window.localStorage.setItem("harbour-language", "en");
+    useOrderStore.setState({
+      orders: [
+        { createdAt: "2026-07-08T08:00:00.000Z", id: "HO-2001", items: [], sequence: 2001, status: "pending", table: "12" },
+        { createdAt: "2026-07-08T08:00:00.000Z", id: "HO-2002", items: [], sequence: 2002, settledAt: "2026-07-08T10:00:00.000Z", status: "settled", table: "02" },
+        { createdAt: "2026-07-09T08:00:00.000Z", id: "custom-order", items: [], sequence: 2003, settledAt: "2026-07-09T10:00:00.000Z", status: "settled", table: "08" },
+      ],
+    });
+
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-09T11:00:00")} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Settled/ }));
+    expect(screen.getByText("Start date")).toBeTruthy();
+    expect(screen.getByText("End date")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Search order number or table"), { target: { value: "custom" } });
+    expect(screen.getByText("#2003")).toBeTruthy();
+    expect(screen.queryByText("#2002")).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Search order number or table"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-07-09" } });
+    fireEvent.change(screen.getByLabelText("End date"), { target: { value: "2026-07-09" } });
+    expect(screen.getByText("#2003")).toBeTruthy();
+    expect(screen.queryByText("#2002")).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-07-10" } });
+    expect(screen.getByRole("alert").textContent).toBe("Start date cannot be after end date.");
+    expect(screen.getByText("No matching orders")).toBeTruthy();
+  });
+
+  it("shows a no-results state and clears order filters", () => {
+    window.localStorage.setItem("harbour-language", "en");
+    render(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-09T11:00:00")} />
+      </LanguageProvider>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Search order number or table"), { target: { value: "missing" } });
+    expect(screen.getByText("No matching orders")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear order filters" }));
+    expect(screen.getByText("#2001")).toBeTruthy();
+  });
   it("asks for confirmation before resetting demo orders", () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(

@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "../../i18n/LanguageContext";
 import { useAuthStore } from "../../stores/authStore";
@@ -9,11 +9,11 @@ import { useSettingsStore } from "../../stores/settingsStore";
 import { useTableStore } from "../../stores/tableStore";
 import { AdminApp } from "../AdminApp";
 
-function renderAdmin() {
+function renderAdmin(now: Date = new Date("2026-07-07T10:00:00")) {
   window.localStorage.setItem("harbour-language", "en");
   return render(
     <LanguageProvider>
-      <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} />
+      <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={now} />
     </LanguageProvider>,
   );
 }
@@ -89,6 +89,26 @@ describe("AdminApp auth permissions", () => {
     expect(screen.queryByRole("button", { name: /Staff/ })).toBeNull();
   });
 
+  it("shows settled order history to cashiers but hides it from floor staff", () => {
+    useOrderStore.setState({
+      orders: [{ createdAt: "2026-07-07T10:00:00.000Z", id: "HO-3002", items: [], sequence: 3002, settledAt: "2026-07-07T10:20:00.000Z", status: "settled", table: "12" }],
+    });
+    useAuthStore.setState({ staffProfile: { active: true, id: 2, name: "Casey", role: "cashier" }, status: "signed-in" });
+
+    const { rerender } = renderAdmin();
+    expect(screen.getByRole("button", { name: /^Settled/ })).toBeTruthy();
+
+    act(() => {
+      useAuthStore.setState({ staffProfile: { active: true, id: 3, name: "Riley", role: "floor" }, status: "signed-in" });
+    });
+    rerender(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} />
+      </LanguageProvider>,
+    );
+
+    expect(screen.queryByRole("button", { name: /^Settled/ })).toBeNull();
+  });
   it("lets cashiers settle orders but keeps settlement unavailable to floor staff", () => {
     useOrderStore.setState({
       orders: [{ createdAt: "2026-07-07T10:00:00.000Z", id: "HO-3001", items: [], sequence: 3001, status: "pending", table: "12" }],
@@ -98,7 +118,9 @@ describe("AdminApp auth permissions", () => {
     const { rerender } = renderAdmin();
     expect(screen.getByRole("button", { name: "Settle" })).toBeTruthy();
 
-    useAuthStore.setState({ staffProfile: { active: true, id: 3, name: "Riley", role: "floor" }, status: "signed-in" });
+    act(() => {
+      useAuthStore.setState({ staffProfile: { active: true, id: 3, name: "Riley", role: "floor" }, status: "signed-in" });
+    });
     rerender(
       <LanguageProvider>
         <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} />
@@ -109,6 +131,39 @@ describe("AdminApp auth permissions", () => {
     expect(screen.queryByRole("button", { name: "Settle" })).toBeNull();
   });
 
+
+  it("only shows settlement reversal for managers on the Hong Kong settlement date", () => {
+    useOrderStore.setState({
+      orders: [
+        { createdAt: "2026-07-07T08:00:00.000Z", id: "HO-3003", items: [], sequence: 3003, settledAt: "2026-07-07T09:00:00.000Z", status: "settled", table: "12" },
+        { createdAt: "2026-07-06T08:00:00.000Z", id: "HO-3004", items: [], sequence: 3004, settledAt: "2026-07-06T15:59:00.000Z", status: "settled", table: "13" },
+      ],
+    });
+
+    const { rerender } = renderAdmin();
+    fireEvent.click(screen.getByRole("button", { name: /^Settled/ }));
+    expect(screen.getAllByRole("button", { name: "Reverse settlement" })).toHaveLength(1);
+
+    act(() => {
+      useAuthStore.setState({ staffProfile: { active: true, id: 2, name: "Casey", role: "cashier" }, status: "signed-in" });
+    });
+    rerender(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} />
+      </LanguageProvider>,
+    );
+    expect(screen.queryByRole("button", { name: "Reverse settlement" })).toBeNull();
+
+    act(() => {
+      useAuthStore.setState({ staffProfile: { active: true, id: 3, name: "Riley", role: "floor" }, status: "signed-in" });
+    });
+    rerender(
+      <LanguageProvider>
+        <AdminApp activeMealPeriod={null} guestBaseUrl="http://127.0.0.1:5174/" now={new Date("2026-07-07T10:00:00")} />
+      </LanguageProvider>,
+    );
+    expect(screen.queryByRole("button", { name: "Reverse settlement" })).toBeNull();
+  });
   it("lets restricted roles open the dashboard but not restricted sections", () => {
     useAuthStore.setState({
       staffProfile: { active: true, id: 2, name: "Casey", role: "floor" },

@@ -12,7 +12,7 @@ import { canReceiveNewOrderAlerts, useNewOrderAlert } from "../hooks/useNewOrder
 import { useFormatAdminDate } from "../i18n/useFormatAdminDate";
 import { useTranslation } from "../i18n/useTranslation";
 import { getDataSourceMode } from "../services/dataSource";
-import { listActiveOrders, listSettledOrders } from "../services/orderService";
+import { filterOrders, isSettlementReversibleToday, listActiveOrders, listSettledOrders } from "../services/orderService";
 import { useAuthStore } from "../stores/authStore";
 import { useMenuStore } from "../stores/menuStore";
 import { useOrderStore } from "../stores/orderStore";
@@ -50,6 +50,9 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const staffProfile = useAuthStore((state) => state.staffProfile);
   const signOut = useAuthStore((state) => state.signOut);
   const [filter, setFilter] = useState<"pending" | "settled">("pending");
+  const [orderQuery, setOrderQuery] = useState("");
+  const [settledStartDate, setSettledStartDate] = useState("");
+  const [settledEndDate, setSettledEndDate] = useState("");
   const [activeSection, setActiveSection] = useState("orders");
   const [actionError, setActionError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -61,12 +64,23 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
   const permissionProfile = isSupabaseMode
     ? staffProfile
     : { active: true, id: 0, name: "Local Admin", role: "manager" };
-  const visibleOrders = filter === "pending" ? pendingOrders : completedOrders;
+  const baseVisibleOrders = filter === "pending" ? pendingOrders : completedOrders;
   const tablesWithStatus = useMemo(() => getTablesWithOrderStatus(tables, orders), [orders, tables]);
   const allowedNavItems = useMemo(() => getAllowedNavItems(permissionProfile), [permissionProfile]);
   const canSettleOrders = permissionProfile?.role === "manager" || permissionProfile?.role === "cashier";
   const canReverseSettlements = permissionProfile?.role === "manager";
   const canReceiveOrderAlerts = canReceiveNewOrderAlerts(permissionProfile?.role);
+  const canViewSettlementHistory = permissionProfile?.role === "manager" || permissionProfile?.role === "cashier";
+  const isInvalidSettlementRange = filter === "settled" && Boolean(settledStartDate && settledEndDate && settledStartDate > settledEndDate);
+  const hasOrderFilters = Boolean(orderQuery.trim() || (filter === "settled" && (settledStartDate || settledEndDate)));
+  const visibleOrders = useMemo(() => {
+    if (isInvalidSettlementRange) return [];
+    return filterOrders(baseVisibleOrders, {
+      endDate: filter === "settled" ? settledEndDate : "",
+      query: orderQuery,
+      startDate: filter === "settled" ? settledStartDate : "",
+    });
+  }, [baseVisibleOrders, filter, isInvalidSettlementRange, orderQuery, settledEndDate, settledStartDate]);
   const { dismissNotice: dismissNewOrderNotice, notice: newOrderNotice } = useNewOrderAlert({
     enabled: canReceiveOrderAlerts,
     isReady: hasLoadedOrders,
@@ -78,6 +92,27 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
     if (!canAccessAdminSection(permissionProfile, activeSection)) setActiveSection("orders");
   }, [activeSection, permissionProfile]);
 
+  useEffect(() => {
+    if (!canViewSettlementHistory && filter === "settled") {
+      selectOrderFilter("pending");
+      setSettledStartDate("");
+      setSettledEndDate("");
+    }
+  }, [canViewSettlementHistory, filter]);
+
+  function selectOrderFilter(nextFilter: "pending" | "settled"): void {
+    setFilter(nextFilter);
+    if (nextFilter === "pending") {
+      setSettledStartDate("");
+      setSettledEndDate("");
+    }
+  }
+
+  function clearOrderFilters(): void {
+    setOrderQuery("");
+    setSettledStartDate("");
+    setSettledEndDate("");
+  }
   async function handlePrint(id: string): Promise<void> {
     setActionError("");
     try {
@@ -121,7 +156,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
 
   function handleSettlementReversal(id: string): void {
     const order = orders.find((entry) => entry.id === id);
-    if (!order || order.status !== "settled" || !canReverseSettlements) return;
+    if (!order || !canReverseSettlements || !isSettlementReversibleToday(order, now)) return;
     setActionError("");
     setSettlementReversalOrder(order);
   }
@@ -136,7 +171,7 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
         reason,
       }, useMenuStore.getState().items);
       setSettlementReversalOrder(null);
-      setFilter("pending");
+      selectOrderFilter("pending");
     } catch (error) {
       console.error("Settlement reversal failed", error);
       setActionError(t("adminApp.settleFailed"));
@@ -194,10 +229,10 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
             <strong>{activeMealPeriod ? t("adminApp.mealPeriodOpen", { name: activeMealPeriod.name }) : t("adminApp.mealPeriodClosed")}</strong>
           </div>
           <div className="admin-topbar-actions">
-            <button aria-label={t("adminApp.notification")} className="topbar-icon" type="button">
+            <span aria-hidden="true" className="topbar-icon">
               <Icon name="bell" size={18} />
               {pendingOrders.some((order) => order.status === "pending") && <small />}
-            </button>
+            </span>
             {isSupabaseMode && staffProfile && (
               <div className="admin-session">
                 <span>{t("adminApp.signedInAs")}</span>
@@ -233,31 +268,81 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
               <div className="orders-tabs">
                 <button
                   className={filter === "pending" ? "active" : ""}
-                  onClick={() => setFilter("pending")}
+                  onClick={() => selectOrderFilter("pending")}
                   type="button"
                 >
                   {t("adminApp.orders.activeTab")}<span>{pendingOrders.length}</span>
                 </button>
-                <button
-                  className={filter === "settled" ? "active" : ""}
-                  onClick={() => setFilter("settled")}
-                  type="button"
-                >
-                  {t("adminApp.orders.completedTab")}<span>{completedOrders.length}</span>
-                </button>
+                {canViewSettlementHistory && (
+                  <button
+                    className={filter === "settled" ? "active" : ""}
+                    onClick={() => selectOrderFilter("settled")}
+                    type="button"
+                  >
+                    {t("adminApp.orders.completedTab")}<span>{completedOrders.length}</span>
+                  </button>
+                )}
               </div>
+              <div className="orders-filter-bar">
+                <input
+                  aria-label={t("adminApp.orders.searchPlaceholder")}
+                  className="orders-search-input"
+                  onChange={(event) => setOrderQuery(event.target.value)}
+                  placeholder={t("adminApp.orders.searchPlaceholder")}
+                  type="search"
+                  value={orderQuery}
+                />
+                {filter === "settled" && (
+                  <>
+                    <label className="orders-date-field">
+                      <span>{t("adminApp.orders.startDate")}</span>
+                      <input
+                        aria-label={t("adminApp.orders.startDate")}
+                        onChange={(event) => setSettledStartDate(event.target.value)}
+                        type="date"
+                        value={settledStartDate}
+                      />
+                    </label>
+                    <label className="orders-date-field">
+                      <span>{t("adminApp.orders.endDate")}</span>
+                      <input
+                        aria-label={t("adminApp.orders.endDate")}
+                        onChange={(event) => setSettledEndDate(event.target.value)}
+                        type="date"
+                        value={settledEndDate}
+                      />
+                    </label>
+                  </>
+                )}
+                {hasOrderFilters && (
+                  <button
+                    aria-label={t("adminApp.orders.clearFilters")}
+                    className="orders-filter-reset"
+                    onClick={clearOrderFilters}
+                    title={t("adminApp.orders.clearFilters")}
+                    type="button"
+                  >
+                    <Icon name="close" size={16} />
+                  </button>
+                )}
+              </div>
+              {isInvalidSettlementRange && (
+                <p className="orders-filter-error" role="alert">{t("adminApp.orders.invalidDateRange")}</p>
+              )}
               {(actionError || orderLoadError) && (
                 <p className="management-error">{actionError || t("adminApp.orders.loadFailed")}</p>
               )}
-              <div className="queue-note">
-                <span>{t("adminApp.orders.flowTitle")}</span>
-                <p>{t("adminApp.orders.flowDescription")}</p>
-              </div>
+              {filter === "pending" && (
+                <div className="queue-note">
+                  <span>{t("adminApp.orders.flowTitle")}</span>
+                  <p>{t("adminApp.orders.flowDescription")}</p>
+                </div>
+              )}
               <div className="orders-grid">
                 {visibleOrders.length ? (
                   visibleOrders.map((order) => (
                     <OrderCard
-                      canReverseSettlement={canReverseSettlements}
+                      canReverseSettlement={canReverseSettlements && isSettlementReversibleToday(order, now)}
                       canSettle={canSettleOrders}
                       isReversingSettlement={reversingOrderId === order.id}
                       isSettling={settlingOrderId === order.id}
@@ -273,8 +358,8 @@ export function AdminApp({ activeMealPeriod, guestBaseUrl, now }: AdminAppProps)
                 ) : (
                   <div className="empty-state">
                     <Icon name="orders" size={30} />
-                    <h3>{t("common.empty.noOrders")}</h3>
-                    <p>{t("common.empty.noOrdersDesc")}</p>
+                    <h3>{hasOrderFilters || isInvalidSettlementRange ? t("adminApp.orders.noMatches") : t("common.empty.noOrders")}</h3>
+                    <p>{hasOrderFilters || isInvalidSettlementRange ? t("adminApp.orders.noMatchesDescription") : t("common.empty.noOrdersDesc")}</p>
                   </div>
                 )}
               </div>

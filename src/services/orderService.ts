@@ -1,6 +1,7 @@
 
 import { ORDER_STORAGE_KEY, seedOrders } from "../data/orders";
 import type { MealPeriod, MenuItem, Order, OrderLine, PrinterSettings, SettlementInput, SettlementReversal } from "../types";
+import { isSameHongKongDate } from "../utils/date";
 import { getMenuItem } from "../utils/order";
 import { getDataSourceMode } from "./dataSource";
 import { isItemAvailableForMealPeriod } from "./settingsService";
@@ -141,6 +142,13 @@ function getReversalReason(value: string): string {
   if (!reason) throw new Error("Settlement reversal reason is required");
   return reason;
 }
+export function isSettlementReversibleToday(
+  order: Pick<Order, "settledAt" | "status">,
+  now: Date = new Date(),
+): boolean {
+  if (order.status !== "settled" || !order.settledAt) return false;
+  return isSameHongKongDate(order.settledAt, now);
+}
 
 export function settleOrder(id: string, input: SettleOrderInput, menuItems: MenuItem[]): SettlementRecord {
   const currentOrder = loadOrders(menuItems).find((order) => order.id === id);
@@ -165,9 +173,17 @@ export async function settleOrderAsync(id: string, input: SettleOrderInput, menu
   return settleSupabaseOrder(id, input);
 }
 
-export function reverseSettlement(id: string, input: ReverseSettlementInput, menuItems: MenuItem[]): SettlementReversal {
+export function reverseSettlement(
+  id: string,
+  input: ReverseSettlementInput,
+  menuItems: MenuItem[],
+  now: Date = new Date(),
+): SettlementReversal {
   const currentOrder = loadOrders(menuItems).find((order) => order.id === id);
   if (!currentOrder || currentOrder.status !== "settled") throw new Error("Order not found or not settled");
+  if (!isSettlementReversibleToday(currentOrder, now)) {
+    throw new Error("Settlement reversal is only available on the settlement date");
+  }
 
   const reversal: SettlementReversal = {
     originalPaymentMethod: currentOrder.paymentMethod,
@@ -176,7 +192,7 @@ export function reverseSettlement(id: string, input: ReverseSettlementInput, men
     originalSettlementNote: currentOrder.settlementNote,
     reason: getReversalReason(input.reason),
     restoredStatus: currentOrder.statusBeforeSettlement || "pending",
-    reversedAt: new Date().toISOString(),
+    reversedAt: now.toISOString(),
     reversedByName: input.operatorName,
   };
 
@@ -204,6 +220,49 @@ export async function reverseSettlementAsync(id: string, input: ReverseSettlemen
   return reverseSupabaseSettlement(id, input);
 }
 
+export interface OrderFilter {
+  endDate?: string;
+  query?: string;
+  startDate?: string;
+}
+
+function getLocalOrderDate(dateString: string | undefined): string | null {
+  if (!dateString) return null;
+
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function matchesOrderQuery(order: Order, normalizedQuery: string): boolean {
+  const tableNumberQuery = normalizedQuery.replace(/(?:\u865f|\u53f7)?(?:\u684c|\u53f0)$/, "");
+
+  if (/^\d+$/.test(tableNumberQuery)) {
+    const normalizedNumber = String(Number(tableNumberQuery));
+    return [String(order.sequence), order.table]
+      .some((value) => /^\d+$/.test(value) && String(Number(value)) === normalizedNumber);
+  }
+
+  return [order.id, order.table]
+    .some((value) => value.toLowerCase().includes(normalizedQuery));
+}
+
+export function filterOrders(orders: Order[], { endDate = "", query = "", startDate = "" }: OrderFilter = {}): Order[] {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  return orders.filter((order) => {
+    if (normalizedQuery && !matchesOrderQuery(order, normalizedQuery)) return false;
+
+    if (!startDate && !endDate) return true;
+
+    const settledDate = getLocalOrderDate(order.settledAt);
+    if (!settledDate) return false;
+    return (!startDate || settledDate >= startDate) && (!endDate || settledDate <= endDate);
+  });
+}
 export function listActiveOrders(orders: Order[]): Order[] {
   return orders
     .filter((order) => order.status !== "settled")

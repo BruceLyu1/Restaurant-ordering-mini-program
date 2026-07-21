@@ -205,8 +205,10 @@
 }
 
 .topbar-icon {
+  align-items: center;
   background: transparent;
   color: var(--green);
+  display: inline-flex;
   padding: 7px;
   position: relative;
 }
